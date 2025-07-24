@@ -40,9 +40,9 @@ export class DashboardService {
         const concursosArray = Array.isArray(concursos) ? concursos : (concursos?.content || []);
         this.loggingService.debug(`[${this.LOG_TAG}] Received ${concursosArray.length} contests from ConcursosService.`, undefined, this.LOG_TAG);
 
-        // Filter active contests (status 'PUBLISHED')
-        const concursosActivos = concursosArray.filter((c: any) => c['status'] === 'PUBLISHED').length;
-        this.loggingService.debug(`[${this.LOG_TAG}] Calculated active contests (status PUBLISHED): ${concursosActivos}.`, undefined, this.LOG_TAG);
+        // Filter active contests using dynamic status logic
+        const concursosActivos = this.calculateActiveContests(concursosArray);
+        this.loggingService.debug(`[${this.LOG_TAG}] Calculated active contests with dynamic logic: ${concursosActivos}.`, undefined, this.LOG_TAG);
 
         // Filter contests expiring soon (within 7 days and still PUBLISHED)
         const proximosAVencer = concursosArray.filter((c: any) => {
@@ -246,5 +246,19 @@ export class DashboardService {
     }
     this.loggingService.debug(`[${this.LOG_TAG}] Mapped status "${status}" to "${mapped}".`, undefined, this.LOG_TAG);
     return mapped;
+  }
+
+  /**
+   * Calcula concursos realmente activos usando lógica de estados dinámicos
+   * Un concurso es activo si está PUBLISHED y tiene inscripciones abiertas
+   */
+  private calculateActiveContests(concursos: any[]): number {
+    const ahora = new Date();
+
+    return concursos.filter((concurso: any) => {
+      // Usar estado dinámico calculado por el backend
+      const currentStatus = concurso['currentStatus'] || concurso['status'];
+      return currentStatus === 'ACTIVE';
+    }).length;
   }
 }

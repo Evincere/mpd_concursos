@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +29,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/documentos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${spring.mvc.cors.allowed-origins}")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 @Slf4j
 public class DocumentController {
 
@@ -41,7 +42,16 @@ public class DocumentController {
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<DocumentTypeDto>> getDocumentTypes() {
         log.debug("REST request to get all active document types");
-        return ResponseEntity.ok(documentTypeService.getAllActiveDocumentTypes());
+        List<DocumentTypeDto> types = documentTypeService.getAllActiveDocumentTypes();
+
+        // DEBUGGING: Log para verificar qué datos están llegando
+        log.info("🔍 [DocumentController] Tipos de documento encontrados: {}", types.size());
+        for (DocumentTypeDto type : types) {
+            log.info("📄 [DocumentController] Tipo: {} | Código: {} | Requerido: {}",
+                type.getNombre(), type.getCode(), type.isRequerido());
+        }
+
+        return ResponseEntity.ok(types);
     }
 
     @GetMapping("/usuario")
@@ -70,6 +80,28 @@ public class DocumentController {
         return ResponseEntity.ok(documents);
     }
 
+    @GetMapping("/usuario/summary")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<List<DocumentSummaryDto>> getUserDocumentsSummary() {
+        log.debug("🔍 [DocumentController] Solicitando resumen de documentos del usuario");
+
+        String currentUserIdStr = securityUtils.getCurrentUserId();
+        log.debug("🔍 [DocumentController] ID del usuario obtenido: {}", currentUserIdStr);
+
+        if (currentUserIdStr == null) {
+            log.error("❌ [DocumentController] No se pudo obtener el ID del usuario actual");
+            return ResponseEntity.badRequest().build();
+        }
+
+        UUID userId = UUID.fromString(currentUserIdStr);
+        log.debug("🔍 [DocumentController] UUID del usuario: {}", userId);
+
+        List<DocumentSummaryDto> summaries = documentService.getUserDocumentsSummary(userId);
+        log.debug("✅ [DocumentController] Resúmenes de documentos encontrados: {}", summaries.size());
+
+        return ResponseEntity.ok(summaries);
+    }
+
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<DocumentResponse> uploadDocument(
@@ -77,8 +109,7 @@ public class DocumentController {
             @RequestParam(value = "tipoDocumentoId", required = false) String documentTypeId,
             @RequestParam(value = "comentarios", required = false) String comments,
             @RequestParam(value = "referenciaId", required = false) String referenciaId,
-            @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia,
-            @RequestParam(value = "replaceExisting", required = false, defaultValue = "false") boolean replaceExisting) {
+            @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia) {
 
         try {
             log.info("=== INICIO UPLOAD DOCUMENTO ===");
@@ -87,7 +118,6 @@ public class DocumentController {
             log.info("Comentarios: {}", comments);
             log.info("Referencia ID: {}", referenciaId);
             log.info("Tipo referencia: {}", tipoReferencia);
-            log.info("Replace existing: {}", replaceExisting);
             log.debug("Recibiendo solicitud para subir documento. Type: {}, Ref: {}, RefType: {}",
                     documentTypeId, referenciaId, tipoReferencia);
 
@@ -147,11 +177,10 @@ public class DocumentController {
                     .build();
 
             UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
-            DocumentResponse response = documentService.uploadDocumentWithDuplicateCheck(
+            DocumentResponse response = documentService.uploadDocument(
                     request,
                     file.getInputStream(),
-                    userId,
-                    replaceExisting);
+                    userId);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IOException e) {
@@ -167,6 +196,13 @@ public class DocumentController {
                     .body(DocumentResponse.builder()
                             .id("")
                             .mensaje("Error en el documento: " + e.getMessage())
+                            .build());
+        } catch (ObjectOptimisticLockingFailureException e) {
+            log.warn("Document upload failed due to optimistic locking conflict: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(DocumentResponse.builder()
+                            .id("")
+                            .mensaje("El documento está siendo procesado por otra operación. Por favor, inténtelo nuevamente.")
                             .build());
         } catch (Exception e) {
             log.error("Error inesperado al subir documento", e);
@@ -322,6 +358,59 @@ public class DocumentController {
             @RequestParam("estado") String status) {
 
         return ResponseEntity.ok(documentService.updateDocumentStatus(documentId, status));
+    }
+
+    @PostMapping("/{id}/replace")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<DocumentReplaceResponse> replaceDocument(
+            @PathVariable("id") String documentId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "comentarios", required = false) String comments,
+            @RequestParam(value = "forceReplace", required = false, defaultValue = "false") boolean forceReplace) throws IOException {
+        try {
+            String currentUserIdStr = securityUtils.getCurrentUserId();
+            if (currentUserIdStr == null) {
+                throw new DocumentException("Usuario no autenticado");
+            }
+            DocumentReplaceRequest request = DocumentReplaceRequest.builder()
+                    .fileName(file.getOriginalFilename())
+                    .contentType(file.getContentType())
+                    .comments(comments)
+                    .forceReplace(forceReplace)
+                    .build();
+            DocumentReplaceResponse response = documentService.replaceDocument(
+                    documentId, request, file.getInputStream(), java.util.UUID.fromString(currentUserIdStr));
+            return ResponseEntity.ok(response);
+        } catch (UnsupportedOperationException e) {
+            throw new DocumentException("Funcionalidad no implementada", e);
+        } catch (DocumentException e) {
+            throw e;
+        }
+    }
+
+    @PostMapping("/{id}/replace/check")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<DocumentReplaceResponse> checkReplaceDocument(
+            @PathVariable("id") String documentId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "comentarios", required = false) String comments) throws IOException {
+        try {
+            String currentUserIdStr = securityUtils.getCurrentUserId();
+            if (currentUserIdStr == null) {
+                throw new DocumentException("Usuario no autenticado");
+            }
+            DocumentReplaceRequest request = DocumentReplaceRequest.builder()
+                    .fileName(file.getOriginalFilename())
+                    .contentType(file.getContentType())
+                    .comments(comments)
+                    .forceReplace(false) // Siempre en false para la verificación
+                    .build();
+            DocumentReplaceResponse response = documentService.checkReplaceDocument(
+                    documentId, request, file.getInputStream(), java.util.UUID.fromString(currentUserIdStr));
+            return ResponseEntity.ok(response);
+        } catch (DocumentException e) {
+            throw e;
+        }
     }
 
     /**

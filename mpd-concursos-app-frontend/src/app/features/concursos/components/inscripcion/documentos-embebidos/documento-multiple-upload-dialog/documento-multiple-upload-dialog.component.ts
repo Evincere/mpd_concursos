@@ -1335,21 +1335,44 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
         console.log(`[DocumentoMultipleUpload] 📄 Subiendo documento ${i + 1}/${totalDocumentos}: ${doc.nombreEstandarizado}`);
 
         try {
-          // Usar UnifiedDocumentService que maneja duplicidad automáticamente
-          const resultado = await this.unifiedDocumentService.uploadDocumentWithDuplicateCheck(
-            doc.file,
-            doc.tipoDocumentoId,
-            doc.comentarios || ''
-          ).toPromise();
-
-          console.log(`[DocumentoMultipleUpload] ✅ Documento subido exitosamente:`, resultado);
-
-          // Marcar como completado
-          doc.estado = 'completado';
-          doc.progreso = 100;
+          // CRITICAL FIX: Usar uploadDocumentWithProgress para progreso real
+          doc.estado = 'subiendo';
+          doc.progreso = 0;
           this.documentosParaSubir = [...this.documentosParaSubir];
           this.cdr.markForCheck();
-          console.log(`[DocumentoMultipleUpload] ✅ Documento completado: ${doc.nombreEstandarizado}`);
+
+          // Suscribirse al progreso de subida
+          await new Promise<void>((resolve, reject) => {
+            this.unifiedDocumentService.uploadDocumentWithProgress(
+              doc.file,
+              doc.tipoDocumentoId,
+              doc.comentarios || ''
+            ).subscribe({
+              next: (event) => {
+                if (event.type === 'progress') {
+                  // Actualizar progreso en tiempo real
+                  doc.progreso = event.progress || 0;
+                  this.documentosParaSubir = [...this.documentosParaSubir];
+                  this.actualizarProgresoGlobal();
+                  this.cdr.markForCheck();
+                  console.log(`[DocumentoMultipleUpload] 📊 Progreso ${doc.nombreEstandarizado}: ${event.progress || 0}%`);
+                } else if (event.type === 'response') {
+                  // Upload completado
+                  console.log(`[DocumentoMultipleUpload] ✅ Documento subido exitosamente:`, event.response);
+                  doc.estado = 'completado';
+                  doc.progreso = 100;
+                  this.documentosParaSubir = [...this.documentosParaSubir];
+                  this.cdr.markForCheck();
+                  console.log(`[DocumentoMultipleUpload] ✅ Documento completado: ${doc.nombreEstandarizado}`);
+                  resolve();
+                }
+              },
+              error: (error) => {
+                console.error(`[DocumentoMultipleUpload] ❌ Error al subir documento ${doc.nombreEstandarizado}:`, error);
+                reject(error);
+              }
+            });
+          });
 
         } catch (error: any) {
           console.error(`[DocumentoMultipleUpload] ❌ Error al subir documento ${doc.nombreEstandarizado}:`, error);
@@ -1359,6 +1382,11 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
           if (error?.message?.includes('cancelado por el usuario')) {
             doc.estado = 'error';
             doc.mensajeError = 'Subida cancelada por el usuario';
+          } else if (error?.status === 409) {
+            doc.estado = 'error';
+            doc.mensajeError = 'Conflicto de concurrencia: el documento fue modificado o eliminado por otra operación. Se recargará la lista de documentos.';
+            // Recargar la lista de documentos del usuario
+            this.unifiedDocumentService.refreshDocuments(true);
           } else {
             doc.estado = 'error';
             doc.mensajeError = 'Error al subir el documento: ' + (error?.error?.message || error?.message || 'Error desconocido');
@@ -1469,8 +1497,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     // Emitir evento de confirmación para que el componente padre actualice el estado
     this.documentosSubidos.emit(this.documentosParaSubir.filter(doc => doc.estado === 'completado'));
 
-    // Usar el mismo mecanismo que la cruz que sí funciona
-    this.basicDialogService.closeAll();
+    // CRITICAL FIX: Cerrar con resultado de éxito para que el componente padre actualice las cards
+    const documentosCompletados = this.documentosParaSubir.filter(doc => doc.estado === 'completado');
+    this.dialogRef.close({ success: true, documentos: documentosCompletados });
   }
 
   /**
@@ -1504,10 +1533,12 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     const documentosCompletados = this.documentosParaSubir.filter(doc => doc.estado === 'completado');
     if (documentosCompletados.length > 0) {
       this.documentosSubidos.emit(documentosCompletados);
+      // CRITICAL FIX: Cerrar con resultado de éxito si hay documentos completados
+      this.dialogRef.close({ success: true, documentos: documentosCompletados });
+    } else {
+      // Cerrar sin resultado de éxito si no hay documentos completados
+      this.dialogRef.close({ success: false, cancelled: true });
     }
-
-    // Usar el mismo mecanismo que la cruz que sí funciona
-    this.basicDialogService.closeAll();
   }
 
   getEstadoTexto(estado: string): string {
@@ -1767,6 +1798,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
 
         // Solo mostrar éxito si realmente hubo documentos subidos exitosamente
         if (hayExitos) {
+          // CRITICAL FIX: Notificar actualización de documentos para que las cards se actualicen
+          this.documentosService.notificarDocumentoActualizado();
+
           setTimeout(() => {
             this.notificationService.success('Documentación subida exitosamente', 'Éxito');
             this.cdr.markForCheck();
@@ -1776,6 +1810,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       error: () => {
         // Solo mostrar éxito si realmente hubo documentos subidos exitosamente
         if (hayExitos) {
+          // CRITICAL FIX: Notificar actualización de documentos incluso si hay error al recargar
+          this.documentosService.notificarDocumentoActualizado();
+
           setTimeout(() => {
             this.notificationService.success('Documentación subida exitosamente', 'Éxito');
             this.cdr.markForCheck();

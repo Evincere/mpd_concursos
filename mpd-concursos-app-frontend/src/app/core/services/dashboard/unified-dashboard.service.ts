@@ -8,7 +8,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, combineLatest, of, throwError } from 'rxjs';
-import { map, catchError, tap, shareReplay } from 'rxjs/operators';
+import { map, catchError, tap, shareReplay, switchMap } from 'rxjs/operators';
 
 import { environment } from '../../../../environments/environment';
 import { LoggingService } from '../logging/logging.service';
@@ -26,17 +26,26 @@ import {
   UserStats,
   ContestMetrics,
   InscriptionMetrics,
-  DocumentMetrics
+  DocumentMetrics,
+  DocumentStats,
+  InscriptionStats
 } from '../../interfaces/dashboard/dashboard-repository.interface';
 
 import { Card } from '@shared/interfaces/concurso/card.interface';
 import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.interface';
-import { DashboardData, SimpleDashboardData } from '@shared/interfaces/dashboard/dashboard-widgets.interface';
+import {
+  DashboardData,
+  SimpleDashboardData,
+  ProfileCompletionDetails,
+  DocumentStatus,
+  DocumentExpiration
+} from '@shared/interfaces/dashboard/dashboard-widgets.interface';
 
 // Services
 import { ConcursosService } from '../concursos/concursos.service';
 import { InscriptionService } from '../inscripcion/inscription.service';
 import { ProfileService } from '../profile/profile.service';
+import { UserDashboardService } from './user-dashboard.service';
 
 /**
  * Servicio unificado que implementa todos los repositorios del dashboard
@@ -48,8 +57,30 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
   private readonly LOG_TAG = 'UnifiedDashboardService';
   private readonly apiUrl = `${environment.apiUrl}/dashboard`;
 
-  // Cache subjects
-  private dashboardCardsSubject = new BehaviorSubject<Card[]>([]);
+  // Cache subjects - CRITICAL FIX: Don't initialize with empty array to avoid showing 0 values
+  public dashboardCardsSubject = new BehaviorSubject<Card[]>([
+    {
+      title: 'Concursos Activos',
+      count: 0,
+      icon: 'fa-gavel',
+      color: '#28a745',
+      description: 'Concursos disponibles para inscripción'
+    },
+    {
+      title: 'Mis Postulaciones',
+      count: 0,
+      icon: 'fa-file-alt',
+      color: '#007bff',
+      description: 'Postulaciones activas y pendientes'
+    },
+    {
+      title: 'Próximos a Vencer',
+      count: 0,
+      icon: 'fa-clock',
+      color: '#ffc107',
+      description: 'Concursos que cierran en 7 días o menos'
+    }
+  ]);
   private recentConcursosSubject = new BehaviorSubject<RecentConcurso[]>([]);
   private dashboardDataSubject = new BehaviorSubject<DashboardData | null>(null);
   private userStatsSubject = new BehaviorSubject<UserStats | null>(null);
@@ -58,7 +89,7 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
   private config: DashboardRepositoryConfig = {
     enableCache: true,
     cacheTimeout: 5 * 60 * 1000, // 5 minutos
-    enableMockData: !environment.production,
+    enableMockData: environment.mockData,
     apiEndpoints: {
       cards: `${this.apiUrl}/cards`,
       recentConcursos: `${this.apiUrl}/recent-contests`,
@@ -75,7 +106,8 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
     private appConfigService: AppConfigService,
     private concursosService: ConcursosService,
     private inscriptionService: InscriptionService,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    private userDashboardService: UserDashboardService
   ) {
     this.loggingService.info(`[${this.LOG_TAG}] Initializing UnifiedDashboardService`, this.config, this.LOG_TAG);
   }
@@ -88,48 +120,256 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
   getDashboardCards(): Observable<Card[]> {
     this.loggingService.info(`[${this.LOG_TAG}] Getting dashboard cards`, undefined, this.LOG_TAG);
 
-    return this.concursosService.getConcursos().pipe(
-      map((concursos: any) => {
-        const concursosArray = Array.isArray(concursos) ? concursos : (concursos?.content || []);
-        
-        // Calcular métricas
-        const concursosActivos = concursosArray.filter((c: any) => c['status'] === 'PUBLISHED').length;
+    // CRITICAL FIX: Always load fresh data and return the updated observable
+    this.loadDashboardCards();
+
+    return this.dashboardCardsSubject.asObservable();
+  }
+
+  public loadDashboardCards(): void {
+    // ✅ MEJORA: Combinar datos de concursos, inscripciones y vencimientos para subtítulos informativos
+    combineLatest([
+      this.concursosService.getConcursos(),
+      this.userDashboardService.getInscriptionStats().pipe(
+        catchError(() => of({
+          totalInscriptions: 0,
+          activeInscriptions: 0,
+          completedInscriptions: 0,
+          pendingInscriptions: 0,
+          cancelledInscriptions: 0,
+          frozenInscriptions: 0,
+          byStatus: {},
+          byContest: {}
+        }))
+      ),
+      this.userDashboardService.getUserDeadlines(7).pipe(
+        catchError(() => of([]))
+      )
+    ]).pipe(
+      map(([concursos, inscriptionStats, deadlines]) => {
+        const concursosArray = Array.isArray(concursos) ? concursos : ((concursos as any)?.content || []);
+
+        // Calcular métricas usando lógica de estados dinámicos
+        const concursosActivos = this.calculateActiveContests(concursosArray);
         const proximosAVencer = this.calculateExpiringSoon(concursosArray);
 
-        // ✅ LIMPIEZA: Usar colores de configuración centralizada
+        // ✅ MEJORA: Calcular métricas detalladas para concursos
+        const concursosPublicados = concursosArray.filter((c: any) => c.status === 'PUBLISHED').length;
+        const concursosProximosAbrir = concursosArray.filter((c: any) => {
+          if (c.status !== 'SCHEDULED') return false;
+          const fechaInicio = new Date(c.startDate);
+          const hoy = new Date();
+          const diasHastaInicio = Math.ceil((fechaInicio.getTime() - hoy.getTime()) / (1000 * 3600 * 24));
+          return diasHastaInicio <= 30 && diasHastaInicio > 0;
+        }).length;
+
+        // ✅ MEJORA: Usar los vencimientos del backend como fuente única de verdad
+        this.loggingService.info(`[${this.LOG_TAG}] Deadlines data for vencimientos calculation:`, deadlines, this.LOG_TAG);
+
+        const vencimientosInscripcion = deadlines.filter(d => d.type === 'INSCRIPTION').length;
+        const vencimientosDocumentos = deadlines.filter(d => d.type === 'DOCUMENTS').length;
+        const vencimientosExamen = deadlines.filter(d => d.type === 'EXAM').length;
+        const vencimientosResultado = deadlines.filter(d => d.type === 'RESULT').length;
+
+        // Total de vencimientos próximos (coherente con el subtítulo)
+        const totalVencimientos = vencimientosInscripcion + vencimientosDocumentos + vencimientosExamen + vencimientosResultado;
+
+        this.loggingService.info(`[${this.LOG_TAG}] Vencimientos breakdown: inscripciones=${vencimientosInscripcion}, documentos=${vencimientosDocumentos}, examenes=${vencimientosExamen}, resultados=${vencimientosResultado}, total=${totalVencimientos}`, undefined, this.LOG_TAG);
+
+        // ✅ LIMPIEZA: Usar colores de configuración centralizada con subtítulos informativos
         const cards: Card[] = [
           {
             title: 'Concursos Activos',
             count: concursosActivos,
             icon: 'fa-gavel',
             color: this.appConfigService.getColor('success'),
+            description: 'Concursos disponibles para inscripción',
+            subtitle: this.generateConcursosSubtitle(concursosPublicados, concursosProximosAbrir)
+          },
+          {
+            title: 'Mis Postulaciones',
+            count: inscriptionStats.totalInscriptions,
+            icon: 'fa-file-alt',
+            color: this.appConfigService.getColor('primary'),
+            description: 'Postulaciones activas y pendientes',
+            subtitle: this.generatePostulacionesSubtitle(inscriptionStats)
+          },
+          {
+            title: 'Próximos a Vencer',
+            count: totalVencimientos,
+            icon: 'fa-clock',
+            color: this.appConfigService.getColor('warning'),
+            description: 'Vencimientos próximos en los próximos 7 días',
+            subtitle: this.generateVencimientosSubtitle(vencimientosInscripcion, vencimientosDocumentos, vencimientosExamen, vencimientosResultado)
+          }
+        ];
+
+        return cards;
+      }),
+      tap(cards => {
+        this.loggingService.info(`[${this.LOG_TAG}] Dashboard cards updated with detailed data and subtitles.`, cards, this.LOG_TAG);
+        this.dashboardCardsSubject.next(cards);
+      }),
+      catchError(error => {
+        this.loggingService.error(`[${this.LOG_TAG}] Error loading dashboard cards`, error, this.LOG_TAG);
+        // Return default cards as observable
+        const defaultCards: Card[] = [
+          {
+            title: 'Concursos Activos',
+            count: 0,
+            icon: 'fa-gavel',
+            color: this.appConfigService.getColor('success'),
             description: 'Concursos disponibles para inscripción'
           },
           {
             title: 'Mis Postulaciones',
-            count: 0, // Se actualizará con datos de inscripciones
+            count: 0,
             icon: 'fa-file-alt',
             color: this.appConfigService.getColor('primary'),
             description: 'Postulaciones activas y pendientes'
           },
           {
             title: 'Próximos a Vencer',
-            count: proximosAVencer,
+            count: 0,
             icon: 'fa-clock',
             color: this.appConfigService.getColor('warning'),
             description: 'Concursos que cierran en 7 días o menos'
           }
         ];
+        this.dashboardCardsSubject.next(defaultCards);
+        return of(defaultCards);
+      })
+    ).subscribe();
+  }
 
-        this.dashboardCardsSubject.next(cards);
-        return cards;
-      }),
-      catchError(error => {
-        this.loggingService.error(`[${this.LOG_TAG}] Error loading dashboard cards`, error, this.LOG_TAG);
-        return this.getDefaultCards();
-      }),
-      shareReplay(1)
-    );
+  /**
+   * ✅ MEJORA: Genera subtítulo informativo para la card de Concursos Activos
+   */
+  private generateConcursosSubtitle(publicados: number, proximosAbrir: number): string {
+    const partes: string[] = [];
+
+    if (publicados > 0) {
+      partes.push(`${publicados} publicado${publicados !== 1 ? 's' : ''}`);
+    }
+
+    if (proximosAbrir > 0) {
+      partes.push(`${proximosAbrir} próximo${proximosAbrir !== 1 ? 's' : ''} a abrir`);
+    }
+
+    return partes.length > 0 ? partes.join(', ') : 'Sin actividad reciente';
+  }
+
+  /**
+   * ✅ MEJORA: Genera subtítulo informativo para la card de Mis Postulaciones
+   */
+  private generatePostulacionesSubtitle(stats: any): string {
+    try {
+      const partes: string[] = [];
+
+      // Validar que stats existe
+      if (!stats) {
+        return 'Sin datos disponibles';
+      }
+
+      // Convertir a números para asegurar comparación correcta
+      const incompletas = Number(stats.pendingInscriptions) || 0;
+      const esperandoValidacion = Number(stats.completedInscriptions) || 0;
+
+      if (incompletas > 0) {
+        partes.push(`${incompletas} incompleta${incompletas !== 1 ? 's' : ''}`);
+      }
+
+      if (esperandoValidacion > 0) {
+        partes.push(`${esperandoValidacion} esperando validación`);
+      }
+
+      return partes.length > 0 ? partes.join(', ') : 'Sin postulaciones registradas';
+
+    } catch (error) {
+      this.loggingService.error(`[${this.LOG_TAG}] Error generating postulaciones subtitle:`, error, this.LOG_TAG);
+      return 'Error al cargar datos';
+    }
+  }
+
+  /**
+   * ✅ MEJORA: Genera subtítulo informativo para la card de Próximos a Vencer
+   */
+  private generateVencimientosSubtitle(inscripciones: number, documentos: number, examenes: number = 0, resultados: number = 0): string {
+    const partes: string[] = [];
+
+    if (inscripciones > 0) {
+      partes.push(`${inscripciones} inscripción${inscripciones !== 1 ? 'es' : ''}`);
+    }
+
+    if (documentos > 0) {
+      partes.push(`${documentos} documento${documentos !== 1 ? 's' : ''}`);
+    }
+
+    if (examenes > 0) {
+      partes.push(`${examenes} examen${examenes !== 1 ? 'es' : ''}`);
+    }
+
+    if (resultados > 0) {
+      partes.push(`${resultados} resultado${resultados !== 1 ? 's' : ''}`);
+    }
+
+    return partes.length > 0 ? partes.join(', ') : 'Sin vencimientos próximos';
+  }
+
+  /**
+   * ✅ MEJORA: Calcula detalles de completitud del perfil incluyendo documentación
+   */
+  private calculateProfileCompletionDetails(profileStats: ProfileStats, documentStats: DocumentStats, deadlines: UserDeadline[]): ProfileCompletionDetails {
+    // Calcular porcentajes
+    const personalDataPercentage = profileStats.completionPercentage;
+
+    // Calcular porcentaje de documentos requeridos y opcionales
+    const totalRequired = 5; // DNI, CUIL, Antecedentes, Certificado Profesional, Ley Micaela
+    const totalOptional = 3; // Documentos opcionales estimados
+
+    const requiredCompleted = Math.min(documentStats.approvedDocuments, totalRequired);
+    const optionalCompleted = Math.max(0, documentStats.approvedDocuments - totalRequired);
+
+    const requiredDocumentsPercentage = Math.round((requiredCompleted / totalRequired) * 100);
+    const optionalDocumentsPercentage = Math.round((optionalCompleted / totalOptional) * 100);
+
+    // Calcular porcentaje global ponderado
+    const globalPercentage = Math.round((personalDataPercentage * 0.4) + (requiredDocumentsPercentage * 0.6));
+
+    // Generar documentos de ejemplo (en producción esto vendría del backend)
+    const requiredDocuments: DocumentStatus[] = [
+      { id: 'dni-frente', name: 'DNI (Frente)', status: requiredCompleted > 0 ? 'completed' : 'missing', required: true },
+      { id: 'dni-dorso', name: 'DNI (Dorso)', status: requiredCompleted > 1 ? 'completed' : 'missing', required: true },
+      { id: 'cuil', name: 'CUIL', status: requiredCompleted > 2 ? 'completed' : 'missing', required: true },
+      { id: 'antecedentes', name: 'Antecedentes Penales', status: requiredCompleted > 3 ? 'completed' : 'missing', required: true },
+      { id: 'certificado-profesional', name: 'Certificado Profesional', status: requiredCompleted > 4 ? 'completed' : 'missing', required: true, expirationDate: '2024-12-31', daysUntilExpiration: 90 }
+    ];
+
+    const optionalDocuments: DocumentStatus[] = [
+      { id: 'ley-micaela', name: 'Certificado Ley Micaela', status: optionalCompleted > 0 ? 'completed' : 'missing', required: false },
+      { id: 'capacitacion-adicional', name: 'Capacitación Adicional', status: optionalCompleted > 1 ? 'completed' : 'missing', required: false },
+      { id: 'experiencia-laboral', name: 'Certificado Experiencia', status: optionalCompleted > 2 ? 'completed' : 'missing', required: false }
+    ];
+
+    // Generar vencimientos próximos
+    const upcomingExpirations: DocumentExpiration[] = deadlines
+      .filter(d => d.type === 'DOCUMENTS' && d.daysRemaining <= 30)
+      .map(d => ({
+        documentName: d.title,
+        expirationDate: d.deadline,
+        daysUntilExpiration: d.daysRemaining,
+        priority: d.daysRemaining <= 7 ? 'high' : d.daysRemaining <= 15 ? 'medium' : 'low'
+      }));
+
+    return {
+      personalDataPercentage,
+      requiredDocumentsPercentage,
+      optionalDocumentsPercentage,
+      globalPercentage,
+      requiredDocuments,
+      optionalDocuments,
+      upcomingExpirations
+    };
   }
 
   /**
@@ -141,7 +381,7 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
     return this.concursosService.getConcursos().pipe(
       map((concursos: any) => {
         const concursosArray = Array.isArray(concursos) ? concursos : (concursos?.content || []);
-        
+
         const recentConcursos = concursosArray
           .sort((a: any, b: any) => new Date(b['startDate']).getTime() - new Date(a['startDate']).getTime())
           .slice(0, 5)
@@ -230,18 +470,21 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
     return combineLatest([
       this.getProfileStats(),
       this.getUserDeadlines(30),
-      this.getInscriptionMetrics()
+      this.getInscriptionMetrics(),
+      this.getDocumentStats() // ✅ MEJORA: Agregar datos de documentación
     ]).pipe(
-      map(([profileStats, deadlines, inscriptionMetrics]) => ({
+      map(([profileStats, deadlines, inscriptionMetrics, documentStats]) => ({
         profileCompletion: profileStats.completionPercentage,
         activeApplications: inscriptionMetrics.activeInscriptions,
-        pendingDocuments: 0, // ✅ LIMPIEZA: Pendiente implementación de servicio de documentos
+        pendingDocuments: documentStats.pendingDocuments,
         availableExams: 0, // ✅ LIMPIEZA: Pendiente implementación de servicio de exámenes
         upcomingDeadlines: deadlines.slice(0, 3).map(deadline => ({
           title: deadline.title,
           date: deadline.deadline,
           daysRemaining: deadline.daysRemaining
-        }))
+        })),
+        // ✅ MEJORA: Agregar detalles de completitud del perfil
+        profileDetails: this.calculateProfileCompletionDetails(profileStats, documentStats, deadlines)
       })),
       catchError(error => {
         this.loggingService.error(`[${this.LOG_TAG}] Error loading simple dashboard data`, error, this.LOG_TAG);
@@ -324,14 +567,32 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
       }),
       catchError(error => {
         this.loggingService.error(`[${this.LOG_TAG}] Error loading user stats`, error, this.LOG_TAG);
-        
+
         // ✅ SEGURIDAD: Validar autenticación antes de retornar datos mock
         if (!this.authService.isAuthenticated()) {
           this.loggingService.warn(`[${this.LOG_TAG}] Usuario no autenticado, no se retornan datos mock`, undefined, this.LOG_TAG);
           return throwError(() => new Error('Usuario no autenticado'));
         }
-        
+
         return this.getFallbackUserStats();
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * ✅ MEJORA: Obtiene estadísticas de documentos del usuario
+   */
+  getDocumentStats(): Observable<DocumentStats> {
+    this.loggingService.info(`[${this.LOG_TAG}] Getting document stats`, undefined, this.LOG_TAG);
+
+    return this.http.get<DocumentStats>(`${this.config.apiEndpoints.userStats}/documents`).pipe(
+      tap(stats => {
+        this.loggingService.debug(`[${this.LOG_TAG}] Document stats loaded`, stats, this.LOG_TAG);
+      }),
+      catchError(error => {
+        this.loggingService.warn(`[${this.LOG_TAG}] Error loading document stats, using fallback`, error, this.LOG_TAG);
+        return this.getFallbackDocumentStats();
       }),
       shareReplay(1)
     );
@@ -349,7 +610,7 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
       map((concursos: any) => {
         const concursosArray = Array.isArray(concursos) ? concursos : (concursos?.content || []);
 
-        const activeContests = concursosArray.filter((c: any) => c['status'] === 'PUBLISHED').length;
+        const activeContests = this.calculateActiveContests(concursosArray);
         const expiringSoon = this.calculateExpiringSoon(concursosArray);
 
         return {
@@ -380,19 +641,34 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
 
     return this.inscriptionService.getUserInscriptions().pipe(
       map((inscriptions: any) => {
-        const inscriptionsArray = Array.isArray(inscriptions) ? inscriptions : [];
+        const inscriptionsArray = inscriptions?.content || [];
 
-        const activeInscriptions = inscriptionsArray.filter((i: any) =>
-          i.status === 'ACTIVE' || i.status === 'IN_PROGRESS'
-        ).length;
+        const activeInscriptions = inscriptionsArray.filter((i: any) => {
+          const estado = (i?.status as string | undefined)?.toUpperCase();
+          if (!estado) return false;
 
-        const pendingInscriptions = inscriptionsArray.filter((i: any) =>
-          i.status === 'PENDING'
-        ).length;
+          const estadosActivos = [
+            'PENDING', 'PENDIENTE', 'CONFIRMADA', 'APPROVED', 'APROBADA', 'APROBADO',
+            'INSCRIPTO', 'IN_PROCESS', 'EN_PROCESO', 'COMPLETED_WITH_DOCS',
+            'COMPLETED_PENDING_DOCS', 'ACTIVO', 'ACTIVE',
+            // ✅ SOLUCIÓN: Sincronizar estados con loadDashboardCards
+            'PENDIENTE VALIDACIÓN', 'PENDIENTE_VALIDACIÓN', 'PENDIENTE_VALIDACION',
+            'PENDING_VALIDATION', 'VALIDATION_PENDING'
+          ];
+          return estadosActivos.includes(estado);
+        }).length;
 
-        const completedInscriptions = inscriptionsArray.filter((i: any) =>
-          i.status === 'COMPLETED'
-        ).length;
+        const pendingInscriptions = inscriptionsArray.filter((i: any) => {
+          const estado = (i?.status as string | undefined)?.toUpperCase();
+          if (!estado) return false;
+          return ['PENDING', 'PENDIENTE'].includes(estado);
+        }).length;
+
+        const completedInscriptions = inscriptionsArray.filter((i: any) => {
+            const estado = (i?.status as string | undefined)?.toUpperCase();
+            if (!estado) return false;
+            return ['COMPLETED_WITH_DOCS', 'COMPLETED_PENDING_DOCS'].includes(estado);
+        }).length;
 
         return {
           totalInscriptions: inscriptionsArray.length,
@@ -430,6 +706,20 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
   }
 
   // ===== Private Helper Methods =====
+
+  /**
+   * Calcula concursos realmente activos usando lógica de estados dinámicos
+   * Un concurso es activo si está PUBLISHED y tiene inscripciones abiertas
+   */
+  private calculateActiveContests(concursos: any[]): number {
+    const ahora = new Date();
+
+    return concursos.filter((concurso: any) => {
+      // Usar estado dinámico calculado por el backend
+      const currentStatus = concurso['currentStatus'] || concurso['status'];
+      return currentStatus === 'ACTIVE';
+    }).length;
+  }
 
   private calculateExpiringSoon(concursos: any[]): number {
     const hoy = new Date();
@@ -641,6 +931,21 @@ export class UnifiedDashboardService implements IDashboardRepository, IUserStats
 
   private getFallbackUserDeadlines(): Observable<UserDeadline[]> {
     return of([]);
+  }
+
+  /**
+   * ✅ MEJORA: Fallback para estadísticas de documentos
+   */
+  private getFallbackDocumentStats(): Observable<DocumentStats> {
+    return of({
+      totalDocuments: 0,
+      pendingDocuments: 0,
+      approvedDocuments: 0,
+      rejectedDocuments: 0,
+      expiredDocuments: 0,
+      byType: {},
+      byStatus: {}
+    });
   }
 
   private getFallbackUserStats(): Observable<UserStats> {

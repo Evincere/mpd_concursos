@@ -14,8 +14,16 @@ import java.util.UUID;
 @Setter
 public class DocumentEntity {
 
+    /**
+     * Constructor por defecto - JPA maneja automáticamente el campo @Version
+     */
+    public DocumentEntity() {
+        // JPA/Hibernate maneja automáticamente el campo @Version
+        // No necesitamos inicializarlo manualmente
+    }
+
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
     @NotNull
@@ -68,17 +76,15 @@ public class DocumentEntity {
     @Column(name = "is_archived", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isArchived = false;
 
-    @Column(name = "replaced_document_id")
-    private UUID replacedDocumentId;
-
     @Column(name = "archived_at")
     private LocalDateTime archivedAt;
 
     @Column(name = "archived_by")
     private UUID archivedBy;
 
+    @Version
     @Column(name = "version")
-    private int version = 1;
+    private int version; // Campo para optimistic locking - JPA maneja automáticamente (inicia en 0)
 
     // Setter personalizado para manejar NULL en isArchived
     public void setIsArchived(Boolean isArchived) {
@@ -87,6 +93,54 @@ public class DocumentEntity {
 
     public Boolean getIsArchived() {
         return this.isArchived != null ? this.isArchived : false;
+    }
+
+    // LOGGING TEMPORAL PARA DEBUGGING - REMOVER EN PRODUCCIÓN
+    @PrePersist
+    public void debugPrePersist() {
+        getVersioningLogger().logPrePersist(
+            this.id,
+            this.version,
+            this.isArchived,
+            "FileName: " + this.fileName + ", UploadDate: " + this.uploadDate
+        );
+    }
+
+    @PostPersist
+    public void debugPostPersist() {
+        getVersioningLogger().logPostPersist(
+            this.id,
+            this.version,
+            this.isArchived,
+            "FileName: " + this.fileName + ", PERSISTED"
+        );
+    }
+
+    @PreUpdate
+    public void debugPreUpdate() {
+        getVersioningLogger().logPreUpdate(
+            this.id,
+            this.version,
+            this.isArchived,
+            "FileName: " + this.fileName + ", UPDATE"
+        );
+    }
+
+    @PostUpdate
+    public void debugPostUpdate() {
+        getVersioningLogger().logPostUpdate(
+            this.id,
+            this.version,
+            this.isArchived,
+            "FileName: " + this.fileName + ", UPDATED"
+        );
+    }
+
+    // Helper para obtener el logger (evita inyección de dependencias en entity)
+    private ar.gov.mpd.concursobackend.document.infrastructure.debug.VersioningDebugLogger getVersioningLogger() {
+        return ar.gov.mpd.concursobackend.shared.config.ApplicationContextProvider.getBean(
+            ar.gov.mpd.concursobackend.document.infrastructure.debug.VersioningDebugLogger.class
+        );
     }
 
     public enum DocumentStatusEnum {

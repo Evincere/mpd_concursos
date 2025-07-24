@@ -242,30 +242,60 @@ export class DashboardWidgetsService {
             }
           });
 
-        // Pending document expirations (e.g., 3 days after contest close)
+        // ✅ CORRECCIÓN: Plazos perentorios de documentación (3 días hábiles después del cierre)
         inscripcionesArray
-          .filter(i => (i['estado'] as string)?.toUpperCase() === 'COMPLETED_PENDING_DOCS') // Assuming 'estado' for PostulacionResponse
+          .filter(i => (i['estado'] as string)?.toUpperCase() === 'COMPLETED_PENDING_DOCS')
           .forEach(inscripcion => {
-            const concurso = concursosArray.find(c => c['id'] === inscripcion['concursoId']); // Assuming 'concursoId' exists
+            const concurso = concursosArray.find(c => c['id'] === inscripcion['concursoId']);
             if (concurso) {
-              const fechaCierre = new Date(concurso['endDate'] as string);
-              const fechaLimiteDoc = new Date(fechaCierre);
-              fechaLimiteDoc.setDate(fechaLimiteDoc.getDate() + 3); // Example: documents due 3 days after contest closes
+              // ✅ CORRECCIÓN: Crear fecha consistente sin problemas de zona horaria
+              let fechaCierre: Date;
+              const endDateStr = (concurso['endDate'] as string);
+              if (endDateStr.includes('T')) {
+                fechaCierre = new Date(endDateStr);
+              } else {
+                // Para fechas en formato YYYY-MM-DD, agregar hora del mediodía
+                fechaCierre = new Date(endDateStr + 'T12:00:00');
+              }
+
+              // ✅ CORRECCIÓN CRÍTICA: Calcular 3 días HÁBILES DESPUÉS del día de cierre
+              // El plazo perentorio empieza DESPUÉS del día de cierre, no desde el día de cierre
+              const fechaInicioPlazo = new Date(fechaCierre);
+              fechaInicioPlazo.setDate(fechaCierre.getDate() + 1); // Día siguiente al cierre
+              const fechaLimiteDoc = this.addBusinessDays(fechaInicioPlazo, 3);
+              // Establecer hora límite a las 23:59:59
+              fechaLimiteDoc.setHours(23, 59, 59, 999);
 
               const diasRestantes = Math.ceil((fechaLimiteDoc.getTime() - hoy.getTime()) / (1000 * 3600 * 24));
 
-              if (diasRestantes >= 0) { // Only show if still active or expired today
+              if (diasRestantes >= 0) { // Solo mostrar si aún está activo o venció hoy
+                // ✅ CORRECCIÓN: Información más clara con fecha de cierre correcta
+                const tituloMejorado = diasRestantes === 0
+                  ? `¡ÚLTIMO DÍA! Documentos: ${concurso['title']}`
+                  : `Documentos: ${concurso['title']}`;
+
+                // ✅ CORRECCIÓN: Mostrar fecha de cierre de inscripción, no fecha límite de documentos
+                const fechaCierreFormateada = fechaCierre.toLocaleDateString('es-AR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                });
+
+                const descripcionMejorada = diasRestantes === 0
+                  ? `Plazo perentorio vence HOY a las 23:59 (inscripción cerró ${fechaCierreFormateada})`
+                  : `Plazo perentorio: ${diasRestantes} días hábiles restantes (inscripción cerró ${fechaCierreFormateada})`;
+
                 vencimientos.push({
                   id: `docs-${inscripcion['id']}`,
                   tipo: TipoVencimiento.DOCUMENTOS,
-                  titulo: `Documentos: ${concurso['title']}`,
-                  descripcion: 'Completar documentación pendiente',
+                  titulo: tituloMejorado,
+                  descripcion: descripcionMejorada,
                   fechaLimite: fechaLimiteDoc,
                   diasRestantes,
                   prioridad: DashboardUtils.calcularPrioridadVencimiento(diasRestantes),
                   concursoId: concurso['id'] as string,
-                  accionRequerida: 'Subir documentos',
-                  ruta: `/dashboard/concursos/${concurso['id']}/inscripcion` // Example route
+                  accionRequerida: diasRestantes === 0 ? 'COMPLETAR HOY' : 'Completar documentación',
+                  ruta: `/dashboard/concursos/${concurso['id']}/inscripcion`
                 });
                 this.loggingService.debug(`[${this.LOG_TAG}] Added pending document expiration: ${concurso['title']} (${diasRestantes} days left).`, undefined, this.LOG_TAG);
               }
@@ -594,5 +624,24 @@ export class DashboardWidgetsService {
       default:
         return PrioridadVencimiento.MEDIA;
     }
+  }
+
+  /**
+   * ✅ NUEVO MÉTODO: Agregar días hábiles a una fecha
+   * Excluye sábados y domingos
+   */
+  private addBusinessDays(date: Date, businessDays: number): Date {
+    const result = new Date(date);
+    let daysAdded = 0;
+
+    while (daysAdded < businessDays) {
+      result.setDate(result.getDate() + 1);
+      // Si no es fin de semana (sábado = 6, domingo = 0)
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        daysAdded++;
+      }
+    }
+
+    return result;
   }
 }

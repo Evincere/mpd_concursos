@@ -15,6 +15,7 @@ import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,68 +63,80 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
             Contest contest = contestRepository.findById(inscription.getContestId().getValue())
                     .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado"));
 
-            // Send notifications based on the new status
-            if (status == InscriptionStatus.PENDING) {
-                // Notify administrators about pending inscription
-                inscriptionNotificationService.notifyAdminsAboutPendingInscription(inscription, contest);
-                log.info("Notification sent to administrators about pending inscription: {}", id);
+            // Send notifications based on the new status - wrapped in try-catch to prevent notification failures from breaking the main operation
+            try {
+                if (status == InscriptionStatus.PENDING) {
+                    // Notify administrators about pending inscription
+                    inscriptionNotificationService.notifyAdminsAboutPendingInscription(inscription, contest);
+                    log.info("Notification sent to administrators about pending inscription: {}", id);
 
-                // Notify user about completed inscription
-                User user = userService.getById(inscription.getUserId().getValue())
-                        .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                    // Notify user about completed inscription
+                    User user = userService.getById(inscription.getUserId().getValue())
+                            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-                NotificationRequest completionRequest = NotificationRequest.builder()
-                        .recipientUsername(user.getUsername().value())
-                        .subject("Inscripción Completada - " + contest.getTitle())
-                        .content(String.format(
-                                "¡Felicitaciones! Has completado tu inscripción al concurso '%s'.\n\n" +
-                                        "Detalles del concurso:\n" +
-                                        "- Cargo: %s\n" +
-                                        "- Dependencia: %s\n\n" +
-                                        "Tu inscripción está ahora pendiente de validación por el equipo administrativo.\n" +
-                                        "Te notificaremos cuando tu inscripción sea revisada.",
-                                contest.getTitle(),
-                                contest.getLocation() != null ? contest.getLocation() : "No especificado",
-                                contest.getDependency()))
-                        .type(NotificationType.INSCRIPTION)
-                        .acknowledgementLevel(AcknowledgementLevel.NONE)
-                        .build();
+                    NotificationRequest completionRequest = NotificationRequest.builder()
+                            .recipientUsername(user.getUsername().value())
+                            .subject("Inscripción Completada - " + contest.getTitle())
+                            .content(String.format(
+                                    "¡Felicitaciones! Has completado tu inscripción al concurso '%s'.\n\n" +
+                                            "Detalles del concurso:\n" +
+                                            "- Cargo: %s\n" +
+                                            "- Dependencia: %s\n\n" +
+                                            "Tu inscripción está ahora pendiente de validación por el equipo administrativo.\n" +
+                                            "Te notificaremos cuando tu inscripción sea revisada.",
+                                    contest.getTitle(),
+                                    contest.getLocation() != null ? contest.getLocation() : "No especificado",
+                                    contest.getDependency()))
+                            .type(NotificationType.INSCRIPTION)
+                            .acknowledgementLevel(AcknowledgementLevel.NONE)
+                            .build();
 
-                notificationService.sendNotification(completionRequest);
-                log.info("Notification sent to user about completed inscription: {}", id);
+                    notificationService.sendNotification(completionRequest);
+                    log.info("Notification sent to user about completed inscription: {}", id);
 
-            } else if (status == InscriptionStatus.APPROVED || status == InscriptionStatus.REJECTED) {
-                // Notify user about approved or rejected inscription
-                inscriptionNotificationService.notifyUserAboutInscriptionStatusChange(inscription, contest);
-                log.info("Notification sent to user about inscription status change to {}: {}", status, id);
+                } else if (status == InscriptionStatus.APPROVED || status == InscriptionStatus.REJECTED) {
+                    // Notify user about approved or rejected inscription
+                    inscriptionNotificationService.notifyUserAboutInscriptionStatusChange(inscription, contest);
+                    log.info("Notification sent to user about inscription status change to {}: {}", status, id);
+                }
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.warn("Notification failed due to optimistic locking conflict for inscription {}: {}. Inscription status update was successful.", id, e.getMessage());
+            } catch (Exception e) {
+                log.error("Failed to send notifications for inscription status update {}: {}. Inscription status update was successful.", id, e.getMessage());
             }
 
             // Para los estados ACTIVE, CANCELLED y otros que no tienen notificaciones específicas
-            // enviamos una notificación general de cambio de estado
-            if (status != InscriptionStatus.PENDING && status != InscriptionStatus.APPROVED && status != InscriptionStatus.REJECTED) {
-                // Obtener información del usuario
-                User user = userService.getById(inscription.getUserId().getValue())
-                        .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            // enviamos una notificación general de cambio de estado - wrapped in try-catch to prevent notification failures
+            try {
+                if (status != InscriptionStatus.PENDING && status != InscriptionStatus.APPROVED && status != InscriptionStatus.REJECTED) {
+                    // Obtener información del usuario
+                    User user = userService.getById(inscription.getUserId().getValue())
+                            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-                // Enviar notificación
-                NotificationRequest notificationRequest = NotificationRequest.builder()
-                        .recipientUsername(user.getUsername().value())
-                        .subject("Estado de Postulación Actualizado - " + contest.getTitle())
-                        .content(String.format(
-                                "El estado de tu postulación al concurso '%s' ha sido actualizado a %s.\n\n" +
-                                        "Detalles del concurso:\n" +
-                                        "- Cargo: %s\n" +
-                                        "- Dependencia: %s",
-                                contest.getTitle(),
-                                status,
-                                contest.getLocation() != null ? contest.getLocation() : "No especificado",
-                                contest.getDependency()))
-                        .type(NotificationType.INSCRIPTION)
-                        .acknowledgementLevel(AcknowledgementLevel.NONE)
-                        .build();
+                    // Enviar notificación
+                    NotificationRequest notificationRequest = NotificationRequest.builder()
+                            .recipientUsername(user.getUsername().value())
+                            .subject("Estado de Postulación Actualizado - " + contest.getTitle())
+                            .content(String.format(
+                                    "El estado de tu postulación al concurso '%s' ha sido actualizado a %s.\n\n" +
+                                            "Detalles del concurso:\n" +
+                                            "- Cargo: %s\n" +
+                                            "- Dependencia: %s",
+                                    contest.getTitle(),
+                                    status,
+                                    contest.getLocation() != null ? contest.getLocation() : "No especificado",
+                                    contest.getDependency()))
+                            .type(NotificationType.INSCRIPTION)
+                            .acknowledgementLevel(AcknowledgementLevel.NONE)
+                            .build();
 
-                notificationService.sendNotification(notificationRequest);
-                log.info("General notification sent to user about inscription status change to {}: {}", status, id);
+                    notificationService.sendNotification(notificationRequest);
+                    log.info("General notification sent to user about inscription status change to {}: {}", status, id);
+                }
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.warn("General notification failed due to optimistic locking conflict for inscription {}: {}. Inscription status update was successful.", id, e.getMessage());
+            } catch (Exception e) {
+                log.error("Failed to send general notification for inscription status update {}: {}. Inscription status update was successful.", id, e.getMessage());
             }
 
         } catch (Exception e) {

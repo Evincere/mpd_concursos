@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Cards Dashboard Mejoradas</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: linear-gradient(135deg,
+                rgba(55, 65, 81, 0.95) 0%,
+                rgba(75, 85, 99, 0.9) 50%,
+                rgba(55, 65, 81, 0.95) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 4px solid;
+            box-shadow:
+                0 12px 40px rgba(0, 0, 0, 0.4),
+                0 6px 20px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(16px) saturate(180%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.15) 0%,
+                rgba(255, 255, 255, 0.08) 50%,
+                rgba(255, 255, 255, 0.05) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 10px 30px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .card-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+        }
+
+        .card-info {
+            flex: 1;
+        }
+
+        .card-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #d1d5db;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .count {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #f9fafb;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+            line-height: 1.2;
+            opacity: 0.9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .card:hover .card-icon {
+            opacity: 0.9;
+            transform: scale3d(1.05, 1.05, 1);
+        }
+
+        .card-success {
+            border-left-color: #10b981;
+        }
+
+        .card-primary {
+            border-left-color: #3b82f6;
+        }
+
+        .card-warning {
+            border-left-color: #f59e0b;
+        }
+
+        .demo-info {
+            background: rgba(55, 65, 81, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .demo-info h2 {
+            margin: 0 0 10px 0;
+            color: #60a5fa;
+        }
+
+        .demo-info p {
+            margin: 0;
+            color: #d1d5db;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="demo-info">
+        <h2>🎯 Mejoras Implementadas en las Cards del Dashboard</h2>
+        <p>Se han agregado subtítulos informativos que proporcionan contexto adicional sin sobrecargar visualmente las cards.</p>
+    </div>
+
+    <div class="dashboard-cards">
+        <!-- Card Concursos Activos -->
+        <div class="card card-success">
+            <div class="card-content">
+                <div class="card-info">
+                    <h3>Concursos Activos</h3>
+                    <span class="count">3</span>
+                    <span class="subtitle">2 publicados, 1 próximo a abrir</span>
+                </div>
+                <i class="fas fa-gavel card-icon" style="color: #10b981;"></i>
+            </div>
+        </div>
+
+        <!-- Card Mis Postulaciones -->
+        <div class="card card-primary">
+            <div class="card-content">
+                <div class="card-info">
+                    <h3>Mis Postulaciones</h3>
+                    <span class="count">3</span>
+                    <span class="subtitle">1 incompleta, 2 esperando validación</span>
+                </div>
+                <i class="fas fa-file-alt card-icon" style="color: #3b82f6;"></i>
+            </div>
+        </div>
+
+        <!-- Card Próximos a Vencer -->
+        <div class="card card-warning">
+            <div class="card-content">
+                <div class="card-info">
+                    <h3>Próximos a Vencer</h3>
+                    <span class="count">1</span>
+                    <span class="subtitle">1 documento</span>
+                </div>
+                <i class="fas fa-clock card-icon" style="color: #f59e0b;"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-info">
+        <h2>✨ Características de la Mejora</h2>
+        <p><strong>• Terminología clara:</strong> "Incompletas" (interrumpidas), "Esperando validación" (completadas pendientes de admin)</p>
+        <p><strong>• Estados específicos:</strong> Diferencia entre inscripciones en proceso, esperando validación, aprobadas y rechazadas</p>
+        <p><strong>• Diseño conservado:</strong> Se mantiene la estética glassmorphism existente</p>
+        <p><strong>• Información contextual:</strong> Los subtítulos se generan dinámicamente basándose en datos reales</p>
+        <p><strong>• Responsive:</strong> Los subtítulos se adaptan a diferentes tamaños de pantalla</p>
+    </div>
+</body>
+</html>

@@ -46,6 +46,12 @@ public interface IDocumentRepository {
     Optional<Document> findActiveByUserAndType(UUID userId, DocumentTypeId documentTypeId);
 
     /**
+     * Busca el documento activo más reciente por usuario y tipo de documento
+     * Ordenado por fecha de subida (más reciente primero)
+     */
+    Optional<Document> findLatestActiveByUserAndType(UUID userId, DocumentTypeId documentTypeId);
+
+    /**
      * Busca documentos archivados por usuario
      */
     List<Document> findArchivedByUserId(UUID userId);
@@ -59,4 +65,13 @@ public interface IDocumentRepository {
      * Obtiene todos los documentos del sistema
      */
     List<Document> findAll();
+
+    /**
+     * Busca un documento por su ID y aplica un bloqueo pesimista de escritura.
+     * Esto previene que otras transacciones lean o escriban en esta fila hasta que la transacción actual termine.
+     *
+     * @param id El ID del documento a buscar.
+     * @return Un Optional que contiene el documento si se encuentra, o vacío si no.
+     */
+    Optional<Document> findByIdWithPessimisticLock(DocumentId id);
 }

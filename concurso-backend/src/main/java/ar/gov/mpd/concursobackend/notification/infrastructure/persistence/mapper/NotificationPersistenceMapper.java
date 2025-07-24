@@ -25,11 +25,9 @@ public class NotificationPersistenceMapper {
                 .signatureType(notification.getSignatureType())
                 .signatureValue(notification.getSignatureValue())
                 .signatureMetadata(notification.getSignatureMetadata())
+                .version(notification.getVersion()) // ✅ MAPEAR EL CAMPO VERSION
                 .type(notification.getType())
                 .build();
-
-        // Aseguramos que la versión se mantenga
-        entity.setVersion(notification.getVersion());
 
         return entity;
     }

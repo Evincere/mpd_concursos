@@ -4,21 +4,20 @@ package ar.gov.mpd.concursobackend.contest.domain.enums;
  * Unified contest status enum
  * Represents all possible states of a contest throughout its lifecycle
  *
- * REFACTORING: Estados específicos y eliminación de ambigüedad
+ * REFACTORING: Estados claros sin ambigüedad con inscripciones de usuarios
  */
 public enum ContestStatus {
     // Estados administrativos fijos
     DRAFT("Draft", "Borrador"),
-    PUBLISHED("Published", "Publicado"),
+    SCHEDULED("Scheduled", "Programado"),        // Concurso programado, esperando fecha de inicio
+    ACTIVE("Active", "Activo"),                  // Concurso activo, inscripciones abiertas
+    CLOSED("Closed", "Cerrado"),                 // Inscripciones cerradas, esperando evaluación
     PAUSED("Paused", "Pausado"),
     CANCELLED("Cancelled", "Cancelado"),
     FINISHED("Finished", "Finalizado"),
     ARCHIVED("Archived", "Archivado"),
 
-    // Estados dinámicos basados en fechas (calculados automáticamente)
-    INSCRIPTION_PENDING("Inscription Pending", "Próximamente"),
-    INSCRIPTION_OPEN("Inscription Open", "Inscripciones Abiertas"),
-    INSCRIPTION_CLOSED("Inscription Closed", "Inscripciones Cerradas"),
+    // Estados específicos de proceso
     IN_EVALUATION("In Evaluation", "En Evaluación"),
     RESULTS_PUBLISHED("Results Published", "Resultados Publicados");
 
@@ -58,7 +57,7 @@ public enum ContestStatus {
      * Check if this status represents an active contest
      */
     public boolean isActive() {
-        return this == INSCRIPTION_OPEN || this == PUBLISHED;
+        return this == ACTIVE;
     }
 
     /**
@@ -72,6 +71,6 @@ public enum ContestStatus {
      * Check if inscriptions are allowed for this status
      */
     public boolean allowsInscriptions() {
-        return this == INSCRIPTION_OPEN || this == PUBLISHED;
+        return this == ACTIVE;
     }
 }

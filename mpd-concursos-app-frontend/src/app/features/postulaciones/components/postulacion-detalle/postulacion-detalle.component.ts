@@ -72,12 +72,13 @@ export class PostulacionDetalleComponent implements OnInit {
 
   navegarADocumentacion() {
     if (this.postulacion.contestId) {
-      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
+      // ✅ CORRECCIÓN: Navegar directamente al paso 3 (documentación) para completar documentación
       this.router.navigate(['/dashboard/inscripcion'], {
         queryParams: {
           contestId: this.postulacion.contestId,
           inscriptionId: this.postulacion.id,
-          resume: 'true'
+          resume: 'true',
+          step: 3 // ✅ CRÍTICO: Ir directamente al paso de documentación
         }
       });
       this.onCerrar();

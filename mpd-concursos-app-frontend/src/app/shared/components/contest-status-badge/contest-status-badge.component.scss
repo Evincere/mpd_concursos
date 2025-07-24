@@ -19,7 +19,7 @@
   text-align: center;
   backdrop-filter: blur(8px);
   border: 1px solid transparent;
-  
+
   // Glassmorphism base effect
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.1),
@@ -64,7 +64,7 @@
     background: rgba(16, 185, 129, 0.15);
     color: #10b981;
     border-color: rgba(16, 185, 129, 0.3);
-    
+
     &:hover {
       background: rgba(16, 185, 129, 0.2);
       border-color: rgba(16, 185, 129, 0.4);
@@ -79,7 +79,7 @@
     background: rgba(245, 158, 11, 0.15);
     color: #f59e0b;
     border-color: rgba(245, 158, 11, 0.3);
-    
+
     &:hover {
       background: rgba(245, 158, 11, 0.2);
       border-color: rgba(245, 158, 11, 0.4);
@@ -94,7 +94,7 @@
     background: rgba(59, 130, 246, 0.15);
     color: #3b82f6;
     border-color: rgba(59, 130, 246, 0.3);
-    
+
     &:hover {
       background: rgba(59, 130, 246, 0.2);
       border-color: rgba(59, 130, 246, 0.4);
@@ -109,7 +109,7 @@
     background: rgba(239, 68, 68, 0.15);
     color: #ef4444;
     border-color: rgba(239, 68, 68, 0.3);
-    
+
     &:hover {
       background: rgba(239, 68, 68, 0.2);
       border-color: rgba(239, 68, 68, 0.4);
@@ -122,12 +122,13 @@
 
   &.status-cancelled {
     background: rgba(107, 114, 128, 0.15);
-    color: #6b7280;
+    color: #374151; // Gris más oscuro para mejor contraste
     border-color: rgba(107, 114, 128, 0.3);
 
     &:hover {
       background: rgba(107, 114, 128, 0.2);
       border-color: rgba(107, 114, 128, 0.4);
+      color: #1f2937; // Aún más oscuro en hover
       box-shadow:
         0 6px 20px rgba(107, 114, 128, 0.2),
         0 3px 10px rgba(107, 114, 128, 0.1),
@@ -135,7 +136,22 @@
     }
   }
 
-  &.status-published {
+  &.status-scheduled {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.3);
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow:
+        0 6px 20px rgba(59, 130, 246, 0.2),
+        0 3px 10px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &.status-active {
     background: rgba(16, 185, 129, 0.15);
     color: #10b981;
     border-color: rgba(16, 185, 129, 0.3);
@@ -146,21 +162,6 @@
       box-shadow:
         0 6px 20px rgba(16, 185, 129, 0.2),
         0 3px 10px rgba(16, 185, 129, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    }
-  }
-
-  &.status-inscription_open {
-    background: rgba(76, 175, 80, 0.15);
-    color: #4CAF50;
-    border-color: rgba(76, 175, 80, 0.3);
-
-    &:hover {
-      background: rgba(76, 175, 80, 0.2);
-      border-color: rgba(76, 175, 80, 0.4);
-      box-shadow:
-        0 6px 20px rgba(76, 175, 80, 0.2),
-        0 3px 10px rgba(76, 175, 80, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
   }
@@ -183,12 +184,13 @@
   &.status-inscription_closed,
   &.status-closed {
     background: rgba(107, 114, 128, 0.15);
-    color: #6b7280;
+    color: #374151; // Gris más oscuro para mejor contraste
     border-color: rgba(107, 114, 128, 0.3);
 
     &:hover {
       background: rgba(107, 114, 128, 0.2);
       border-color: rgba(107, 114, 128, 0.4);
+      color: #1f2937; // Aún más oscuro en hover
       box-shadow:
         0 6px 20px rgba(107, 114, 128, 0.2),
         0 3px 10px rgba(107, 114, 128, 0.1),
@@ -288,12 +290,13 @@
 
   &.status-archived {
     background: rgba(75, 85, 99, 0.15);
-    color: #4b5563;
+    color: #374151; // Gris más oscuro para mejor contraste
     border-color: rgba(75, 85, 99, 0.3);
 
     &:hover {
       background: rgba(75, 85, 99, 0.2);
       border-color: rgba(75, 85, 99, 0.4);
+      color: #1f2937; // Aún más oscuro en hover
       box-shadow:
         0 6px 20px rgba(75, 85, 99, 0.2),
         0 3px 10px rgba(75, 85, 99, 0.1),
@@ -303,12 +306,13 @@
 
   &.status-frozen {
     background: rgba(75, 85, 99, 0.15);
-    color: #4b5563;
+    color: #374151; // Gris más oscuro para mejor contraste
     border-color: rgba(75, 85, 99, 0.3);
 
     &:hover {
       background: rgba(75, 85, 99, 0.2);
       border-color: rgba(75, 85, 99, 0.4);
+      color: #1f2937; // Aún más oscuro en hover
       box-shadow:
         0 6px 20px rgba(75, 85, 99, 0.2),
         0 3px 10px rgba(75, 85, 99, 0.1),
@@ -516,8 +520,14 @@
   // Unknown status fallback
   &.status-unknown {
     background: rgba(75, 85, 99, 0.15);
-    color: #9ca3af;
+    color: #374151; // Gris más oscuro para mejor contraste
     border-color: rgba(75, 85, 99, 0.3);
+
+    &:hover {
+      background: rgba(75, 85, 99, 0.2);
+      border-color: rgba(75, 85, 99, 0.4);
+      color: #1f2937; // Aún más oscuro en hover
+    }
   }
 
   // Responsive adjustments
@@ -541,7 +551,7 @@
   // Reduced motion support
   @media (prefers-reduced-motion: reduce) {
     transition: none;
-    
+
     &:hover {
       transform: none;
     }

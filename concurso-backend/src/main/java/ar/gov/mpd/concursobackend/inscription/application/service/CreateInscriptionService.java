@@ -11,6 +11,7 @@ import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscripti
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.DuplicateInscriptionException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionPeriodClosedException;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
@@ -20,6 +21,8 @@ import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,6 +93,15 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                 Contest contest = contestRepository.findById(request.getContestId())
                                 .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado"));
 
+                // SECURITY FIX: Validar que el concurso está abierto para inscripciones
+                if (!contest.isInscriptionOpen()) {
+                        log.warn("Intento de inscripción rechazado - Concurso {} ('{}') no está abierto para inscripciones. Usuario: {}",
+                                contest.getId(), contest.getTitle(), request.getUserId());
+                        throw new InscriptionPeriodClosedException(contest.getId(), contest.getTitle());
+                }
+
+                log.debug("Validación de período de inscripción exitosa para concurso: {}", contest.getTitle());
+
                 LocalDateTime now = LocalDateTime.now();
 
                 // CRITICAL FIX: Generar ID antes de construir la inscripción
@@ -105,19 +117,45 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                                 .build();
 
                 log.debug("Creando inscripción con ID: {}", inscription.getId().getValue());
-                Inscription savedInscription = saveInscriptionPort.save(inscription);
-                log.debug("Inscripción guardada con ID: {}", savedInscription.getId().getValue());
 
-                // Obtener el username del usuario autenticado
-                String username = securityUtils.getCurrentUsername();
-                if (username == null) {
-                        throw new IllegalStateException("No se pudo obtener el username del usuario autenticado");
+                try {
+                        Inscription savedInscription = saveInscriptionPort.save(inscription);
+                        log.debug("Inscripción guardada con ID: {}", savedInscription.getId().getValue());
+
+                        // Obtener el username del usuario autenticado
+                        String username = securityUtils.getCurrentUsername();
+                        if (username == null) {
+                                throw new IllegalStateException("No se pudo obtener el username del usuario autenticado");
+                        }
+
+                        // No enviamos notificación al iniciar el proceso
+                        log.debug("Inscripción iniciada para el usuario {} en el concurso {} - No se envía notificación inicial",
+                                        username, contest.getTitle());
+
+                        return inscriptionMapper.toDetailResponse(savedInscription, null);
+
+                } catch (DataIntegrityViolationException e) {
+                        // Manejo específico para violación de constraint único (contest_id, user_id)
+                        log.warn("Intento de crear inscripción duplicada para usuario {} en concurso {} - Constraint violation: {}",
+                                request.getUserId(), request.getContestId(), e.getMessage());
+                        throw new DuplicateInscriptionException("Ya existe una inscripción para este usuario en este concurso");
+
+                } catch (ObjectOptimisticLockingFailureException e) {
+                        // Manejo específico para errores de concurrencia optimista
+                        log.warn("Error de concurrencia al crear inscripción para usuario {} en concurso {} - Optimistic locking failure: {}",
+                                request.getUserId(), request.getContestId(), e.getMessage());
+
+                        // Verificar si la inscripción ya existe después del error de concurrencia
+                        Optional<Inscription> existingAfterError = loadInscriptionPort.findByContestIdAndUserIdIncludingCancelled(
+                                request.getContestId(), request.getUserId());
+
+                        if (existingAfterError.isPresent()) {
+                                log.info("Inscripción ya existe después del error de concurrencia - Retornando inscripción existente");
+                                return inscriptionMapper.toDetailResponse(existingAfterError.get(), null);
+                        } else {
+                                // Si no existe, relanzar la excepción original
+                                throw new IllegalStateException("Error de concurrencia al crear inscripción", e);
+                        }
                 }
-
-                // No enviamos notificación al iniciar el proceso
-                log.debug("Inscripción iniciada para el usuario {} en el concurso {} - No se envía notificación inicial",
-                                username, contest.getTitle());
-
-                return inscriptionMapper.toDetailResponse(savedInscription, null);
         }
 }

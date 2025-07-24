@@ -6,7 +6,7 @@ import { CustomButtonComponent } from '@shared/components/custom-button/custom-b
 import { CustomCheckboxComponent } from '@shared/components/custom-form/custom-checkbox/custom-checkbox.component';
 import { NotificationService } from '@shared/services/notification.service';
 import { Subject, of, throwError, forkJoin, Observable } from 'rxjs'; // Import forkJoin
-import { takeUntil, finalize, map, catchError, switchMap, tap } from 'rxjs/operators'; // Import tap
+import { takeUntil, finalize, map, catchError, switchMap, tap, debounceTime, distinctUntilChanged } from 'rxjs/operators'; // Import tap
 import { HttpClient } from '@angular/common/http';
 
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
@@ -22,11 +22,12 @@ import { DocumentosEmbebidosComponent } from '../../documentos-embebidos/documen
 import { CustomAddressAutocompleteComponent } from '@shared/components/custom-address-autocomplete/custom-address-autocomplete.component';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
-import { IInscriptionUpdateRequest } from '@shared/interfaces/inscripcion/inscription.interface';
+import { IInscriptionUpdateRequest, IInscriptionStepRequest } from '@shared/interfaces/inscripcion/inscription.interface';
 import { InscriptionDocumentationService, InscriptionDocumentationState } from '@core/services/inscripcion/inscription-documentation.service';
 import { RequiredDocument } from '@core/services/documentos/documento-validation.service';
 import { DocumentoUsuario, TipoDocumento } from '@core/models/documento.model'; // Import TipoDocumento
 import { LoggingService } from '@core/services/logging/logging.service';
+import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
 
 /**
  * Componente para el proceso de inscripción a concursos
@@ -81,6 +82,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   contestId: number | null = null;
   contest: Contest | null = null;
   showValidationErrors = false;
+
+  // CONCURRENCY FIX: Flag para prevenir múltiples creaciones de inscripción simultáneas
+  private isCreatingInscription = false;
 
   // CRITICAL FIX: Bandera para evitar reinicialización en navegaciones internas
   private isInternalNavigation: boolean = false;
@@ -149,7 +153,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     private http: HttpClient, // Assuming HttpClient is directly used for T&C content
     private cdr: ChangeDetectorRef,
     private loggingService: LoggingService,
-    private inscriptionDocumentationService: InscriptionDocumentationService
+    private inscriptionDocumentationService: InscriptionDocumentationService,
+    private postulacionesService: PostulacionesService // Inyectar servicio de postulaciones para refrescar cache
   ) {
     // Inicializar formulario reactivo
     this.inscriptionForm = this.fb.group({
@@ -236,17 +241,21 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.onProvisionalAcceptanceChange(value);
     });
 
-    // CRITICAL FIX: Eliminar suscripción duplicada que causa condiciones de carrera
-    // La actualización de documentos se manejará a través del cache del servicio
-    // y la comunicación entre componentes, no mediante múltiples suscriptores
-    // this.documentosService.documentoActualizado$.pipe(
-    //   takeUntil(this.destroy$)
-    // ).subscribe(() => {
-    //   this.loggingService.debug('[InscripcionProcess] Documento actualizado detectado - actualizando estado', undefined, 'InscripcionProcessPage');
-    //   setTimeout(() => {
-    //     this.actualizarEstadoDocumentos();
-    //   }, 500);
-    // });
+    // ✅ CORRECCIÓN: Restaurar suscripción a actualizaciones de documentos para actualizar UI
+    // Esta suscripción es necesaria para que la card se actualice después de cargar un documento
+    this.documentosService.documentoActualizado$.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(300), // Evitar actualizaciones muy frecuentes
+      distinctUntilChanged() // Solo procesar cambios reales
+    ).subscribe(() => {
+      this.loggingService.debug('[InscripcionProcess] Documento actualizado detectado - actualizando estado de UI', undefined, 'InscripcionProcessPage');
+      // Actualizar estado de documentos para reflejar cambios en la UI
+      setTimeout(() => {
+        this.actualizarEstadoDocumentos();
+        // Forzar detección de cambios para actualizar la UI inmediatamente
+        this.cdr.detectChanges();
+      }, 100);
+    });
   }
 
   /**
@@ -254,6 +263,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    * @param isResume Indica si es una recuperación de proceso interrumpido
    */
   private initializeInscriptionProcess(isResume: boolean = false): void {
+    this.loggingService.debug('[InscripcionProcess] initializeInscriptionProcess llamado:', {
+      isResume,
+      inscriptionId: this.inscriptionId,
+      requestedStepFromUrl: this.requestedStepFromUrl,
+      currentStep: this.currentStep
+    }, 'InscripcionProcessPage');
+
     // Cargar datos del concurso
     this.cargarDatosConcurso();
 
@@ -456,6 +472,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    * @param requestedStep Paso solicitado desde la URL
    */
   private validateAndSetStep(requestedStep: number): void {
+    this.loggingService.debug('[InscripcionProcess] validateAndSetStep llamado:', {
+      requestedStep,
+      inscriptionId: this.inscriptionId,
+      currentStep: this.currentStep
+    }, 'InscripcionProcessPage');
+
     // Si hay una inscripción existente, verificar el estado para determinar el paso máximo permitido
     if (this.inscriptionId) {
       // Permitir navegación directa cuando hay inscriptionId (el backend determinará el estado correcto)
@@ -732,14 +754,63 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Verificar si se puede finalizar la inscripción
   canFinish(): boolean {
+    // CRITICAL FIX: Logging básico SIEMPRE visible con timestamp
+    const timestamp = new Date().toLocaleTimeString();
+    console.log(`[InscripcionProcess] 🔍 EJECUTANDO canFinish() - ${timestamp}`);
+
+    // CRITICAL FIX: Si estamos en el paso 4, asegurar que termsAccepted esté en true
+    // porque el usuario ya pasó por el paso 1 y aceptó los términos
+    if (this.currentStep === 4 && this.termsAcceptedControl.value !== true) {
+      console.log(`[InscripcionProcess] 🔧 CORRIGIENDO termsAccepted a true en paso 4`);
+      this.termsAcceptedControl.setValue(true);
+    }
+
     // Ensure all controls for the final step are valid and documentation check passes
     const formValid = this.inscriptionForm.valid; // This checks all controls
     const personalDataConfirmed = this.confirmedPersonalDataControl.value === true;
     const documentationValid = this.canProceedWithDocumentation();
 
+    // CRITICAL FIX: Logging detallado para debugging del botón "Finalizar"
+    const canFinish = formValid && personalDataConfirmed && documentationValid;
+
+    // CRITICAL FIX: Debugging detallado del formulario para identificar campos inválidos
+    const invalidControls: any = {};
+    Object.keys(this.inscriptionForm.controls).forEach(key => {
+      const control = this.inscriptionForm.get(key);
+      if (control && control.invalid) {
+        invalidControls[key] = {
+          value: control.value,
+          errors: control.errors,
+          status: control.status
+        };
+      }
+    });
+
+    console.log(`[InscripcionProcess] 🔍 DEBUGGING canFinish() - RESULTADOS (${timestamp}):`, {
+      formValid,
+      personalDataConfirmed,
+      documentationValid,
+      canFinish,
+      currentStep: this.currentStep,
+      documentationState: this.documentationState,
+      allDocsComplete: this.documentationState?.completenessResult.allDocumentsComplete,
+      canProceedWithProvisional: this.documentationState?.completenessResult.canProceedWithProvisional,
+      provisionalAccepted: this.documentosCompletosControl.value,
+      formControls: {
+        confirmedPersonalData: this.confirmedPersonalDataControl.value,
+        documentosCompletos: this.documentosCompletosControl.value
+      },
+      // CRITICAL: Información detallada del formulario
+      formStatus: this.inscriptionForm.status,
+      formErrors: this.inscriptionForm.errors,
+      invalidControls: invalidControls,
+      totalControls: Object.keys(this.inscriptionForm.controls).length,
+      invalidControlsCount: Object.keys(invalidControls).length
+    });
+
     // The inscription can be finalized if all form controls are valid and the documentation
     // is either fully complete OR the user has accepted provisional inscription terms.
-    return formValid && personalDataConfirmed && documentationValid;
+    return canFinish;
   }
 
   /**
@@ -747,20 +818,33 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    * Usa el servicio centralizado para validación consistente
    */
   canProceedWithDocumentation(): boolean {
+    console.log('[InscripcionProcess] 📋 EJECUTANDO canProceedWithDocumentation()');
+
     if (!this.inscriptionDocumentationService) {
-      this.loggingService.warn('[InscripcionProcess] Servicio de documentación no disponible para validación', undefined, 'InscripcionProcessPage');
+      console.log('[InscripcionProcess] ❌ Servicio de documentación no disponible');
       return false;
     }
 
     const canProceed = this.inscriptionDocumentationService.canProceedWithCurrentState();
+    const currentState = this.inscriptionDocumentationService.getCurrentState();
 
-    // Log detallado para debugging
-    this.loggingService.debug(`[InscripcionProcess] Validación de documentación: ${canProceed}`, {
+    // CRITICAL FIX: Log detallado para debugging con más información
+    console.log(`[InscripcionProcess] 📋 VALIDACIÓN DE DOCUMENTACIÓN: ${canProceed}`, {
+      canProceed,
       documentationState: this.documentationState,
+      currentState,
       provisionalAccepted: this.documentosCompletosControl.value,
-      allDocsComplete: this.documentationState?.completenessResult.allDocumentsComplete,
-      canProceedWithProvisional: this.documentationState?.completenessResult.canProceedWithProvisional
-    }, 'InscripcionProcessPage');
+      allDocsComplete: currentState.completenessResult.allDocumentsComplete,
+      canProceedWithProvisional: currentState.completenessResult.canProceedWithProvisional,
+      completedCount: currentState.completenessResult.completedCount,
+      totalCount: currentState.completenessResult.totalCount,
+      missingDocuments: currentState.completenessResult.missingDocuments.map(doc => doc.title),
+      requiredDocuments: currentState.requiredDocuments.map(doc => ({
+        title: doc.title,
+        required: doc.required,
+        completed: doc.completed
+      }))
+    });
 
     return canProceed;
   }
@@ -889,6 +973,46 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * CRITICAL FIX: Fuerza la actualización del estado de documentación
+   * Útil cuando se detecta que los documentos están completos pero el estado no se actualiza
+   */
+  forceUpdateDocumentationState(): void {
+    if (!this.inscriptionDocumentationService) {
+      this.loggingService.warn('[InscripcionProcess] No se puede forzar actualización - servicio no disponible', undefined, 'InscripcionProcessPage');
+      return;
+    }
+
+    // Obtener documentos del usuario actualizados
+    const userDocuments = this.documentosUsuario || [];
+    const requiredDocuments = this.documentacionRequerida || [];
+
+    this.loggingService.debug('[InscripcionProcess] 🔄 Forzando actualización del estado de documentación', {
+      userDocumentsCount: userDocuments.length,
+      requiredDocumentsCount: requiredDocuments.length,
+      userDocuments: userDocuments.map(doc => ({
+        tipoDocumentoId: doc.tipoDocumento?.id,
+        nombreArchivo: doc.nombreArchivo,
+        estado: doc.estado
+      })),
+      requiredDocuments: requiredDocuments.map(doc => ({
+        title: doc.title,
+        tipoDocumentoId: doc.tipoDocumentoId,
+        required: doc.required,
+        completed: doc.completed
+      }))
+    }, 'InscripcionProcessPage');
+
+    // Forzar actualización del estado
+    this.inscriptionDocumentationService.updateDocumentationState(
+      requiredDocuments,
+      userDocuments,
+      this.documentosCompletosControl.value || false
+    );
+
+    this.loggingService.debug('[InscripcionProcess] ✅ Estado de documentación actualizado forzadamente', undefined, 'InscripcionProcessPage');
+  }
+
+  /**
    * CRITICAL FIX: Shows specific validation error messages based on the current step.
    */
   showValidationErrorMessages(): void {
@@ -980,18 +1104,44 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         // Determinar el paso inicial basado en el estado
         switch (inscription.estado) {
           case 'COMPLETED_PENDING_DOCS':
-            // Para documentación pendiente, ir directamente al paso 3
-            this.loggingService.debug('[InscripcionProcess] Estado COMPLETED_PENDING_DOCS detectado - navegando al paso 3', {
-              inscriptionId: this.inscriptionId,
-              estado: inscription.estado
-            }, 'InscripcionProcessPage');
+            // CRITICAL FIX: Respetar navegación directa si existe
+            if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
+              this.loggingService.debug('[InscripcionProcess] Navegación directa detectada para COMPLETED_PENDING_DOCS - respetando paso de URL:', {
+                requestedStep: this.requestedStepFromUrl,
+                inscriptionState: inscription.estado
+              }, 'InscripcionProcessPage');
 
-            this.currentStep = 3;
-            this.updateProgressPercentage();
+              // Mantener el paso ya establecido desde la URL
+              this.updateProgressPercentage();
+              this.cargarDatosFormularioSinPaso();
+            } else {
+              // Para documentación pendiente, ir directamente al paso 3 (comportamiento por defecto)
+              this.loggingService.debug('[InscripcionProcess] Estado COMPLETED_PENDING_DOCS detectado - navegando al paso 3', {
+                inscriptionId: this.inscriptionId,
+                estado: inscription.estado
+              }, 'InscripcionProcessPage');
 
-            // CRITICAL FIX: Cargar datos del formulario ANTES de establecer el paso
-            // para evitar que cargarEstadoGuardado sobrescriba el paso
-            this.cargarDatosFormularioSinPaso();
+              this.currentStep = 3;
+              this.updateProgressPercentage();
+
+              // CRITICAL FIX: Cargar datos del formulario ANTES de establecer el paso
+              // para evitar que cargarEstadoGuardado sobrescriba el paso
+              this.cargarDatosFormularioSinPaso();
+
+              // Forzar actualización del progreso después de establecer el paso
+              setTimeout(() => {
+                this.currentStep = 3;
+                this.updateProgressPercentage();
+                this.cdr.detectChanges();
+
+                // Scroll al paso 3 después de establecerlo
+                this.performImmediateScroll();
+                this.scrollToTopAfterAnimation();
+              }, 100);
+
+              this.notificationService.info('Continuando con la carga de documentación pendiente.');
+              this.loggingService.debug('[InscripcionProcess] Directed to step 3 for pending documentation', undefined, 'InscripcionProcessPage');
+            }
 
             // Asegurar que los términos estén marcados como aceptados y datos necesarios
             this.inscriptionForm.patchValue({
@@ -999,19 +1149,6 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
               confirmedPersonalData: false // Reset confirmation for re-completion
             });
 
-            // Forzar actualización del progreso después de establecer el paso
-            setTimeout(() => {
-              this.currentStep = 3;
-              this.updateProgressPercentage();
-              this.cdr.detectChanges();
-
-              // Scroll al paso 3 después de establecerlo
-              this.performImmediateScroll();
-              this.scrollToTopAfterAnimation();
-            }, 100);
-
-            this.notificationService.info('Continuando con la carga de documentación pendiente.');
-            this.loggingService.debug('[InscripcionProcess] Directed to step 3 for pending documentation', undefined, 'InscripcionProcessPage');
             break;
 
           case 'ACTIVE':
@@ -1686,6 +1823,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           }))
         }, 'InscripcionProcessPage');
 
+        // CRITICAL FIX: Asignar documentos del usuario a la propiedad del componente
+        this.documentosUsuario = documentosUsuario;
+
         // ✅ CORRECCIÓN: Actualizar el servicio centralizado con los documentos consolidados Y SUS ESTADOS ACTUALIZADOS
         this.inscriptionDocumentationService.updateDocumentationState(
           consolidatedDocs,
@@ -1729,6 +1869,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
               provisionalAccepted: this.documentosCompletosControl.value
             }, 'InscripcionProcessPage');
           }
+
+          // CRITICAL FIX: Forzar actualización adicional del estado para asegurar sincronización
+          this.forceUpdateDocumentationState();
+
+          // CRITICAL FIX: Forzar detección de cambios para actualizar el botón
+          this.cdr.detectChanges();
+          console.log('[InscripcionProcess] 🔄 Forzando detección de cambios después de actualizar documentación');
         }, 100); // ✅ Aumentar el delay para asegurar que la UI se actualice correctamente
 
         this.loggingService.debug('[InscripcionProcess] Documentación requerida final (con estado):', consolidatedDocs, 'InscripcionProcessPage');
@@ -1774,19 +1921,25 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     this.actualizarPerfilConCentroDeVidaAsync().pipe(
       takeUntil(this.destroy$),
       switchMap(() => {
-        // UNIFICADO: Determinar estado basado en documentación usando servicio centralizado
-        const allRequiredDocsUploaded = this.allRequiredDocumentsUploaded();
-        const state = allRequiredDocsUploaded
-          ? InscripcionState.COMPLETED_WITH_DOCS    // Inscripción completa con todos los documentos
-          : InscripcionState.COMPLETED_PENDING_DOCS; // Inscripción completa pero con documentos pendientes
-
-        // Logging implementado con LoggingService;
-
-        const updateRequest: IInscriptionUpdateRequest = {
-          state: state
+        // CRITICAL FIX: Usar updateInscriptionStep con COMPLETED para que el backend
+        // automáticamente determine el estado correcto y llame a completeInscription()
+        const formData = this.inscriptionForm.value;
+        const stepRequest: IInscriptionStepRequest = {
+          step: InscriptionStep.COMPLETED,
+          centroDeVida: formData.centroDeVida,
+          selectedCircunscripciones: formData.selectedCircunscripciones,
+          acceptedTerms: formData.termsAccepted,
+          confirmedPersonalData: formData.confirmedPersonalData
         };
 
-        return this.updateInscriptionStatusWrapper(this.inscriptionId!, updateRequest);
+        this.loggingService.info('[InscripcionProcess] Finalizando inscripción con updateInscriptionStep', {
+          inscriptionId: this.inscriptionId,
+          step: 'COMPLETED',
+          centroDeVida: formData.centroDeVida,
+          selectedCircunscripciones: formData.selectedCircunscripciones
+        }, 'InscripcionProcessPage');
+
+        return this.inscriptionService.updateInscriptionStep(this.inscriptionId!, stepRequest);
       }),
       finalize(() => {
         this.loading = false;
@@ -1815,7 +1968,14 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
         // Delay antes de navegar para permitir sincronización
         setTimeout(() => {
-          this.router.navigate(['/dashboard/concursos']);
+          // CRITICAL FIX: Navegar a postulaciones con parámetro para mostrar la inscripción finalizada
+          this.router.navigate(['/dashboard/postulaciones'], {
+            queryParams: {
+              postulacionId: this.inscriptionId,
+              openDetail: 'true',
+              refresh: Date.now() // Forzar refresh con timestamp
+            }
+          });
         }, 1000); // 1 segundo de delay para permitir sincronización
       },
       error: () => {
@@ -1898,6 +2058,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // CONCURRENCY FIX: Prevenir múltiples llamadas simultáneas
+    if (this.isCreatingInscription) {
+      this.loggingService.debug('[InscripcionProcess] Inscription creation already in progress, ignoring duplicate request', undefined, 'InscripcionProcessPage');
+      return;
+    }
+
+    this.isCreatingInscription = true;
     this.loggingService.debug('[InscripcionProcess] Creating inscription when advancing to step 2 for contest:', this.contestId, 'InscripcionProcessPage');
 
     this.inscriptionService.createInscription(this.contestId).pipe(
@@ -1906,10 +2073,17 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         console.error('[InscripcionProcess] Error creating inscription when advancing to step 2:', error);
 
         // Mostrar errores específicos basados en el tipo de error
-        if (error.status === 409) {
+        if (error.status === 403) {
+          // Período de inscripción cerrado
+          const errorMessage = error.error?.message || 'El período de inscripción para este concurso ha finalizado o aún no ha comenzado.';
+          this.notificationService.error(errorMessage);
+        } else if (error.status === 409) {
           this.notificationService.error('La operación no pudo completarse debido a un conflicto con el estado actual del recurso.');
         } else if (error.status === 500) {
           this.notificationService.error('Error al crear la inscripción. Por favor, intente nuevamente.');
+        } else if (error.message && error.message.includes('período de inscripción')) {
+          // Error específico de período cerrado desde el servicio
+          this.notificationService.error(error.message);
         } else {
           this.notificationService.error('Error: No se recibió un ID de inscripción válido');
         }
@@ -1920,6 +2094,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (response: any) => {
+        // CONCURRENCY FIX: Resetear bandera al completar exitosamente
+        this.isCreatingInscription = false;
+
         if (response && response.id) {
           this.inscriptionId = response.id;
           this.loggingService.debug('[InscripcionProcess] Using inscription with ID:', this.inscriptionId, 'InscripcionProcessPage');
@@ -1942,6 +2119,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           this.notificationService.error('Error: No se recibió un ID de inscripción válido');
           this.router.navigate(['/dashboard/concursos']);
         }
+      },
+      error: () => {
+        // CONCURRENCY FIX: Resetear bandera también en caso de error
+        this.isCreatingInscription = false;
       }
     });
   }

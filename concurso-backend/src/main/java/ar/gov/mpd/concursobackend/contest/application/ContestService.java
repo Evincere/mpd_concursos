@@ -12,10 +12,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
 @Service
+@Slf4j
 public class ContestService {
     private final ContestRepository contestRepository;
     private final ContestValidator contestValidator;
@@ -140,14 +143,13 @@ public class ContestService {
         List<Contest> allContests = contestRepository.findAll();
 
         long total = allContests.size();
-        // REFACTORING: Usar solo nuevos estados específicos
+        // REFACTORING: Estados simplificados y claros
         long active = allContests.stream().filter(c ->
-            ContestStatus.INSCRIPTION_OPEN.equals(c.getStatus()) ||
-            ContestStatus.PUBLISHED.equals(c.getStatus())
+            ContestStatus.ACTIVE.equals(c.getCurrentStatus())
         ).count();
         long draft = allContests.stream().filter(c -> ContestStatus.DRAFT.equals(c.getStatus())).count();
         long closed = allContests.stream().filter(c ->
-            ContestStatus.INSCRIPTION_CLOSED.equals(c.getStatus())
+            ContestStatus.CLOSED.equals(c.getCurrentStatus())
         ).count();
         long inProgress = allContests.stream().filter(c ->
             ContestStatus.IN_EVALUATION.equals(c.getStatus())
@@ -263,6 +265,46 @@ public class ContestService {
     }
 
     /**
+     * Actualiza automáticamente los estados de concursos basándose en fechas
+     * Método público para ser usado por el scheduler
+     */
+    @Transactional
+    public void updateContestStatusesBasedOnDates() {
+        log.info("🔄 [ContestService] Iniciando actualización automática de estados de concursos");
+
+        List<Contest> scheduledContests = contestRepository.findByStatus(ContestStatus.SCHEDULED);
+        List<Contest> activeContests = contestRepository.findByStatus(ContestStatus.ACTIVE);
+
+        int updatedCount = 0;
+
+        // Actualizar concursos SCHEDULED que deberían estar ACTIVE
+        for (Contest contest : scheduledContests) {
+            ContestStatus currentStatus = contest.getCurrentStatus();
+            if (currentStatus != contest.getStatus()) {
+                log.info("📅 [ContestService] Actualizando estado de concurso '{}': {} -> {}",
+                    contest.getTitle(), contest.getStatus(), currentStatus);
+                contest.setStatus(currentStatus);
+                contestRepository.save(contest);
+                updatedCount++;
+            }
+        }
+
+        // Actualizar concursos ACTIVE que deberían estar CLOSED
+        for (Contest contest : activeContests) {
+            ContestStatus currentStatus = contest.getCurrentStatus();
+            if (currentStatus != contest.getStatus()) {
+                log.info("📅 [ContestService] Actualizando estado de concurso '{}': {} -> {}",
+                    contest.getTitle(), contest.getStatus(), currentStatus);
+                contest.setStatus(currentStatus);
+                contestRepository.save(contest);
+                updatedCount++;
+            }
+        }
+
+        log.info("✅ [ContestService] Actualización automática completada: {} concursos actualizados", updatedCount);
+    }
+
+    /**
      * Genera mensaje para mostrar al usuario basado en el estado
      */
     private String generateUserMessage(ContestStatus status, boolean allowsInscriptions) {
@@ -271,8 +313,8 @@ public class ContestService {
         }
 
         return switch (status) {
-            case INSCRIPTION_PENDING -> "Las inscripciones abrirán próximamente.";
-            case INSCRIPTION_CLOSED -> "Las inscripciones han cerrado.";
+            case SCHEDULED -> "Las inscripciones abrirán próximamente.";
+            case CLOSED -> "Las inscripciones han cerrado.";
             case IN_EVALUATION -> "Concurso en proceso de evaluación.";
             case RESULTS_PUBLISHED -> "Resultados disponibles.";
             case FINISHED -> "Concurso finalizado.";

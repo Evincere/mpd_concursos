@@ -22,7 +22,7 @@ class ContestStateMachineTest {
     @Test
     @DisplayName("Should allow valid transitions from DRAFT")
     void shouldAllowValidTransitionsFromDraft() {
-        assertTrue(stateMachine.canTransition(ContestStatus.DRAFT, ContestStatus.PUBLISHED));
+        assertTrue(stateMachine.canTransition(ContestStatus.DRAFT, ContestStatus.SCHEDULED));
         assertTrue(stateMachine.canTransition(ContestStatus.DRAFT, ContestStatus.CANCELLED));
     }
 

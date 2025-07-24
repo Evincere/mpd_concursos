@@ -7,6 +7,123 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Agregado
+- **🎯 Dashboard Mejorado con Información Contextual**: Implementadas mejoras significativas en la interfaz del dashboard
+  - **Cards con Subtítulos Informativos**: Todas las cards principales ahora muestran información contextual detallada
+    - "Concursos Activos": Desglose entre publicados y próximos a abrir
+    - "Mis Postulaciones": Estados específicos (incompletas vs esperando validación)
+    - "Próximos a Vencer": Coherencia entre número principal y subtítulo
+  - **Widget Estado del Perfil Expandible**: Nuevo widget con funcionalidad expandible bajo demanda
+    - Porcentaje global inteligente: combina datos personales (40%) + documentos requeridos (60%)
+    - Desglose por categorías: datos personales vs documentación
+    - Vista expandible con detalles completos de documentación requerida y opcional
+    - Estados específicos para documentos: completados, pendientes, rechazados, faltantes
+    - Alertas de vencimientos próximos integradas
+    - Acciones contextuales: botones específicos para completar perfil y gestionar documentos
+  - **Cálculo Inteligente de Completitud**: Algoritmo mejorado para calcular porcentaje de perfil
+  - **Animaciones Suaves**: Transiciones elegantes para expandir/contraer manteniendo glassmorphism
+  - **Responsive Design**: Todas las mejoras completamente adaptables a móviles y tablets
+
+### Mejorado
+- **Coherencia de Datos**: Eliminadas inconsistencias entre números principales y subtítulos en cards
+- **Experiencia de Usuario**: Información más clara y contextual sin saturar la interfaz
+- **Arquitectura de Servicios**: Nuevos métodos para obtener estadísticas de documentación
+- **Interfaces TypeScript**: Nuevas interfaces para `ProfileCompletionDetails`, `DocumentStatus`, `DocumentExpiration`
+
+### Corregido
+- **🚨 CRÍTICO - Limpieza Incorrecta de Inscripciones**: Solucionado problema que eliminaba inscripciones válidas
+  - **Problema**: El sistema eliminaba automáticamente inscripciones en estado `COMPLETED_PENDING_DOCS` cuando el usuario cerraba sesión durante el proceso de carga de documentos
+  - **Causa**: Ejecución automática de `cleanupInvalidInscriptions()` en cada navegación al dashboard que comparaba inscripciones locales con listas del backend potencialmente filtradas
+  - **Solución**:
+    - Eliminada ejecución automática de limpieza en `main.component.ts`
+    - Mejorado método `cleanupInvalidInscriptions()` para ser más conservador
+    - Implementada verificación individual de inscripciones en lugar de comparación con listas
+    - Agregado parámetro `forceCleanup` para ejecutar limpieza solo cuando sea explícitamente necesario
+  - **Resultado**: Las inscripciones válidas en proceso de documentación se preservan correctamente y pueden ser retomadas por el usuario
+  - **Impacto**: Evita pérdida de progreso del usuario y mensajes confusos de "inscripción limpiada"
+
+- **🔄 Actualización de UI después de cargar documentos**: Corregido problema donde las cards de documentación no se actualizaban después de cargar un documento exitosamente
+  - **Problema**: Después de cargar un documento, la card no reflejaba el nuevo estado y seguía mostrando el documento como pendiente
+  - **Causa**: Suscripción a `documentoActualizado$` estaba comentada, impidiendo que el componente se enterara de las actualizaciones
+  - **Solución**:
+    - Restaurada suscripción a `documentosService.documentoActualizado$` con debounce y distinctUntilChanged para evitar actualizaciones excesivas
+    - Agregada actualización automática del estado de documentación después de cada upload exitoso
+    - Implementada detección de cambios forzada para actualizar la UI inmediatamente
+  - **Resultado**: Las cards de documentación se actualizan correctamente después de cargar documentos, mostrando el estado real
+
+### Seguridad
+- **Aplicación del Principio de "Denegación por Defecto"**: Mejorada configuración de Spring Security
+  - Reemplazada regla amplia `.requestMatchers("/api/concursos/**").permitAll()` con rutas específicas:
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos").permitAll()`
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos/{id}").permitAll()`
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos/buscar").permitAll()`
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos/filtrar").permitAll()`
+  - Solo operaciones de lectura son públicas, escritura requiere autenticación
+  - Reducido riesgo de exposición accidental de nuevos endpoints
+
+- **Control de Acceso para Imágenes de Perfil**: Implementada protección contra enumeración
+  - Cambiada regla de `.requestMatchers("/api/files/profile-images/**").permitAll()` a `.authenticated()`
+  - Agregada anotación `@PreAuthorize("hasRole('ROLE_USER')")` en controlador de imágenes
+  - Endpoint de debug `/api/files/profile-images/{userId}` restringido a administradores
+  - Previene enumeración de usuarios a través de adivinación de UUIDs
+  - Agregado logging de auditoría para accesos a imágenes
+
+- **Configuración CORS Específica y Segura**: Implementada configuración CORS por entorno
+  - Reemplazados comodines `*` con headers específicos necesarios por la aplicación
+  - Headers permitidos específicos: Authorization, Content-Type, Accept, X-Requested-With, etc.
+  - Headers expuestos específicos: Content-Disposition, X-Total-Count, Location, etc.
+  - Configuración por entorno:
+    - **Desarrollo**: Permite localhost:4200, localhost:8000 y 127.0.0.1
+    - **Producción**: Solo dominios específicos de producción (más restrictivo)
+    - **Testing**: Configuración permisiva para tests de integración
+  - Aplicado principio de menor privilegio en configuración CORS
+  - Eliminada configuración legacy `spring.mvc.cors.*` en favor de configuración programática
+
+- **Validación y Documentación de Configuración CSRF**: Confirmada deshabilitación segura de CSRF
+  - Documentada justificación técnica para deshabilitación de CSRF en SecurityConfig
+  - Confirmada arquitectura 100% stateless con SessionCreationPolicy.STATELESS
+  - Verificada autenticación únicamente via JWT en headers Authorization (sin cookies)
+  - Creado SecurityValidationService para validación automática de configuración
+  - Implementado SecurityDiagnosticController para diagnóstico (solo desarrollo)
+  - Agregadas validaciones de peticiones HTTP para detectar cookies de autenticación
+  - Configuración segura: CSRF innecesario en APIs REST stateless con JWT
+  - Advertencias documentadas para desarrolladores futuros sobre rehabilitación de CSRF
+
+- **Configuración Segura de Gestión de Esquema de Base de Datos**: Implementada configuración por entorno
+  - **Por defecto**: `ddl-auto=validate`, `generate-ddl=false` (configuración segura)
+  - **Desarrollo**: `ddl-auto=update`, `generate-ddl=true` (permitido solo en desarrollo)
+  - **Producción**: `ddl-auto=validate`, `generate-ddl=false` (seguro, solo validación)
+  - **Testing**: `ddl-auto=create-drop`, `generate-ddl=true` (BD fresca para cada test)
+  - Creado DatabaseConfigurationValidationService para validación automática
+  - Implementado endpoint de diagnóstico de configuración de BD (solo desarrollo)
+  - Documentación completa en DATABASE_MIGRATIONS.md
+  - Eliminado riesgo de modificaciones automáticas no controladas en producción
+  - Advertencias y validaciones para detectar configuraciones peligrosas
+
+- **Plan de Gestión de Dependencias**: Implementado sistema de monitoreo y actualización
+  - Agregado plugin versions-maven-plugin (2.17.1) para verificación de actualizaciones
+  - Creado DEPENDENCY_UPDATES.md con plan detallado de actualización por fases
+  - Implementado script check-dependencies.ps1 para verificación automática
+  - Documentadas dependencias críticas que requieren actualización:
+    - Spring Boot 3.2.4 → 3.3.5+ (parches de seguridad)
+    - MySQL Connector 8.2.0 → 8.4.0+ (vulnerabilidades conocidas)
+    - JJWT 0.12.5 → 0.12.6+ (mejoras de seguridad JWT)
+    - Apache Tika 2.9.1 → 2.9.2+ (parches de seguridad)
+  - Establecido proceso de actualización segura con testing y rollback
+  - Configurado monitoreo continuo de dependencias desactualizadas
+  - **Problema SSL identificado**: Error PKIX path building failed con Maven Central
+  - Creada documentación completa de solución SSL (MAVEN_SSL_SETUP.md)
+  - Implementado script de instalación automática de certificados (install-maven-cert.ps1)
+  - Solución basada en experiencia previa del equipo con certificados SSL
+
+- **Eliminación de H2 Console**: Removido acceso a H2 Console por motivos de seguridad
+  - Eliminada regla `.requestMatchers("/h2-console/**").permitAll()` de SecurityConfig
+  - Removida configuración `.frameOptions(frameOptions -> frameOptions.disable())`
+  - Eliminada configuración CORS específica para `/h2-console/**`
+  - Limpiadas referencias en SecurityConstants.java y JwtTokenFilter.java
+  - H2 Console no debe estar disponible en entornos de producción por razones de seguridad
+  - Mantiene H2 para tests unitarios (configuración apropiada en application-test.properties)
+
 ### Corregido
 - **Documentación del Perfil**: Corregido el mecanismo de carga individual de documentos
   - El botón "Cargar" en las cards individuales ahora abre el uploader específico para ese documento

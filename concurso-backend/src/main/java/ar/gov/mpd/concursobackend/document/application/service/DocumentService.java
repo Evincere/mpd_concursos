@@ -2,7 +2,10 @@ package ar.gov.mpd.concursobackend.document.application.service;
 
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentSummaryDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentReplaceRequest;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentReplaceResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,11 +19,20 @@ public interface DocumentService {
 
     /**
      * Get all documents for a user
-     * 
+     *
      * @param userId User's UUID
      * @return List of documents
      */
     List<DocumentDto> getUserDocuments(UUID userId);
+
+    /**
+     * Get documents summary grouped by type, showing only the most recent version
+     * with information about previous versions
+     *
+     * @param userId User's UUID
+     * @return List of document summaries
+     */
+    List<DocumentSummaryDto> getUserDocumentsSummary(UUID userId);
 
     /**
      * Upload a document
@@ -32,18 +44,6 @@ public interface DocumentService {
      * @throws IOException If an I/O error occurs
      */
     DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream inputStream, UUID userId) throws IOException;
-
-    /**
-     * Upload a document with duplicate checking and replacement option
-     *
-     * @param request        Upload request
-     * @param inputStream    Document input stream
-     * @param userId         User's UUID
-     * @param replaceExisting Whether to replace existing document of same type
-     * @return Document response
-     * @throws IOException If an I/O error occurs
-     */
-    DocumentResponse uploadDocumentWithDuplicateCheck(DocumentUploadRequest request, InputStream inputStream, UUID userId, boolean replaceExisting) throws IOException;
 
     /**
      * Get a document's metadata
@@ -104,4 +104,14 @@ public interface DocumentService {
      * @throws IOException If an I/O error occurs
      */
     String saveDocument(InputStream inputStream, String filename, UUID documentId, UUID userId) throws IOException;
+
+    /**
+     * Replace a document with a new file, handling validation and impact on contests
+     */
+    DocumentReplaceResponse replaceDocument(String documentId, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException;
+
+    /**
+     * Check if replacing a document has any warnings or impacts
+     */
+    DocumentReplaceResponse checkReplaceDocument(String documentId, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException;
 } 

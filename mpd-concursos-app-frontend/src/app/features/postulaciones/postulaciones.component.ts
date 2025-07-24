@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil, finalize } from 'rxjs/operators';
+import { takeUntil, finalize, switchMap } from 'rxjs/operators';
 
 // Interfaces
 import { Postulacion, PostulationStatus } from '@shared/interfaces/postulacion/postulacion.interface';
 import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaciones.interface';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 
 // Services
 import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
@@ -47,16 +48,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   // Data
   postulaciones: Postulacion[] = [];
   postulacionesFiltradas: Postulacion[] = [];
-  
+
   // UI State
   loading = false;
   error: 'connection' | 'server' | 'no-results' | 'empty' | null = null;
-  
+
   // Pagination
   pageSize = 10;
   pageIndex = 0;
   totalItems = 0;
-  
+
   // Filters
   terminoBusqueda = '';
   filtrosActivos = false;
@@ -68,19 +69,19 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     fechaDesde: null,
     fechaHasta: null
   };
-  
+
   // UI Controls
   mostrarFiltros = false;
   postulacionSeleccionada: Postulacion | null = null;
   mostrarDialogoCancelacion = false;
   postulacionACancelar: Postulacion | null = null;
   cancelandoPostulacion = false;
-  
+
   // Flags
   primeraConsulta = true;
   filtrosModificados = false;
   todasCanceladas = false;
-  
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -138,12 +139,14 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.error = null;
     this.todasCanceladas = false;
 
-    this.postulacionesService.getPostulaciones(
-      this.pageIndex,
-      this.pageSize,
-      'inscriptionDate',
-      'DESC'
-    ).pipe(
+    // CRITICAL FIX: Forzar limpieza de cache antes de cargar postulaciones
+    this.inscriptionService.clearCacheAndRefresh().pipe(
+      switchMap(() => this.postulacionesService.getPostulaciones(
+        this.pageIndex,
+        this.pageSize,
+        'inscriptionDate',
+        'DESC'
+      )),
       takeUntil(this.destroy$),
       finalize(() => {
         this.loading = false;
@@ -258,12 +261,36 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   /**
    * Formatea una fecha para mostrar en formato dd/MM/yyyy
+   * ✅ CORRECCIÓN: Manejo robusto de fechas sin problemas de zona horaria
    */
   formatDate(date: string | Date | null | undefined): string {
     if (!date) return 'No especificada';
 
     try {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      let dateObj: Date;
+
+      if (typeof date === 'string') {
+        // ✅ CORRECCIÓN: Si es string, asumimos formato ISO (YYYY-MM-DD) del backend
+        // Agregamos 'T12:00:00' para evitar problemas de zona horaria
+        if (date.includes('T')) {
+          dateObj = new Date(date);
+        } else {
+          // Para fechas en formato YYYY-MM-DD, agregar hora del mediodía
+          dateObj = new Date(date + 'T12:00:00');
+        }
+      } else {
+        dateObj = date;
+      }
+
+      // 🔍 DIAGNÓSTICO TEMPORAL: Log para investigar problema de fechas
+      console.log('🔍 [DIAGNÓSTICO] formatDate input:', date);
+      console.log('🔍 [DIAGNÓSTICO] formatDate dateObj:', dateObj);
+      console.log('🔍 [DIAGNÓSTICO] formatDate formatted:', dateObj.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }));
+
       return dateObj.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
@@ -274,16 +301,50 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Determina el paso correcto del proceso de inscripción basado en el estado
+   */
+  private determinarPasoSegunEstado(estado: string): number {
+    switch (estado) {
+      case 'COMPLETED_PENDING_DOCS':
+        // Si la inscripción está completa pero faltan documentos, ir al paso 3 (documentación)
+        return 3;
+      case 'ACTIVE':
+        // Para inscripciones activas, ir al paso 2 (circunscripción) por defecto
+        // El componente de inscripción determinará el paso exacto basado en el estado guardado
+        return 2;
+      case 'PENDING':
+      case 'COMPLETED_WITH_DOCS':
+        // Para estados completos, ir al paso 4 (confirmación/resumen)
+        return 4;
+      default:
+        // Por defecto, ir al paso 1
+        return 1;
+    }
+  }
+
 
 
   retomarInscripcion(postulacion: Postulacion): void {
     if (postulacion.contestId) {
-      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
+      // CRITICAL FIX: Determinar el paso correcto basado en el estado de la inscripción
+      const step = this.determinarPasoSegunEstado(postulacion.estado);
+
+      // DEBUG: Logging para diagnosticar el problema de navegación
+      console.log('[PostulacionesComponent] Retomando inscripción:', {
+        estado: postulacion.estado,
+        stepCalculado: step,
+        contestId: postulacion.contestId,
+        inscriptionId: postulacion.id
+      });
+
+      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard y el paso apropiado
       this.router.navigate(['/dashboard/inscripcion'], {
         queryParams: {
           contestId: postulacion.contestId,
           inscriptionId: postulacion.id,
-          resume: 'true'
+          resume: 'true',
+          step: step
         }
       });
     }
@@ -291,12 +352,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   completarDocumentacion(postulacion: Postulacion): void {
     if (postulacion.contestId) {
+      // CRITICAL FIX: Para completar documentación, siempre ir al paso 3 (documentación)
+      const step = 3;
+
       // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
       this.router.navigate(['/dashboard/inscripcion'], {
         queryParams: {
           contestId: postulacion.contestId,
           inscriptionId: postulacion.id,
-          resume: 'true'
+          resume: 'true',
+          step: step
         }
       });
     }
@@ -323,6 +388,64 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   navegarAConcursos(): void {
     this.router.navigate(['/dashboard/concursos']);
+  }
+
+  /**
+   * ✅ NUEVO MÉTODO: Obtiene mensaje específico sobre plazo de documentación
+   */
+  getDocumentationDeadlineMessage(postulacion: Postulacion): string {
+    if (!postulacion.concurso?.endDate) {
+      return 'Fecha límite no disponible';
+    }
+
+    // ✅ CORRECCIÓN: Crear fecha consistente sin problemas de zona horaria
+    let contestEndDate: Date;
+    const endDateStr = postulacion.concurso.endDate.toString();
+    if (endDateStr.includes('T')) {
+      contestEndDate = new Date(endDateStr);
+    } else {
+      // Para fechas en formato YYYY-MM-DD, agregar hora del mediodía
+      contestEndDate = new Date(endDateStr + 'T12:00:00');
+    }
+
+    // ✅ CORRECCIÓN CRÍTICA: Calcular 3 días HÁBILES DESPUÉS del día de cierre
+    // El plazo perentorio empieza DESPUÉS del día de cierre, no desde el día de cierre
+    const fechaInicioPlazo = new Date(contestEndDate);
+    fechaInicioPlazo.setDate(contestEndDate.getDate() + 1); // Día siguiente al cierre
+    const documentationDeadline = this.addBusinessDays(fechaInicioPlazo, 3);
+    documentationDeadline.setHours(23, 59, 59, 999);
+
+    const now = new Date();
+    const diffTime = documentationDeadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return '⚠️ Plazo vencido - Inscripción será congelada';
+    } else if (diffDays === 0) {
+      return '🚨 ¡ÚLTIMO DÍA! Vence hoy a las 23:59';
+    } else if (diffDays === 1) {
+      return `⏰ Vence mañana (${documentationDeadline.toLocaleDateString('es-AR')})`;
+    } else {
+      return `📅 ${diffDays} días restantes (vence ${documentationDeadline.toLocaleDateString('es-AR')})`;
+    }
+  }
+
+  /**
+   * ✅ MÉTODO AUXILIAR: Agregar días hábiles a una fecha
+   */
+  private addBusinessDays(date: Date, businessDays: number): Date {
+    const result = new Date(date);
+    let daysAdded = 0;
+
+    while (daysAdded < businessDays) {
+      result.setDate(result.getDate() + 1);
+      // Si no es fin de semana (sábado = 6, domingo = 0)
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        daysAdded++;
+      }
+    }
+
+    return result;
   }
 
   hayFiltrosAplicados(): boolean {
@@ -363,6 +486,11 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   }
 
   puedesCancelarPostulacion(postulacion: Postulacion): boolean {
+    // CRITICAL FIX: Verificar que la postulación NO esté ya cancelada
+    if (postulacion.estado === PostulationStatus.CANCELLED) {
+      return false;
+    }
+
     // Permitir cancelar postulaciones en proceso (interrumpidas) y completadas
     return postulacion.estado === PostulationStatus.PENDING ||
            postulacion.estado === PostulationStatus.APPROVED ||
@@ -372,8 +500,43 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   }
 
   cancelarPostulacion(postulacion: Postulacion): void {
-    this.postulacionACancelar = postulacion;
-    this.mostrarDialogoCancelacion = true;
+    // CRITICAL FIX: Verificar estado real desde el backend antes de permitir cancelación
+    if (postulacion.id) {
+      this.inscriptionService.verifyInscriptionState(postulacion.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (realState) => {
+          // Mapear InscripcionState a PostulationStatus
+          const mappedState = this.mapInscripcionStateToPostulationStatus(realState);
+
+          if (mappedState === PostulationStatus.CANCELLED) {
+            this.notificationService.warning('Esta postulación ya está cancelada');
+            // Forzar recarga de datos para sincronizar estado
+            this.cargarPostulaciones();
+            return;
+          }
+
+          // Actualizar estado local si es diferente
+          if (postulacion.estado !== mappedState) {
+            postulacion.estado = mappedState;
+          }
+
+          if (!this.puedesCancelarPostulacion(postulacion)) {
+            this.notificationService.warning('No se puede cancelar esta postulación en su estado actual');
+            return;
+          }
+
+          this.postulacionACancelar = postulacion;
+          this.mostrarDialogoCancelacion = true;
+        },
+        error: (error) => {
+          console.error('Error verificando estado de postulación:', error);
+          this.notificationService.error('Error al verificar el estado de la postulación');
+        }
+      });
+    } else {
+      this.notificationService.error('ID de postulación no válido');
+    }
   }
 
   onConfirmarCancelacion(): void {
@@ -415,9 +578,17 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe();
         },
-        error: (error: Error) => {
-          // Mostrar notificación de error
-          this.notificationService.error('Error al cancelar la postulación. Por favor, inténtelo nuevamente.');
+        error: (error: any) => {
+          console.error('Error al cancelar postulación:', error);
+
+          // CRITICAL FIX: Manejar errores específicos de estado
+          if (error.status === 400 && error.error?.message?.includes('CANCELLED')) {
+            this.notificationService.warning('Esta postulación ya está cancelada');
+            // Forzar recarga para sincronizar estado
+            this.cargarPostulaciones();
+          } else {
+            this.notificationService.error('Error al cancelar la postulación. Por favor, inténtelo nuevamente.');
+          }
 
           // Cerrar diálogo y resetear estado
           this.mostrarDialogoCancelacion = false;
@@ -452,6 +623,26 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Determina si se puede retomar una inscripción (está incompleta)
+   * @param postulacion La postulación a evaluar
+   * @returns true si se puede retomar la inscripción
+   */
+  puedeRetomarInscripcion(postulacion: Postulacion): boolean {
+    return postulacion.estado === PostulationStatus.ACTIVE ||
+           postulacion.estado === PostulationStatus.COMPLETED_PENDING_DOCS;
+  }
+
+  /**
+   * Determina si una inscripción está completada y pendiente de validación
+   * @param postulacion La postulación a evaluar
+   * @returns true si la inscripción está completada
+   */
+  inscripcionCompletada(postulacion: Postulacion): boolean {
+    return postulacion.estado === PostulationStatus.COMPLETED_WITH_DOCS ||
+           postulacion.estado === PostulationStatus.PENDING;
+  }
+
+  /**
    * Obtiene la clase CSS para el indicador de urgencia
    * @param postulacion La postulación a evaluar
    * @returns Clase CSS apropiada
@@ -461,5 +652,31 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       return 'urgent-action';
     }
     return '';
+  }
+
+  /**
+   * Mapea InscripcionState a PostulationStatus
+   */
+  private mapInscripcionStateToPostulationStatus(inscripcionState: InscripcionState): PostulationStatus {
+    switch (inscripcionState) {
+      case InscripcionState.ACTIVE:
+        return PostulationStatus.ACTIVE;
+      case InscripcionState.PENDING:
+        return PostulationStatus.PENDING;
+      case InscripcionState.COMPLETED_WITH_DOCS:
+        return PostulationStatus.COMPLETED_WITH_DOCS;
+      case InscripcionState.COMPLETED_PENDING_DOCS:
+        return PostulationStatus.COMPLETED_PENDING_DOCS;
+      case InscripcionState.FROZEN:
+        return PostulationStatus.FROZEN;
+      case InscripcionState.APPROVED:
+        return PostulationStatus.APPROVED;
+      case InscripcionState.REJECTED:
+        return PostulationStatus.REJECTED;
+      case InscripcionState.CANCELLED:
+        return PostulationStatus.CANCELLED;
+      default:
+        return PostulationStatus.ACTIVE;
+    }
   }
 }

@@ -2,6 +2,8 @@ package ar.gov.mpd.concursobackend.document.application.service;
 
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentAuditEntity;
+import ar.gov.mpd.concursobackend.document.application.mapper.DocumentMapper;
+import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentAuditSpringRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class DocumentAuditService {
 
     private final IDocumentAuditSpringRepository auditRepository;
     private final ObjectMapper objectMapper;
+    private final DocumentMapper documentMapper;
 
     /**
      * Registra la creación de un nuevo documento
@@ -39,7 +42,7 @@ public class DocumentAuditService {
                     .newFilePath(document.getFilePath())
                     .actionBy(actionBy)
                     .reason("Documento creado")
-                    .metadata(createMetadata(document))
+                    .metadata(createMetadata(documentMapper.toEntity(document)))
                     .build();
 
             auditRepository.save(audit);
@@ -48,49 +51,6 @@ public class DocumentAuditService {
         } catch (Exception e) {
             log.error("Error registrando auditoría de creación para documento: {}", document.getId().value(), e);
             // No relanzamos la excepción para no afectar el flujo principal
-        }
-    }
-
-    /**
-     * Registra el reemplazo de un documento
-     */
-    @Transactional
-    public void recordReplacement(Document oldDocument, Document newDocument, UUID actionBy) {
-        log.debug("Registrando reemplazo de documento: {} -> {}",
-                oldDocument.getId().value(), newDocument.getId().value());
-
-        try {
-            // Auditoría para documento archivado
-            DocumentAuditEntity archiveAudit = DocumentAuditEntity.builder()
-                    .documentId(oldDocument.getId().value())
-                    .userId(oldDocument.getUserId())
-                    .actionType(DocumentAuditEntity.ActionType.REPLACED)
-                    .oldFilePath(oldDocument.getFilePath())
-                    .actionBy(actionBy)
-                    .reason("Documento reemplazado por nueva versión")
-                    .metadata(createReplacementMetadata(oldDocument, newDocument))
-                    .build();
-
-            // Auditoría para nuevo documento
-            DocumentAuditEntity createAudit = DocumentAuditEntity.builder()
-                    .documentId(newDocument.getId().value())
-                    .userId(newDocument.getUserId())
-                    .actionType(DocumentAuditEntity.ActionType.CREATED)
-                    .newFilePath(newDocument.getFilePath())
-                    .actionBy(actionBy)
-                    .reason("Documento creado como reemplazo")
-                    .metadata(createMetadata(newDocument))
-                    .build();
-
-            auditRepository.save(archiveAudit);
-            auditRepository.save(createAudit);
-
-            log.debug("Auditoría de reemplazo registrada exitosamente: {} -> {}",
-                    oldDocument.getId().value(), newDocument.getId().value());
-
-        } catch (Exception e) {
-            log.error("Error registrando auditoría de reemplazo: {} -> {}",
-                    oldDocument.getId().value(), newDocument.getId().value(), e);
         }
     }
 
@@ -138,7 +98,7 @@ public class DocumentAuditService {
     /**
      * Crea metadata JSON para auditoría
      */
-    private String createMetadata(Document document) {
+    private String createMetadata(DocumentEntity document) {
         try {
             var metadata = new java.util.HashMap<String, Object>();
             metadata.put("fileName", document.getFileName() != null ? document.getFileName().toString() : null);
@@ -147,35 +107,12 @@ public class DocumentAuditService {
             metadata.put("status", document.getStatus() != null ? document.getStatus().toString() : null);
             metadata.put("processingStatus", document.getProcessingStatus() != null ? document.getProcessingStatus().toString() : null);
             metadata.put("version", document.getVersion());
-            metadata.put("isArchived", document.isArchived());
+            metadata.put("isArchived", document.getIsArchived());
             metadata.put("timestamp", LocalDateTime.now().toString());
 
             return objectMapper.writeValueAsString(metadata);
         } catch (Exception e) {
-            log.warn("Error creando metadata para documento: {}", document.getId().value(), e);
-            return "{}";
-        }
-    }
-
-    /**
-     * Crea metadata específica para reemplazos
-     */
-    private String createReplacementMetadata(Document oldDocument, Document newDocument) {
-        try {
-            var metadata = new java.util.HashMap<String, Object>();
-            metadata.put("oldDocumentId", oldDocument.getId().value().toString());
-            metadata.put("newDocumentId", newDocument.getId().value().toString());
-            metadata.put("oldFileName", oldDocument.getFileName() != null ? oldDocument.getFileName().toString() : null);
-            metadata.put("newFileName", newDocument.getFileName() != null ? newDocument.getFileName().toString() : null);
-            metadata.put("oldVersion", oldDocument.getVersion());
-            metadata.put("newVersion", newDocument.getVersion());
-            metadata.put("replacementReason", "Document type duplicate replacement");
-            metadata.put("timestamp", LocalDateTime.now().toString());
-
-            return objectMapper.writeValueAsString(metadata);
-        } catch (Exception e) {
-            log.warn("Error creando metadata de reemplazo: {} -> {}",
-                    oldDocument.getId().value(), newDocument.getId().value(), e);
+            log.warn("Error creando metadata para documento: {}", document.getId(), e);
             return "{}";
         }
     }

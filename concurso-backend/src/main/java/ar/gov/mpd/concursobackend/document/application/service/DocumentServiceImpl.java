@@ -4,9 +4,12 @@ import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentSummaryDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentVersionDto;
 import ar.gov.mpd.concursobackend.document.application.mapper.DocumentMapper;
 import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
+import ar.gov.mpd.concursobackend.document.infrastructure.debug.VersioningDebugLogger;
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.document.domain.model.DocumentType;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
@@ -16,8 +19,17 @@ import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
+import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionDeadlineService;
+import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
+import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,21 +39,46 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
+import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentReplaceResponse;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentReplaceRequest;
+import ar.gov.mpd.concursobackend.document.domain.valueObject.ProcessingStatus;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class DocumentServiceImpl implements DocumentService {
 
+    // Logger específico para versioning debug
+    private static final Logger versioningLog = LoggerFactory.getLogger("VERSIONING_DEBUG");
+
     private final IDocumentRepository documentRepository;
     private final IDocumentTypeRepository documentTypeRepository;
     private final IDocumentStorageService documentStorageService;
     private final DocumentMapper documentMapper;
     private final IUserRepository userRepository;
-    private final DocumentDuplicateService duplicateService;
     private final DocumentAuditService auditService;
+    private final InscriptionDeadlineService inscriptionDeadlineService;
+    private final InscriptionRepository inscriptionRepo;
+    private final InscriptionRepository inscriptionRepository;
+    private final DocumentOperationLockService operationLockService;
+    private final DocumentConcurrencyService concurrencyService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     @Transactional
@@ -63,60 +100,183 @@ public class DocumentServiceImpl implements DocumentService {
 
         DocumentType documentType = findDocumentType(request.getDocumentTypeId());
 
-        // Verificar documento existente
-        var existingDocument = duplicateService.findExistingDocument(userId, request.getDocumentTypeId());
-
-        if (existingDocument.isPresent() && !replaceExisting) {
-            log.warn("Documento duplicado encontrado para usuario: {} y tipo: {}", userId, request.getDocumentTypeId());
-            throw new DocumentException("Ya existe un documento de este tipo. Use replaceExisting=true para reemplazarlo.");
-        }
-
+        // Crear nuevo documento
         String displayFileName = documentType.getName() + ".pdf";
-
         Document newDocument = Document.create(
                 userId,
                 documentType,
                 new DocumentName(displayFileName),
                 request.getContentType(),
                 null,
-                request.getComments());
+                request.getComments()
+        );
 
-        newDocument.setStatus(DocumentStatus.PROCESSING);
+        // CRITICAL FIX: Guardar archivo ANTES del save para consistencia con reemplazo
+        String userDni = userRepository.findById(userId)
+                .map(user -> user.getDni().value())
+                .orElseThrow(() -> new DocumentException("Usuario no encontrado: " + userId));
 
-        if (existingDocument.isPresent() && replaceExisting) {
-            // Reemplazar documento existente
-            log.info("Reemplazando documento existente: {}", existingDocument.get().getId().value());
+        String filePath = documentStorageService.storeFile(fileContent, request.getFileName(), userId,
+                newDocument.getId().value(), userDni, documentType.getName());
 
-            var replacementResult = duplicateService.replaceDocument(
-                    existingDocument.get(),
-                    newDocument,
-                    userId);
+        newDocument.setFilePath(filePath);
+        newDocument.setStatus(DocumentStatus.PENDING);
 
-            if (!replacementResult.isSuccess()) {
-                throw new DocumentException("Error al reemplazar documento: " + replacementResult.getErrorMessage());
-            }
+        versioningLog.error("💾 [UPLOAD] BEFORE_SAVE_WITH_FILEPATH | ID: {} | FilePath: {}",
+            newDocument.getId().value(), filePath);
 
-            Document savedDocument = replacementResult.getNewDocument();
-            storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
+        Document savedDocument = documentRepository.save(newDocument);
+        auditService.recordCreation(savedDocument, userId);
 
-            return DocumentResponse.builder()
-                    .id(savedDocument.getId().value().toString())
-                    .mensaje("Document replaced successfully")
-                    .documento(documentMapper.toDto(savedDocument))
-                    .build();
-        } else {
-            // Crear nuevo documento
-            Document savedDocument = documentRepository.save(newDocument);
-            auditService.recordCreation(savedDocument, userId);
+        // CRITICAL FIX: Actualizar estado de inscripciones después de cargar documento
+        updateInscriptionStatusAfterDocumentUpload(userId);
 
-            storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
+        return DocumentResponse.builder()
+                .id(savedDocument.getId().value().toString())
+                .mensaje("Document upload started")
+                .documento(documentMapper.toDto(savedDocument))
+                .build();
+    }
 
-            return DocumentResponse.builder()
-                    .id(savedDocument.getId().value().toString())
-                    .mensaje("Document upload started")
-                    .documento(documentMapper.toDto(savedDocument))
+    @Override
+    @Transactional
+    public DocumentReplaceResponse replaceDocument(String documentId, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException {
+        final DocumentId docId = new DocumentId(UUID.fromString(documentId));
+
+        log.info("🔄 [DocumentService] Iniciando reemplazo de documento: {} por usuario: {}", documentId, userId);
+
+        // CRÍTICO: Adquirir lock para prevenir operaciones concurrentes
+        if (!operationLockService.tryAcquireLock(userId, docId.value(), "REPLACE")) {
+            log.warn("⚠️ [DocumentService] Operación de reemplazo ya en progreso para documento: {}", documentId);
+            throw new DocumentException("Ya hay una operación de reemplazo en progreso para este documento. Por favor, espere a que termine.");
+        }
+
+        try {
+            // CRITICAL FIX: Usar bloqueo pesimista y pasar el documento bloqueado a la operación
+            return concurrencyService.executeWithPessimisticLock(docId, (lockedDocument) -> {
+                try {
+                    return performDocumentReplacement(lockedDocument, request, inputStream, userId);
+                } catch (IOException e) {
+                    throw new RuntimeException("Error de E/S durante reemplazo de documento", e);
+                }
+            }, "DOCUMENT_REPLACE_PESSIMISTIC");
+
+        } finally {
+            // CRÍTICO: Siempre liberar el lock
+            operationLockService.releaseLock(userId, docId.value(), "REPLACE");
+            log.debug("🔓 [DocumentService] Lock liberado para documento: {}", documentId);
+        }
+    }
+
+    /**
+     * Realiza el reemplazo efectivo del documento.
+     * Este método es llamado dentro del contexto de manejo de concurrencia.
+     * @param lockedDocument El documento ya bloqueado por la transacción.
+     */
+    private DocumentReplaceResponse performDocumentReplacement(Document lockedDocument, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException {
+        log.debug("📋 [DocumentService] Ejecutando reemplazo efectivo para documento: {}", lockedDocument.getId().value());
+
+        // CRITICAL FIX: No recargar. Usar la entidad ya bloqueada y cargada.
+        // Document current = concurrencyService.reloadDocumentSafely(docId);
+        final Document current = lockedDocument;
+
+        if (!current.getUserId().equals(userId) || current.isArchived()) {
+            throw new DocumentException("Document does not belong to user or is archived");
+        }
+
+        // 2. Detectar inscripciones activas que referencian este documento
+        final Document currentDocument = current;
+        List<Inscription> impactedInscriptions = inscriptionRepository.findByUserId(userId).stream()
+                .filter(insc -> insc.getDocuments().stream().anyMatch(doc -> doc.getId().equals(currentDocument.getId())))
+                .filter(insc -> insc.getState() == InscriptionState.ACTIVE || insc.getState() == InscriptionState.PENDING)
+                .toList();
+        List<String> impactedEntities = impactedInscriptions.stream()
+                .map(insc -> String.format("Inscripción en concurso '%s' (estado: %s)",
+                        insc.getContest() != null ? insc.getContest().getTitle() : "-",
+                        insc.getState().name()))
+                .toList();
+
+        // 3. Si el documento está validado y no se fuerza el reemplazo, advertir y abortar
+        if (current.getStatus() == DocumentStatus.APPROVED && !request.isForceReplace()) {
+            log.info("⚠️ [DocumentService] Documento validado requiere confirmación para reemplazo: {}", current.getId().value());
+            return DocumentReplaceResponse.builder()
+                    .newDocument(null)
+                    .previousDocument(documentMapper.toDto(current))
+                    .warning("El documento está validado y será reemplazado. Esto puede afectar inscripciones activas.")
+                    .message("Debe confirmar el reemplazo. Consulte el detalle de impacto.")
+                    .impactedEntities(impactedEntities)
                     .build();
         }
+
+        // 4. Archivar documento actual
+        log.debug("📦 [DocumentService] Archivando documento actual: {}", current.getId().value());
+        current.archive(current.getId(), userId);
+
+        // CRITICAL FIX: Con locks pesimistas, usar flush() en lugar de save() para evitar conflictos de versioning
+        entityManager.flush();
+
+        // 5. Crear nuevo documento (versión activa)
+        versioningLog.error("═══════════════════════════════════════════════════════════════");
+        versioningLog.error("🎯 [SERVICE] INICIANDO OPERACIÓN: CREAR DOCUMENTO DE REEMPLAZO");
+        versioningLog.error("═══════════════════════════════════════════════════════════════");
+
+        log.debug("📄 [DocumentService] Creando nuevo documento para reemplazar: {}", current.getId().value());
+        DocumentType documentType = current.getDocumentType();
+        String displayFileName = documentType.getName() + ".pdf";
+
+        Document newDoc = Document.create(
+                userId,
+                documentType,
+                new DocumentName(displayFileName),
+                request.getContentType(),
+                null,
+                request.getComments()
+        );
+
+        versioningLog.error("🆕 [SERVICE] DOC_CREATE   | ID: {} | Operation: REPLACEMENT_DOCUMENT | Replacing: {}",
+            newDoc.getId().value(), current.getId().value());
+
+        newDoc.setReplacedDocumentId(current.getId());
+        newDoc.setStatus(DocumentStatus.PENDING);
+        newDoc.setProcessingStatus(ProcessingStatus.UPLOAD_COMPLETE);
+
+        // Obtener DNI del usuario para el almacenamiento
+        String userDni = userRepository.findById(userId)
+                .map(user -> user.getDni().value())
+                .orElseThrow(() -> new DocumentException("Usuario no encontrado: " + userId));
+
+        // Guardar archivo
+        String filePath = documentStorageService.storeFile(inputStream, request.getFileName(), userId, newDoc.getId().value(), userDni, documentType.getName());
+        newDoc.setFilePath(filePath);
+
+        // LOGGING CRÍTICO: Antes del save
+        versioningLog.error("💾 [SERVICE] BEFORE_SAVE  | ID: {} | File: {}",
+            newDoc.getId().value(), newDoc.getFileName().value());
+
+        Document savedDoc = documentRepository.save(newDoc);
+
+        // LOGGING CRÍTICO: Después del save
+        versioningLog.error("💾 [SERVICE] AFTER_SAVE   | ID: {} | File: {}",
+            savedDoc.getId().value(), savedDoc.getFileName().value());
+
+        versioningLog.error("═══════════════════════════════════════════════════════════════");
+        versioningLog.error("🏁 [SERVICE] FINALIZANDO OPERACIÓN: CREAR DOCUMENTO DE REEMPLAZO");
+        versioningLog.error("═══════════════════════════════════════════════════════════════");
+
+        log.info("✅ [DocumentService] Documento reemplazado exitosamente - Anterior: {}, Nuevo: {}",
+                current.getId().value(), savedDoc.getId().value());
+
+        // 6. Armar respuesta
+        String warning = current.getStatus() == DocumentStatus.APPROVED ?
+                "El documento validado fue reemplazado. Las inscripciones activas pueden requerir nueva validación." : null;
+        String message = "Documento reemplazado exitosamente.";
+        return DocumentReplaceResponse.builder()
+                .newDocument(documentMapper.toDto(newDoc))
+                .previousDocument(documentMapper.toDto(current))
+                .warning(warning)
+                .message(message)
+                .impactedEntities(impactedEntities)
+                .build();
     }
 
     @Async
@@ -133,19 +293,52 @@ public class DocumentServiceImpl implements DocumentService {
 
             document.setFilePath(filePath);
             document.setStatus(DocumentStatus.PENDING);
-            documentRepository.save(document);
+
+            versioningLog.error("💾 [ASYNC] UPDATING_FILEPATH | ID: {} | FilePath: {} | Status: PENDING",
+                documentId, filePath);
+
+            try {
+                documentRepository.save(document);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.warn("Document update failed due to optimistic locking conflict during file storage: {}", e.getMessage());
+                // Recargar el documento y reintentar
+                Document reloadedDocument = documentRepository.findById(new DocumentId(documentId))
+                        .orElseThrow(() -> new DocumentException("Document not found"));
+                reloadedDocument.setFilePath(filePath);
+                reloadedDocument.setStatus(DocumentStatus.PENDING);
+                documentRepository.save(reloadedDocument);
+            }
         } catch (DocumentException e) {
             log.error("Error storing file asynchronously", e);
-            Document document = documentRepository.findById(new DocumentId(documentId))
-                    .orElseThrow(() -> new DocumentException("Document not found"));
-            document.setStatus(DocumentStatus.ERROR);
-            documentRepository.save(document);
+            updateDocumentStatusSafely(documentId, DocumentStatus.ERROR);
         } catch (Exception e) {
             log.error("Unexpected error storing file asynchronously", e);
+            updateDocumentStatusSafely(documentId, DocumentStatus.ERROR);
+        }
+    }
+
+    /**
+     * Actualiza el estado de un documento de manera segura, manejando errores de concurrencia
+     */
+    private void updateDocumentStatusSafely(UUID documentId, DocumentStatus status) {
+        try {
             Document document = documentRepository.findById(new DocumentId(documentId))
                     .orElseThrow(() -> new DocumentException("Document not found"));
-            document.setStatus(DocumentStatus.ERROR);
+            document.setStatus(status);
             documentRepository.save(document);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            log.warn("Failed to update document status due to optimistic locking conflict: {}", e.getMessage());
+            // Reintentar una vez más
+            try {
+                Document reloadedDocument = documentRepository.findById(new DocumentId(documentId))
+                        .orElseThrow(() -> new DocumentException("Document not found"));
+                reloadedDocument.setStatus(status);
+                documentRepository.save(reloadedDocument);
+            } catch (Exception retryException) {
+                log.error("Failed to update document status after retry: {}", retryException.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error updating document status: {}", e.getMessage());
         }
     }
 
@@ -165,6 +358,99 @@ public class DocumentServiceImpl implements DocumentService {
         log.debug("✅ [DocumentService] Documents mapped to DTOs: {}", documentDtos.size());
 
         return documentDtos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DocumentSummaryDto> getUserDocumentsSummary(UUID userId) {
+        log.debug("🔍 [DocumentService] Getting documents summary for user: {}", userId);
+
+        List<Document> allDocuments = documentRepository.findByUserId(userId);
+        log.debug("📊 [DocumentService] Total documents found: {}", allDocuments.size());
+
+        // Agrupar documentos por tipo
+        Map<UUID, List<Document>> documentsByType = allDocuments.stream()
+                .collect(Collectors.groupingBy(doc -> doc.getDocumentType().getId().value()));
+
+        List<DocumentSummaryDto> summaries = new ArrayList<>();
+
+        for (Map.Entry<UUID, List<Document>> entry : documentsByType.entrySet()) {
+            List<Document> documentsOfType = entry.getValue();
+
+            // Ordenar por fecha de carga (más reciente primero)
+            documentsOfType.sort(Comparator.comparing(Document::getUploadDate).reversed());
+
+            Document mostRecent = documentsOfType.get(0);
+            List<Document> previousVersions = documentsOfType.subList(1, documentsOfType.size());
+
+            // Crear DTO del documento más reciente
+            DocumentDto mostRecentDto = documentMapper.toDto(mostRecent);
+
+            // Crear DTOs de versiones anteriores
+            List<DocumentVersionDto> versionDtos = previousVersions.stream()
+                    .map(this::createVersionDto)
+                    .collect(Collectors.toList());
+
+            // Crear el summary
+            DocumentSummaryDto summary = DocumentSummaryDto.builder()
+                    .id(mostRecentDto.getId())
+                    .tipoDocumentoId(mostRecentDto.getTipoDocumentoId())
+                    .tipoDocumento(mostRecentDto.getTipoDocumento())
+                    .nombreArchivo(mostRecentDto.getNombreArchivo())
+                    .contentType(mostRecentDto.getContentType())
+                    .estado(mostRecentDto.getEstado())
+                    .comentarios(mostRecentDto.getComentarios())
+                    .fechaCarga(mostRecentDto.getFechaCarga())
+                    .validadoPor(mostRecentDto.getValidadoPor())
+                    .fechaValidacion(mostRecentDto.getFechaValidacion())
+                    .motivoRechazo(mostRecentDto.getMotivoRechazo())
+                    .totalVersiones(documentsOfType.size())
+                    .versionActual(1) // El más reciente es siempre versión 1
+                    .tieneVersionesAnteriores(!previousVersions.isEmpty())
+                    .versionesAnteriores(versionDtos)
+                    .esDocumentoActivo(true)
+                    .estadoDetallado(determineDetailedStatus(mostRecent))
+                    .build();
+
+            summaries.add(summary);
+        }
+
+        // Ordenar por nombre del tipo de documento
+        summaries.sort(Comparator.comparing(s -> s.getTipoDocumento().getNombre()));
+
+        log.debug("✅ [DocumentService] Document summaries created: {}", summaries.size());
+        return summaries;
+    }
+
+    private DocumentVersionDto createVersionDto(Document document) {
+        return DocumentVersionDto.builder()
+                .id(document.getId().value().toString())
+                .nombreArchivo(document.getFileName().value())
+                .estado(document.getStatus().name())
+                .fechaCarga(document.getUploadDate())
+                .comentarios(document.getComments())
+                .numeroVersion(0) // Se calculará después si es necesario
+                .esArchivado(document.isArchived())
+                .fechaArchivado(document.getArchivedAt())
+                .archivedBy(document.getArchivedBy() != null ? document.getArchivedBy().toString() : null)
+                .build();
+    }
+
+    private String determineDetailedStatus(Document document) {
+        if (document.isArchived()) {
+            return "Archivado";
+        }
+
+        switch (document.getStatus()) {
+            case PENDING:
+                return "En revisión";
+            case APPROVED:
+                return "Aprobado";
+            case REJECTED:
+                return "Rechazado";
+            default:
+                return "Activo";
+        }
     }
 
     /**
@@ -349,8 +635,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public String saveDocument(InputStream inputStream, String filename, UUID documentId, UUID userId)
-            throws IOException {
+    public String saveDocument(InputStream inputStream, String filename, UUID documentId, UUID userId) throws IOException {
         log.debug("=== INICIO saveDocument ===");
         log.info("Guardando documento con id: {} para usuario: {}", documentId, userId);
         log.info("Nombre del archivo: {}", filename);
@@ -495,6 +780,97 @@ public class DocumentServiceImpl implements DocumentService {
             log.error("Error durante el proceso de guardar documento: {}", e.getMessage(), e);
             log.info("=== FIN saveDocument (ERROR) ===");
             throw e;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DocumentReplaceResponse checkReplaceDocument(String documentId, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException {
+        final DocumentId docId = new DocumentId(UUID.fromString(documentId));
+        log.info("🔍 [DocumentService] Verificando reemplazo de documento: {} por usuario: {}", documentId, userId);
+
+        final Document current = documentRepository.findById(docId)
+                .orElseThrow(() -> new DocumentException("Document not found"));
+
+        if (!current.getUserId().equals(userId) || current.isArchived()) {
+            throw new DocumentException("Document does not belong to user or is archived");
+        }
+
+        List<Inscription> impactedInscriptions = inscriptionRepository.findByUserId(userId).stream()
+                .filter(insc -> insc.getDocuments().stream().anyMatch(doc -> doc.getId().equals(current.getId())))
+                .filter(insc -> insc.getState() == InscriptionState.ACTIVE || insc.getState() == InscriptionState.PENDING)
+                .toList();
+        List<String> impactedEntities = impactedInscriptions.stream()
+                .map(insc -> String.format("Inscripción en concurso '%s' (estado: %s)",
+                        insc.getContest() != null ? insc.getContest().getTitle() : "-",
+                        insc.getState().name()))
+                .toList();
+
+        if (current.getStatus() == DocumentStatus.APPROVED) {
+            log.info("⚠️ [DocumentService] Documento validado requiere confirmación para reemplazo: {}", current.getId().value());
+            return DocumentReplaceResponse.builder()
+                    .newDocument(null)
+                    .previousDocument(documentMapper.toDto(current))
+                    .warning("El documento está validado y será reemplazado. Esto puede afectar inscripciones activas.")
+                    .message("Debe confirmar el reemplazo. Consulte el detalle de impacto.")
+                    .impactedEntities(impactedEntities)
+                    .build();
+        }
+
+        return DocumentReplaceResponse.builder()
+                .newDocument(null)
+                .previousDocument(documentMapper.toDto(current))
+                .warning(null)
+                .message("El documento puede ser reemplazado sin advertencias.")
+                .impactedEntities(Collections.emptyList())
+                .build();
+    }
+
+    /**
+     * CRITICAL FIX: Actualiza el estado de las inscripciones del usuario después de cargar un documento
+     * Verifica si ahora tiene todos los documentos requeridos y actualiza el estado correspondiente
+     */
+    private void updateInscriptionStatusAfterDocumentUpload(UUID userId) {
+        try {
+            log.info("🔄 [DocumentService] Actualizando estado de inscripciones para usuario: {}", userId);
+
+            // Buscar inscripciones activas del usuario que puedan necesitar actualización
+            List<Inscription> userInscriptions = inscriptionRepo.findByUserId(userId);
+            log.info("🔍 [DocumentService] Encontradas {} inscripciones para usuario {}", userInscriptions.size(), userId);
+
+            for (Inscription inscription : userInscriptions) {
+                log.info("📋 [DocumentService] Procesando inscripción {} con estado: {}", inscription.getId(), inscription.getState());
+
+                // Solo actualizar inscripciones que estén en estado COMPLETED_PENDING_DOCS
+                if (inscription.getState() == InscriptionState.COMPLETED_PENDING_DOCS) {
+
+                    // Obtener tipos de documentos requeridos dinámicamente
+                    Set<String> requiredDocumentTypes = documentTypeRepository.findAllActive()
+                            .stream()
+                            .filter(ar.gov.mpd.concursobackend.document.domain.model.DocumentType::isRequired)
+                            .map(ar.gov.mpd.concursobackend.document.domain.model.DocumentType::getCode)
+                            .collect(java.util.stream.Collectors.toSet());
+
+                    log.info("📄 [DocumentService] Tipos de documentos requeridos: {}", requiredDocumentTypes);
+
+                    // Verificar si ahora tiene todos los documentos requeridos
+                    boolean hasAllRequiredDocuments = inscription.hasAllRequiredDocuments(requiredDocumentTypes);
+
+                    log.info("✅ [DocumentService] Inscripción {} - Documentos completos: {}",
+                            inscription.getId(), hasAllRequiredDocuments);
+
+                    // Actualizar estado usando el servicio especializado
+                    inscriptionDeadlineService.updateInscriptionDocumentationStatus(inscription, hasAllRequiredDocuments);
+
+                    log.info("🔄 [DocumentService] Estado de inscripción {} actualizado. Documentos completos: {}",
+                            inscription.getId(), hasAllRequiredDocuments);
+                }
+            }
+
+        } catch (Exception e) {
+            // No fallar la operación principal si la actualización de estado falla
+            log.warn("Error al actualizar estado de inscripciones después de cargar documento para usuario {}: {}",
+                    userId, e.getMessage());
         }
     }
 }

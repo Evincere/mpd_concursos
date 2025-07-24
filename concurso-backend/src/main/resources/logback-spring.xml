@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Configuración estándar de consola -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{36}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Appender específico para debugging de versioning (archivo simple) -->
+    <appender name="VERSIONING_DEBUG_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>./logs/versioning-debug.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Logger específico para versioning debug -->
+    <logger name="VERSIONING_DEBUG" level="ERROR" additivity="false">
+        <appender-ref ref="VERSIONING_DEBUG_FILE"/>
+    </logger>
+
+    <!-- Configuración para perfil debug -->
+    <springProfile name="debug">
+        <!-- Logging SQL detallado solo en debug -->
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
+        <logger name="org.hibernate.engine.internal.Versioning" level="DEBUG"/>
+        <logger name="org.hibernate.event.internal" level="DEBUG"/>
+    </springProfile>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

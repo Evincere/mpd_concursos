@@ -19,7 +19,7 @@ public class UserRoleDiagnosticConfig {
     private static final Logger logger = LoggerFactory.getLogger(UserRoleDiagnosticConfig.class);
 
     @Bean
-    @Order(2) // Se ejecuta después de la inicialización de roles
+    @Order(50) // Se ejecuta DESPUÉS de la inicialización de roles (Order 10) y usuarios esenciales
     public CommandLineRunner runUserRoleDiagnostic(FixUsersWithoutRoles fixUsersWithoutRoles) {
         return args -> {
             logger.info("Ejecutando diagnóstico de roles de usuarios...");

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class ContestDataInitializationService implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
         log.info("🚀 [ContestDataInitialization] Iniciando verificación de concursos de prueba");
-        
+
         try {
             initializeTestContests();
             log.info("✅ [ContestDataInitialization] Inicialización de concursos completada exitosamente");
@@ -67,8 +68,8 @@ public class ContestDataInitializationService implements CommandLineRunner {
         LocalDate today = LocalDate.now();
         LocalDate contestEndDate = today.plusDays(60);
 
-        // Concurso 1: Co-Defensor Penal y Penal Juvenil - Clase 3 Multifuero
-        ContestEntity contest1 = createTestContest(
+        // Concurso 1: Co-Defensor Penal y Penal Juvenil - Clase 3 Multifuero (ACTIVO para testing)
+        ContestEntity contest1 = createActiveTestContest(
             "Co-Defensor Penal y Penal Juvenil - Clase 03 Multifuero",
             "FUNCIONARIOS Y PERSONAL JERARQUICO",
             "03",
@@ -81,8 +82,8 @@ public class ContestDataInitializationService implements CommandLineRunner {
             "/api/files/contest-descriptions/codefensor_penal_clase03_descripcion.pdf"
         );
 
-        // Concurso 2: Co-Defensor Civil - Clase 3 Multifuero
-        ContestEntity contest2 = createTestContest(
+        // Concurso 2: Co-Defensor Civil - Clase 3 Multifuero (ACTIVO para testing)
+        ContestEntity contest2 = createActiveTestContest(
             "Co-Defensor Civil - Clase 03 Multifuero",
             "FUNCIONARIOS Y PERSONAL JERARQUICO",
             "03",
@@ -109,6 +110,20 @@ public class ContestDataInitializationService implements CommandLineRunner {
             "/api/files/contest-descriptions/coasesor_nnapcr_clase03_descripcion.pdf"
         );
 
+        // Concurso 4: CONCURSO DE PRUEBA - Período de Inscripción Cerrado (Para testing de seguridad)
+        ContestEntity contest4 = createTestContestWithClosedInscription(
+            "CONCURSO DE PRUEBA - Secretario/a Judicial Clase 02 (PERÍODO CERRADO)",
+            "FUNCIONARIOS Y PERSONAL JERARQUICO",
+            "02",
+            "CONCURSO DE PRUEBA para validar restricciones de período de inscripción. Las inscripciones están CERRADAS para probar la corrección de seguridad del punto 12.",
+            "SECRETARIAS JUDICIALES",
+            "Secretario/a Judicial - Clase 02",
+            today.minusDays(60), // Concurso que comenzó hace 60 días
+            today.minusDays(10), // Y terminó hace 10 días
+            "/api/files/contest-bases/concurso_secretario_clase02_prueba.pdf",
+            "/api/files/contest-descriptions/secretario_clase02_prueba_descripcion.pdf"
+        );
+
         // Guardar concursos
         try {
             ContestEntity savedContest1 = contestRepository.save(contest1);
@@ -120,13 +135,18 @@ public class ContestDataInitializationService implements CommandLineRunner {
                 savedContest2.getTitle(), savedContest2.getId());
 
             ContestEntity savedContest3 = contestRepository.save(contest3);
-            log.info("✅ [ContestDataInitialization] Concurso creado: {} (ID: {})", 
+            log.info("✅ [ContestDataInitialization] Concurso creado: {} (ID: {})",
                 savedContest3.getTitle(), savedContest3.getId());
+
+            ContestEntity savedContest4 = contestRepository.save(contest4);
+            log.info("✅ [ContestDataInitialization] Concurso de prueba creado: {} (ID: {})",
+                savedContest4.getTitle(), savedContest4.getId());
 
             // Crear fechas importantes para cada concurso
             createContestDates(savedContest1);
             createContestDates(savedContest2);
             createContestDates(savedContest3);
+            createClosedInscriptionDates(savedContest4); // Fechas especiales para el concurso de prueba
 
         } catch (Exception e) {
             log.error("❌ [ContestDataInitialization] Error creando concursos de prueba", e);
@@ -142,16 +162,82 @@ public class ContestDataInitializationService implements CommandLineRunner {
                                           String functions, String department, String position,
                                           LocalDate startDate, LocalDate endDate,
                                           String basesUrl, String descriptionUrl) {
+        // Configurar fechas de inscripción: desde las 00:00 del día de inicio hasta las 23:59 del día final
+        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
+        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
+
         return ContestEntity.builder()
             .title(title)
             .category(category)
             .class_(class_)
             .functions(functions)
-            .status(ContestStatus.PUBLISHED) // Estado que permite inscripciones
+            .status(ContestStatus.SCHEDULED) // Estado programado que se activa automáticamente
             .department(department)
             .position(position)
             .startDate(startDate)
             .endDate(endDate)
+            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
+            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
+            .basesUrl(basesUrl)
+            .descriptionUrl(descriptionUrl)
+            .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después
+            .build();
+    }
+
+    /**
+     * Crea un concurso de prueba ACTIVO (permite inscripciones inmediatamente)
+     * TESTING: Para probar la hipótesis de estados vs fechas
+     */
+    private ContestEntity createActiveTestContest(String title, String category, String class_,
+                                                String functions, String department, String position,
+                                                LocalDate startDate, LocalDate endDate,
+                                                String basesUrl, String descriptionUrl) {
+        // Configurar fechas de inscripción: desde las 00:00 del día de inicio hasta las 23:59 del día final
+        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
+        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
+
+        return ContestEntity.builder()
+            .title(title)
+            .category(category)
+            .class_(class_)
+            .functions(functions)
+            .status(ContestStatus.ACTIVE) // ✅ Estado ACTIVO que permite inscripciones
+            .department(department)
+            .position(position)
+            .startDate(startDate)
+            .endDate(endDate)
+            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
+            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
+            .basesUrl(basesUrl)
+            .descriptionUrl(descriptionUrl)
+            .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después
+            .build();
+    }
+
+    /**
+     * Crea un concurso de prueba con período de inscripción cerrado
+     * SECURITY TEST: Para validar la corrección del punto 12 de la auditoría
+     */
+    private ContestEntity createTestContestWithClosedInscription(String title, String category, String class_,
+                                                               String functions, String department, String position,
+                                                               LocalDate startDate, LocalDate endDate,
+                                                               String basesUrl, String descriptionUrl) {
+        // Para concursos cerrados, las fechas de inscripción ya pasaron
+        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
+        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
+
+        return ContestEntity.builder()
+            .title(title)
+            .category(category)
+            .class_(class_)
+            .functions(functions)
+            .status(ContestStatus.CLOSED) // Estado que NO permite inscripciones
+            .department(department)
+            .position(position)
+            .startDate(startDate)
+            .endDate(endDate)
+            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
+            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
             .basesUrl(basesUrl)
             .descriptionUrl(descriptionUrl)
             .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después
@@ -220,5 +306,70 @@ public class ContestDataInitializationService implements CommandLineRunner {
         contest.setDates(dates);
 
         log.info("📅 [ContestDataInitialization] Fechas creadas para concurso: {}", contest.getTitle());
+    }
+
+    /**
+     * Crea fechas para un concurso con período de inscripción cerrado
+     * SECURITY TEST: Para validar la corrección del punto 12 de la auditoría
+     */
+    private void createClosedInscriptionDates(ContestEntity contest) {
+        LocalDate today = LocalDate.now();
+
+        List<ContestDateEntity> dates = new ArrayList<>();
+
+        // Fecha de inscripción CERRADA (período pasado)
+        ContestDateEntity inscriptionDate = ContestDateEntity.builder()
+            .contest(contest)
+            .label("Período de Inscripción (CERRADO)")
+            .type("inscription")
+            .startDate(today.minusDays(45)) // Comenzó hace 45 días
+            .endDate(today.minusDays(15))   // Terminó hace 15 días
+            .build();
+        dates.add(inscriptionDate);
+
+        // Fecha de evaluación de antecedentes (ya pasó)
+        ContestDateEntity evaluationDate = ContestDateEntity.builder()
+            .contest(contest)
+            .label("Evaluación de Antecedentes (FINALIZADA)")
+            .type("evaluation")
+            .startDate(today.minusDays(10))
+            .endDate(today.minusDays(5))
+            .build();
+        dates.add(evaluationDate);
+
+        // Fecha de examen escrito (ya pasó)
+        ContestDateEntity examDate = ContestDateEntity.builder()
+            .contest(contest)
+            .label("Examen Escrito (FINALIZADO)")
+            .type("written_exam")
+            .startDate(today.minusDays(3))
+            .endDate(today.minusDays(3))
+            .build();
+        dates.add(examDate);
+
+        // Fecha de entrevista personal (próximamente)
+        ContestDateEntity interviewDate = ContestDateEntity.builder()
+            .contest(contest)
+            .label("Entrevista Personal (PRÓXIMAMENTE)")
+            .type("interview")
+            .startDate(today.plusDays(5))
+            .endDate(today.plusDays(5))
+            .build();
+        dates.add(interviewDate);
+
+        // Fecha de publicación de resultados (futuro)
+        ContestDateEntity resultsDate = ContestDateEntity.builder()
+            .contest(contest)
+            .label("Publicación de Resultados (PENDIENTE)")
+            .type("results")
+            .startDate(today.plusDays(10))
+            .endDate(today.plusDays(10))
+            .build();
+        dates.add(resultsDate);
+
+        // Asignar las fechas al concurso
+        contest.setDates(dates);
+
+        log.info("🧪 [ContestDataInitialization] Fechas de prueba (período cerrado) creadas para concurso: {}", contest.getTitle());
     }
 }

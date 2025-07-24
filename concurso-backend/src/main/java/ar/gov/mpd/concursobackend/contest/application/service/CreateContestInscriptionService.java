@@ -57,12 +57,16 @@ public class CreateContestInscriptionService implements CreateContestInscription
                                 .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado"));
                 log.debug("Concurso encontrado: {}", contest.getTitle());
 
-                // Verificar que el concurso está disponible para inscripciones
-                // REFACTORING: Usar solo nuevos estados específicos
-                if (!ContestStatus.INSCRIPTION_OPEN.equals(contest.getStatus()) &&
-                    !ContestStatus.PUBLISHED.equals(contest.getStatus())) {
-                        throw new IllegalStateException("El concurso no está disponible para inscripciones");
+                // SECURITY FIX: Validar que el concurso está abierto para inscripciones
+                // Usar método del dominio que incluye validación de fechas y estados
+                if (!contest.isInscriptionOpen()) {
+                        log.warn("Intento de inscripción rechazado - Concurso {} ('{}') no está abierto para inscripciones. Usuario: {}",
+                                contest.getId(), contest.getTitle(), username);
+                        throw new IllegalStateException("El concurso no está disponible para inscripciones. " +
+                                "El período de inscripción ha finalizado o aún no ha comenzado.");
                 }
+
+                log.debug("Validación de período de inscripción exitosa para concurso: {}", contest.getTitle());
 
                 // Crear la inscripción
                 Inscription inscription = Inscription.builder()

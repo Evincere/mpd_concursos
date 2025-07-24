@@ -16,6 +16,12 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
   - Exportación a PDF con múltiples plantillas
   - Drag & drop para reordenamiento
   - Autocompletado inteligente
+- **🆕 Dashboard Mejorado**: Interfaz de usuario optimizada con información contextual
+  - Cards con subtítulos informativos y métricas detalladas
+  - Widget Estado del Perfil expandible con desglose de documentación
+  - Cálculo inteligente de completitud (datos personales + documentos)
+  - Estados específicos para documentos requeridos vs opcionales
+  - Alertas de vencimientos próximos integradas
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -964,8 +970,48 @@ Existe un problema en el flujo de inscripción a concursos donde los usuarios no
 
 Este problema está siendo abordado en la rama `inscripcion` con mejoras en el servicio `InscriptionRecoveryService` y el componente `ReturnToInscriptionBanner`.
 
+### Cambio importante
+- La funcionalidad de reemplazo/actualización de documentos ha sido eliminada. Ahora solo es posible eliminar un documento y luego cargar uno nuevo del mismo tipo. Esto mejora la robustez, la experiencia de usuario y la mantenibilidad del sistema.
+
 ### Otras mejoras planificadas
 - Optimización del rendimiento en la carga de documentos
 - Mejora en la validación de documentos en tiempo real
 - Implementación de notificaciones push para actualizaciones de estado
 - Integración con sistema de firma digital
+
+## 🧪 Testing
+
+### Backend
+```bash
+cd concurso-backend
+mvn test
+```
+
+### Frontend
+```bash
+cd mpd-concursos-app-frontend
+pnpm test
+```
+
+### Testing de Seguridad
+```bash
+# Probar corrección del Punto 12 (Validación de Período de Inscripción)
+cd concurso-backend
+.\scripts\test-security-point-12.ps1
+```
+
+Ver documentación completa en: `concurso-backend/TESTING_SECURITY_POINT_12.md`
+
+### Datos de Prueba
+
+El sistema incluye **4 concursos de ejemplo** que se cargan automáticamente:
+- **3 concursos normales** basados en concursos reales del MPD
+- **1 concurso de prueba de seguridad** con período de inscripción cerrado (para testing del punto 12)
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+---
+
+**Desarrollado para el Ministerio Público de la Defensa de Mendoza** 🏛️

@@ -39,6 +39,12 @@ public class ContestEntity {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Column(name = "inscription_start_date")
+    private LocalDateTime inscriptionStartDate;
+
+    @Column(name = "inscription_end_date")
+    private LocalDateTime inscriptionEndDate;
+
     @Column(name = "bases_url")
     private String basesUrl;
 

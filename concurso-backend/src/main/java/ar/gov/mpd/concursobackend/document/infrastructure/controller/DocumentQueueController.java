@@ -20,7 +20,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/documentos/queue")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${spring.mvc.cors.allowed-origins}")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 @Slf4j
 public class DocumentQueueController {
 

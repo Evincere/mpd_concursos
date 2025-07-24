@@ -11032,6 +11032,8 @@ snapshots:
       '@angular/router': 18.2.13(@angular/common@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(@angular/platform-browser@18.2.13(@angular/animations@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10)))(@angular/common@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10)))(rxjs@7.8.2)
       '@angular/service-worker': 18.2.13(@angular/common@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))
       '@auth0/angular-jwt': 5.2.0(@angular/common@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))
+      '@fontsource/material-icons': 5.2.5
+      '@fontsource/roboto': 5.2.6
       '@fortawesome/fontawesome-free': 6.7.2
       '@ngrx/effects': 18.1.1(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(@ngrx/store@18.1.1(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(rxjs@7.8.2)
       '@ngrx/store': 18.1.1(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2)
@@ -11046,6 +11048,7 @@ snapshots:
       jspdf: 3.0.1
       jwt-decode: 4.0.0
       marked: 12.0.2
+      material-icons: 1.13.14
       ng-apexcharts: 1.15.0(@angular/common@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(apexcharts@4.7.0)(rxjs@7.8.2)
       ng2-pdf-viewer: 10.4.0
       ngx-markdown: 18.1.0(@angular/common@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(@angular/platform-browser@18.2.13(@angular/animations@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10)))(@angular/common@18.2.13(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@18.2.13(rxjs@7.8.2)(zone.js@0.14.10)))(marked@12.0.2)(rxjs@7.8.2)(zone.js@0.14.10)

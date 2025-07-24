@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SimpleDashboardData } from '@shared/interfaces/dashboard/dashboard-widgets.interface';
@@ -18,24 +18,28 @@ import { SimpleDashboardData } from '@shared/interfaces/dashboard/dashboard-widg
           {{ getUrgencyText() }}
         </div>
       </div>
-      
+
       <div class="widget-body">
         <div class="vencimientos-list" *ngIf="dashboardData.upcomingDeadlines.length > 0; else noVencimientos">
-          <div 
-            class="vencimiento-item" 
+          <div
+            class="vencimiento-item"
             *ngFor="let deadline of dashboardData.upcomingDeadlines; let i = index"
             [class]="getDeadlineClass(deadline.daysRemaining)">
             <div class="deadline-info">
               <div class="deadline-title">{{ deadline.title }}</div>
               <div class="deadline-date">{{ formatDate(deadline.date) }}</div>
+              <!-- ✅ MEJORA: Mostrar tipo de vencimiento -->
+              <div class="deadline-type" *ngIf="getDeadlineTypeText(deadline.title)">
+                {{ getDeadlineTypeText(deadline.title) }}
+              </div>
             </div>
             <div class="deadline-countdown">
               <span class="days-number">{{ deadline.daysRemaining }}</span>
-              <span class="days-text">{{ deadline.daysRemaining === 1 ? 'día' : 'días' }}</span>
+              <span class="days-text">{{ getDaysText(deadline.daysRemaining) }}</span>
             </div>
           </div>
         </div>
-        
+
         <ng-template #noVencimientos>
           <div class="no-deadlines">
             <i class="fas fa-check-circle"></i>
@@ -43,9 +47,9 @@ import { SimpleDashboardData } from '@shared/interfaces/dashboard/dashboard-widg
             <span class="subtitle">¡Estás al día con tus postulaciones!</span>
           </div>
         </ng-template>
-        
-        <button 
-          class="action-button" 
+
+        <button
+          class="action-button"
           (click)="navigateToPostulaciones()"
           *ngIf="dashboardData.upcomingDeadlines.length > 0">
           <i class="fas fa-list"></i>
@@ -182,6 +186,19 @@ import { SimpleDashboardData } from '@shared/interfaces/dashboard/dashboard-widg
       font-size: 0.75rem;
     }
 
+    .deadline-type {
+      color: #9ca3af;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.125rem;
+      padding: 0.125rem 0.375rem;
+      background: rgba(156, 163, 175, 0.1);
+      border-radius: 4px;
+      display: inline-block;
+    }
+
     .deadline-countdown {
       display: flex;
       flex-direction: column;
@@ -295,28 +312,48 @@ import { SimpleDashboardData } from '@shared/interfaces/dashboard/dashboard-widg
     }
   `]
 })
-export class ProximosVencimientosWidgetComponent implements OnInit {
+export class ProximosVencimientosWidgetComponent implements OnInit, OnChanges {
   @Input() dashboardData: SimpleDashboardData | null = null;
 
   constructor(private router: Router) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.logDeadlineData('ngOnInit');
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['dashboardData']) {
+      this.logDeadlineData('ngOnChanges');
+    }
+  }
+
+  private logDeadlineData(source: string): void {
+    console.log(`🔍 [ProximosVencimientosWidget] ${source} - Dashboard data:`, this.dashboardData);
+    if (this.dashboardData?.upcomingDeadlines) {
+      console.log(`🔍 [ProximosVencimientosWidget] ${source} - Upcoming deadlines:`, this.dashboardData.upcomingDeadlines);
+      console.log(`🔍 [ProximosVencimientosWidget] ${source} - Urgency class:`, this.getUrgencyClass());
+      console.log(`🔍 [ProximosVencimientosWidget] ${source} - Urgency text:`, this.getUrgencyText());
+    } else {
+      console.log(`⚠️ [ProximosVencimientosWidget] ${source} - No upcoming deadlines data`);
+    }
+  }
 
   getUrgencyClass(): string {
     if (!this.dashboardData || this.dashboardData.upcomingDeadlines.length === 0) {
       return 'normal';
     }
 
+    // ✅ CORREGIDO: Usar lógica alineada con backend (≤1 día = urgent, 2-7 días = warning)
     const minDays = Math.min(...this.dashboardData.upcomingDeadlines.map((d: any) => d.daysRemaining));
-    
-    if (minDays <= 3) return 'urgent';
-    if (minDays <= 7) return 'warning';
-    return 'normal';
+
+    if (minDays <= 1) return 'urgent';   // Alineado con backend HIGH priority
+    if (minDays <= 7) return 'warning';  // Alineado con backend MEDIUM priority
+    return 'normal';                     // Alineado con backend LOW priority
   }
 
   getUrgencyText(): string {
     const urgencyClass = this.getUrgencyClass();
-    
+
     switch (urgencyClass) {
       case 'urgent': return 'Urgente';
       case 'warning': return 'Atención';
@@ -325,9 +362,10 @@ export class ProximosVencimientosWidgetComponent implements OnInit {
   }
 
   getDeadlineClass(daysRemaining: number): string {
-    if (daysRemaining <= 3) return 'urgent';
-    if (daysRemaining <= 7) return 'warning';
-    return 'normal';
+    // ✅ CORREGIDO: Alineado con backend y getUrgencyClass()
+    if (daysRemaining <= 1) return 'urgent';   // HIGH priority
+    if (daysRemaining <= 7) return 'warning';  // MEDIUM priority
+    return 'normal';                           // LOW priority
   }
 
   formatDate(dateString: string): string {
@@ -339,7 +377,34 @@ export class ProximosVencimientosWidgetComponent implements OnInit {
     });
   }
 
+  /**
+   * ✅ MEJORA: Texto más descriptivo para días restantes
+   */
+  getDaysText(daysRemaining: number): string {
+    if (daysRemaining < 0) return 'vencido';
+    if (daysRemaining === 0) return 'hoy';
+    if (daysRemaining === 1) return 'día';
+    return 'días';
+  }
+
+  /**
+   * ✅ MEJORA: Extraer tipo de vencimiento del título
+   */
+  getDeadlineTypeText(title: string): string {
+    if (title.toLowerCase().includes('inscripción')) return 'Inscripción';
+    if (title.toLowerCase().includes('documentos')) return 'Documentación';
+    if (title.toLowerCase().includes('examen')) return 'Examen';
+    if (title.toLowerCase().includes('resultado')) return 'Resultado';
+    return '';
+  }
+
   navigateToPostulaciones(): void {
-    this.router.navigate(['/dashboard/postulaciones']);
+    // ✅ MEJORADO: Navegar a postulaciones con filtro de vencimientos próximos
+    this.router.navigate(['/dashboard/postulaciones'], {
+      queryParams: {
+        filter: 'upcoming-deadlines',
+        sortBy: 'deadline'
+      }
+    });
   }
 }

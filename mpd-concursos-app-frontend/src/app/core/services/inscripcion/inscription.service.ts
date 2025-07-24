@@ -25,6 +25,28 @@ import { InscriptionStateMachineService } from './inscription-state-machine.serv
   providedIn: 'root'
 })
 export class InscriptionService {
+
+  /**
+   * CRITICAL FIX: Helper function para validar fechas antes de usar toISOString()
+   * Evita el error "RangeError: Invalid time value"
+   */
+  private getValidDateString(date: any): string {
+    if (!date) return new Date().toISOString();
+
+    // Si es string, intentar convertir a Date
+    if (typeof date === 'string') {
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
+    }
+
+    // Si es Date, verificar que sea válida
+    if (date instanceof Date) {
+      return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+    }
+
+    // Si no es ni string ni Date, usar fecha actual
+    return new Date().toISOString();
+  }
   private readonly baseUrl = environment.apiUrl;
   private readonly inscriptionsEndpoint = '/inscriptions';
   // Keep old endpoint for backward compatibility during transition
@@ -94,6 +116,12 @@ export class InscriptionService {
    * @returns The corresponding InscripcionState enum value.
    */
   private mapStatusToState(status: string): InscripcionState {
+    // CRITICAL FIX: Validar que el status no sea null o undefined
+    if (!status) {
+      this.loggingService.error(`[InscriptionService] Status is null or undefined`, undefined, 'Inscription');
+      return InscripcionState.ACTIVE;
+    }
+
     switch (status.toLowerCase()) {
       case 'no_inscription':
         return InscripcionState.NO_INSCRIPTION;
@@ -246,11 +274,18 @@ export class InscriptionService {
         this.loggingService.debug('[InscriptionService] Error creating inscription:', {
           status: error.status,
           statusText: error.statusText,
-          message: error.message
+          message: error.message,
+          errorBody: error.error
         }, 'Inscription');
 
-        // If error is 409 (Conflict) or 500 (Internal Server Error), it might be due to an existing inscription
-        if (error.status === 409 || error.status === 500) {
+        // Handle specific HTTP status codes
+        if (error.status === 403) {
+          // Forbidden - Period closed or not started
+          const errorMessage = error.error?.message || 'El período de inscripción para este concurso ha finalizado o aún no ha comenzado.';
+          this.loggingService.warn('[InscriptionService] Inscription period closed or not started:', errorMessage, 'Inscription');
+          return throwError(() => new Error(errorMessage));
+        } else if (error.status === 409 || error.status === 500) {
+          // Conflict or Server Error - might be due to existing inscription
           this.loggingService.warn('[InscriptionService] Conflict or Server Error detected during inscription creation, potentially due to existing entry.', undefined, 'Inscription');
           return throwError(() => new Error('Ya existe una inscripción para este concurso o hubo un problema al crearla. Por favor, intente nuevamente en unos momentos.'));
         }
@@ -368,29 +403,8 @@ export class InscriptionService {
             }),
             catchError(secondError => {
               this.loggingService.debug('[InscriptionService] Error with alternative old endpoint:', secondError.status, 'Inscription');
-              // If it also fails, return an empty array to avoid UI errors
-              this.inscriptions$.next([]);
-              const emptyPage: Page<IInscriptionResponse> = {
-                content: [],
-                totalElements: 0,
-                totalPages: 0,
-                number: 0,
-                size: 10,
-                pageable: {
-                  sort: { sorted: false, unsorted: true, empty: true },
-                  pageNumber: 0,
-                  pageSize: 10,
-                  offset: 0,
-                  paged: true,
-                  unpaged: false
-                },
-                last: true,
-                sort: { sorted: false, unsorted: true, empty: true },
-                first: true,
-                numberOfElements: 0,
-                empty: true
-              };
-              return of(emptyPage);
+              // If it also fails, re-throw the error to be caught by the calling service
+              return throwError(() => secondError);
             })
           );
         }
@@ -562,53 +576,19 @@ export class InscriptionService {
         }, 1000); // Increase delay for more backend processing time
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('[InscriptionService] Error cancelling inscription with PATCH:', error);
+        this.loggingService.error(`[InscriptionService] Error cancelling inscription ${inscriptionId}:`, error.status, 'Inscription');
 
-        // If it's a 404 or 405 error, try with the DELETE method (for backward compatibility)
-        if (error.status === 404 || error.status === 405) {
-          this.loggingService.warn(`[InscriptionService] PATCH cancellation failed (${error.status}). Trying DELETE as fallback for inscription ${inscriptionId}.`, undefined, 'Inscription');
-          return this.http.delete<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`).pipe(
-            tap(() => {
-              this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} cancelled successfully via DELETE.`, undefined, 'Inscription');
-              this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local state
+        // ✅ REFACTORING: Eliminado código de fallback obsoleto PATCH/DELETE
+        // Manejo simplificado de errores - solo PATCH es necesario
+        this.clearFormState(inscriptionId);
+        this.handleLocalCancellation(inscriptionId, isProcessCancellation);
 
-              // Add delay to ensure backend processes cancellation
-              setTimeout(() => {
-                this.loggingService.debug('[InscriptionService] Clearing cache after successful cancellation (DELETE).', undefined, 'Inscription');
-                this.clearCacheAndRefresh().subscribe({
-                  next: () => {
-                    this.loggingService.debug('[InscriptionService] Cache cleared and refreshed after cancellation (DELETE).', undefined, 'Inscription');
-                  },
-                  error: (error) => {
-                    console.error('[InscriptionService] Error clearing cache after cancellation (DELETE):', error);
-                  }
-                });
-              }, 1000);
-            }),
-            catchError((deleteError: HttpErrorResponse) => {
-              this.loggingService.debug('[InscriptionService] Error cancelling inscription with DELETE:', deleteError.status, 'Inscription');
-
-              this.clearFormState(inscriptionId); // Clear local form state
-              this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local inscription state
-
-              // Force an update of inscriptions from the backend
-              setTimeout(() => {
-                this.refreshInscriptions();
-              }, 500);
-
-              return this.handleSimpleError(deleteError); // Propagate error
-            })
-          );
-        }
-
-        this.clearFormState(inscriptionId); // Clear local form state
-        this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local inscription state
-
+        // Forzar actualización desde backend
         setTimeout(() => {
           this.refreshInscriptions();
         }, 500);
 
-        return this.handleSimpleError(error); // Propagate error
+        return this.handleSimpleError(error);
       })
     );
   }
@@ -706,8 +686,8 @@ export class InscriptionService {
         contestId: localInscription?.contestId || 0,
         userId: localInscription?.userId || '',
         status: request.state, // Return the requested state as 'successfully' applied locally
-        inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-        createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+        inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+        createdAt: this.getValidDateString(localInscription?.createdAt),
         updatedAt: new Date().toISOString()
       } as IInscriptionResponse);
     }
@@ -788,8 +768,8 @@ export class InscriptionService {
                       contestId: localInscription?.contestId || 0,
                       userId: localInscription?.userId || '',
                       status: request.state,
-                      inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-                      createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+                      inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+                      createdAt: this.getValidDateString(localInscription?.createdAt),
                       updatedAt: new Date().toISOString()
                     } as IInscriptionResponse);
                   })
@@ -799,13 +779,14 @@ export class InscriptionService {
               delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter to avoid infinite loops
               // We already updated the local state, so we can return a successful observable
               const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
+
               return of({
                 id: inscriptionId,
                 contestId: localInscription?.contestId || 0,
                 userId: localInscription?.userId || '',
                 status: request.state,
-                inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-                createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+                inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+                createdAt: this.getValidDateString(localInscription?.createdAt),
                 updatedAt: new Date().toISOString()
               } as IInscriptionResponse);
             })
@@ -817,13 +798,14 @@ export class InscriptionService {
           this.loggingService.warn(`[InscriptionService] Update status failed with ${error.status}. Returning local state as fallback.`, undefined, 'Inscription');
           // We already updated the local state, so we can return a successful observable
           const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
+
           return of({
             id: inscriptionId,
             contestId: localInscription?.contestId || 0,
             userId: localInscription?.userId || '',
             status: request.state,
-            inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-            createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+            inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+            createdAt: this.getValidDateString(localInscription?.createdAt),
             updatedAt: new Date().toISOString()
           } as IInscriptionResponse);
         }
@@ -896,8 +878,8 @@ export class InscriptionService {
         contestId: localInscription?.contestId || 0,
         userId: localInscription?.userId || '',
         status: localInscription?.state, // Return current local status
-        inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-        createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+        inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+        createdAt: this.getValidDateString(localInscription?.createdAt),
         updatedAt: new Date().toISOString()
       } as IInscriptionResponse);
     }
@@ -937,8 +919,8 @@ export class InscriptionService {
             contestId: localInscription?.contestId || 0,
             userId: localInscription?.userId || '',
             status: localInscription?.state, // Return current local status
-            inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-            createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+            inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+            createdAt: this.getValidDateString(localInscription?.createdAt),
             updatedAt: new Date().toISOString()
           } as IInscriptionResponse);
         }
@@ -1002,6 +984,32 @@ export class InscriptionService {
     this.loggingService.info('[InscriptionService] Forcing refresh of user inscriptions from backend.', undefined, 'Inscription');
     // Calling getUserInscriptions with forceReload will bypass cache and fetch fresh data
     return this.getUserInscriptions();
+  }
+
+  /**
+   * Verifica el estado real de una inscripción específica desde el backend
+   * @param inscriptionId ID de la inscripción
+   * @returns Observable con el estado actual de la inscripción
+   */
+  verifyInscriptionState(inscriptionId: string): Observable<InscripcionState> {
+    this.loggingService.info(`[InscriptionService] Verifying real state for inscription ${inscriptionId}`, undefined, 'Inscription');
+
+    // CRITICAL FIX: El endpoint /api/inscriptions/{id} devuelve InscriptionDetailResponse con campo 'estado'
+    return this.http.get<any>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`).pipe(
+      map(response => {
+        // El endpoint devuelve 'estado' en lugar de 'status'
+        const estado = response.estado || response.status;
+        if (!estado) {
+          this.loggingService.error(`[InscriptionService] No state field found in response for inscription ${inscriptionId}`, response, 'Inscription');
+          throw new Error('Estado de inscripción no encontrado en la respuesta');
+        }
+        return this.mapStatusToState(estado);
+      }),
+      catchError(error => {
+        this.loggingService.error(`[InscriptionService] Error verifying inscription state for ${inscriptionId}:`, error, 'Inscription');
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

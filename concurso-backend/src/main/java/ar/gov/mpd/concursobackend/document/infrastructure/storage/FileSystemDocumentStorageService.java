@@ -130,7 +130,6 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
             isInputStreamEmpty = true;
         }
 
-        // CRITICAL REFACTOR: Nueva estructura de almacenamiento por DNI
         // Validar parámetros requeridos
         if (userDni == null || userDni.trim().isEmpty()) {
             throw new DocumentException("DNI del usuario es requerido para el almacenamiento");

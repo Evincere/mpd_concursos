@@ -18,6 +18,7 @@ import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -117,6 +118,9 @@ public class InscriptionUserStatusController {
                 notificationService.sendNotification(completionRequest);
                 log.info("Notification sent to user about completed inscription: {}", id);
 
+            } catch (ObjectOptimisticLockingFailureException e) {
+                // Don't fail the request if notification fails due to optimistic locking
+                log.warn("Notification failed due to optimistic locking conflict for inscription {}: {}. Status update was successful.", id, e.getMessage());
             } catch (Exception e) {
                 // Don't fail the request if notification fails
                 log.error("Failed to send notifications about pending inscription: {}", id, e);

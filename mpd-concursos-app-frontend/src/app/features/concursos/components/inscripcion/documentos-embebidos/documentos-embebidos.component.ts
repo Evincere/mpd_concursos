@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
 import { FormsModule } from '@angular/forms';
 import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
@@ -6,15 +6,16 @@ import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.ser
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { NotificationService } from '@shared/services/notification.service';
 
-import { DocumentoUsuario, TipoDocumento, EstadoDocumento } from '@core/models/documento.model'; // Import EstadoDocumento
+import { DocumentoUsuario, TipoDocumento, EstadoDocumento, DocumentoReplaceResponse } from '@core/models/documento.model'; // Import EstadoDocumento
 import { DocumentoUploadDialogComponent } from './documento-upload-dialog/documento-upload-dialog.component';
 import { DocumentoMultipleUploadDialogComponent } from './documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { LoggingService } from '@core/services/logging/logging.service';
 
-import { finalize, catchError, map } from 'rxjs/operators'; // Import map
+import { finalize, catchError, map, debounceTime, distinctUntilChanged } from 'rxjs/operators'; // Import map
 import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
+import { ConfirmationService } from '@shared/services/confirmation.service';
 
 @Component({
   selector: 'app-documentos-embebidos',
@@ -489,8 +490,14 @@ import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
       position: absolute;
       top: 8px;
       right: 8px;
-      z-index: 10;
+      z-index: 15; /* Z-index más alto para estar siempre encima */
       opacity: 0.7;
+      /* CRITICAL FIX: Asegurar que el botón tenga espacio suficiente */
+      min-width: 40px;
+      min-height: 40px;
+      /* CRITICAL FIX: Área de click clara */
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
       transition: opacity 0.3s ease;
 
       &:hover {
@@ -505,6 +512,7 @@ import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
       align-items: flex-start;
       margin-bottom: 1rem;
       z-index: 1;
+      position: relative;
       position: relative;
     }
 
@@ -597,12 +605,22 @@ import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
 
     .documento-estado {
       flex-shrink: 0;
+      /* CRITICAL FIX: Agregar margen derecho para evitar superposición con botón eliminar */
+      margin-right: 60px; /* Más espacio para el botón de eliminar */
+      max-width: calc(100% - 70px); /* Limitar ancho para evitar overflow */
     }
 
     .estado-texto {
       display: flex;
       align-items: center;
       font-size: 0.85rem;
+      /* CRITICAL FIX: Asegurar que el texto no se desborde */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* CRITICAL FIX: Máximo ancho para evitar superposición absoluta */
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .estado-texto i {
@@ -614,38 +632,42 @@ import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
       color: #10b981;
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.2);
-      padding: 0.5rem 0.75rem;
+      padding: 0.4rem 0.6rem; /* Padding más compacto */
       border-radius: 6px;
       backdrop-filter: blur(4px);
       font-weight: 600;
+      font-size: 0.8rem; /* Texto ligeramente más pequeño */
     }
 
     .estado-texto.pendiente {
       color: #f59e0b;
       background: rgba(245, 158, 11, 0.1);
       border: 1px solid rgba(245, 158, 11, 0.2);
-      padding: 0.5rem 0.75rem;
+      padding: 0.4rem 0.6rem; /* Padding más compacto */
       border-radius: 6px;
       backdrop-filter: blur(4px);
       font-weight: 600;
+      font-size: 0.8rem; /* Texto ligeramente más pequeño */
     }
 
     .estado-texto.rechazado {
       color: #ef4444;
       background: rgba(239, 68, 68, 0.1);
       border: 1px solid rgba(239, 68, 68, 0.2);
-      padding: 0.5rem 0.75rem;
+      padding: 0.4rem 0.6rem; /* Padding más compacto */
       border-radius: 6px;
       backdrop-filter: blur(4px);
       font-weight: 600;
+      font-size: 0.8rem; /* Texto ligeramente más pequeño */
     }
 
     .estado-texto.no-subido {
       color: #9ca3af;
       background: rgba(156, 163, 175, 0.1);
       border: 1px solid rgba(156, 163, 175, 0.2);
-      padding: 0.5rem 0.75rem;
+      padding: 0.4rem 0.6rem; /* Padding más compacto */
       border-radius: 6px;
+      font-size: 0.8rem; /* Texto ligeramente más pequeño */
       backdrop-filter: blur(4px);
       font-weight: 600;
     }
@@ -831,6 +853,24 @@ import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
         margin-bottom: 0.75rem;
       }
 
+      /* CRITICAL FIX: Ajustes responsivos para evitar superposición en móviles */
+      .documento-estado {
+        margin-right: 50px; /* Margen suficiente en móviles */
+        max-width: calc(100% - 55px);
+      }
+
+      .estado-texto {
+        font-size: 0.75rem; /* Texto más pequeño en móviles */
+        padding: 0.3rem 0.5rem; /* Padding más reducido */
+      }
+
+      .delete-button-corner {
+        top: 6px;
+        right: 6px;
+        min-width: 36px;
+        min-height: 36px;
+      }
+
       .documento-icon i {
         font-size: 28px;
       }
@@ -920,6 +960,9 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   showDeadlineWarning = false;
   private lastNotificationHour = -1; // Para evitar notificaciones duplicadas
 
+  // CRITICAL FIX: Flag para controlar notificación de documentación completada
+  private documentacionCompletadaNotificada: boolean = false;
+
   // Cache para evitar múltiples verificaciones
   private documentoSubidoCache: Record<string, boolean> = {};
   private documentoCache: Record<string, DocumentoUsuario> = {};
@@ -931,24 +974,26 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     private dialog: UnifiedDialogService,
     private notificationService: NotificationService,
     private documentosService: DocumentosService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private cdr: ChangeDetectorRef,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
     this.loggingService.debug('[DocumentosEmbebidos] Componente inicializado.', undefined, 'DocumentosEmbebidos');
+
+    // CRITICAL FIX: Reset flag de notificación al inicializar
+    this.documentacionCompletadaNotificada = false;
+
     // Force data reload on init
     this.cargarDatos(true);
 
     // Calculate deadline on init if available
     this.calculateDocumentationDeadline();
 
-    // CRITICAL FIX: Eliminar suscripción duplicada que causa ciclo infinito
-    // Esta suscripción se elimina porque causa conflictos con documentacion-tab
-    // Los datos se actualizarán a través del cache del servicio
-    // this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
-    //   this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Recargando datos.', undefined, 'DocumentosEmbebidos');
-    //   this.cargarDatos(true); // Force reload all data
-    // });
+    // CRITICAL FIX: Eliminar suscripción automática que causaba bucle infinito
+    // Las actualizaciones se manejan manualmente después de operaciones específicas
+    // (subir, eliminar, reemplazar documentos) para evitar ciclos infinitos
 
     // Update deadlines every minute
     this.deadlineInterval = setInterval(() => {
@@ -977,20 +1022,20 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     this.loggingService.debug(`[DocumentosEmbebidos] Cargando datos (forzarRecarga: ${forceReload})...`, undefined, 'DocumentosEmbebidos');
 
     // Use forkJoin to fetch both types of documents in parallel
-    forkJoin([
-      this.documentosService.getTiposDocumento(forceReload),
-      this.documentosService.getDocumentosUsuario(forceReload)
-    ]).pipe(
-      map(([tiposDocumento, documentosUsuario]) => {
+    forkJoin({
+      tiposDocumento: this.documentosService.getTiposDocumento(forceReload),
+      documentosUsuario: this.documentosService.getDocumentosUsuario(forceReload)
+    }).pipe(
+      map(({ tiposDocumento, documentosUsuario }) => {
         // First, process and consolidate required document types
         const processedRequiredDocs = this.processRequiredDocumentTypes(tiposDocumento);
         this.documentosRequeridos = processedRequiredDocs;
 
         // Then, update user's uploaded documents and caches
-        this.documentosUsuario = documentosUsuario;
+        this.documentosUsuario = documentosUsuario || [];
         this.documentoSubidoCache = {}; // Reset cache
         this.documentoCache = {}; // Reset cache
-        for (const documento of documentosUsuario) {
+        for (const documento of this.documentosUsuario) {
           if (documento.tipoDocumentoId) {
             // CRITICAL FIX: Marcar como subido independientemente del estado de aprobación
             this.documentoSubidoCache[documento.tipoDocumentoId] = true;
@@ -1009,8 +1054,12 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.loggingService.debug('[DocumentosEmbebidos] Carga de datos finalizada. Calculando progreso...', undefined, 'DocumentosEmbebidos');
         this.calcularProgreso(); // Calculate progress after both lists are loaded and caches updated
-        // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
-        // Angular manejará automáticamente la detección de cambios
+
+        // CRITICAL FIX: Forzar detección de cambios después de actualizar datos
+        setTimeout(() => {
+          this.cdr.detectChanges();
+          this.loggingService.debug('[DocumentosEmbebidos] Detección de cambios forzada después de cargar datos', undefined, 'DocumentosEmbebidos');
+        }, 100);
       }),
       catchError(error => {
         console.error('[DocumentosEmbebidos] Error al cargar datos combinados:', error);
@@ -1163,7 +1212,6 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
    * CRITICAL FIX: Solo considera documentos marcados como 'required: true' para el progreso
    */
   calcularProgreso(): void {
-    console.log('🔥 MÉTODO calcularProgreso() EJECUTÁNDOSE - CORRECCIÓN APLICADA');
     this.loggingService.debug('[DocumentosEmbebidos] Recalculando progreso de documentos...', undefined, 'DocumentosEmbebidos');
 
     // ✅ ACTUALIZAR ESTADO DE COMPLETITUD PARA TODOS LOS DOCUMENTOS (obligatorios y opcionales)
@@ -1220,9 +1268,15 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       todosDocumentosCompletos: this.todosDocumentosCompletos
     }, 'DocumentosEmbebidos');
 
-    // ✅ SOLO NOTIFICAR SI REALMENTE TODOS LOS DOCUMENTOS OBLIGATORIOS ESTÁN COMPLETOS
-    if (this.todosDocumentosCompletos) {
+    // ✅ CRITICAL FIX: SOLO NOTIFICAR UNA VEZ cuando se complete la documentación
+    if (this.todosDocumentosCompletos && !this.documentacionCompletadaNotificada) {
       this.notificationService.success('¡Has completado toda la documentación obligatoria!');
+      this.documentacionCompletadaNotificada = true;
+      this.loggingService.debug('[DocumentosEmbebidos] Notificación de documentación completada enviada (primera vez)', undefined, 'DocumentosEmbebidos');
+    } else if (!this.todosDocumentosCompletos && this.documentacionCompletadaNotificada) {
+      // RESET: Si ya no están todos completos, permitir notificar nuevamente cuando se completen
+      this.documentacionCompletadaNotificada = false;
+      this.loggingService.debug('[DocumentosEmbebidos] Flag de notificación reseteado - documentación ya no está completa', undefined, 'DocumentosEmbebidos');
     }
 
     this.emitirEstadoDocumentos();
@@ -1249,13 +1303,6 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     }
     // Verificación estándar para todos los documentos (incluidos DNI frente y dorso por separado)
     const isUploaded = this.documentoSubidoCache[tipoDocumentoId] === true;
-
-    // Log para debugging
-    this.loggingService.debug(`[DocumentosEmbebidos] Verificando documento ${tipoDocumentoId}: ${isUploaded ? 'SUBIDO' : 'NO SUBIDO'}`, {
-      tipoDocumentoId,
-      cacheValue: this.documentoSubidoCache[tipoDocumentoId],
-      allCache: this.documentoSubidoCache
-    }, 'DocumentosEmbebidos');
 
     return isUploaded;
   }
@@ -1301,29 +1348,81 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     const esReemplazo = this.isDocumentoSubido(tipoDocumentoId);
     const documentoExistente = esReemplazo ? this.getDocumento(tipoDocumentoId) : null;
 
-    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo diálogo para ${esReemplazo ? 'reemplazar' : 'cargar'} documento: ${tipoDocumentoId}`, undefined, 'DocumentosEmbebidos');
+    if (!esReemplazo) {
+      // Flujo original para carga nueva
+      this.dialog.open(DocumentoUploadDialogComponent, {
+        title: `Cargar ${tipoDoc.title}`,
+        showFooter: false,
+        showCancelButton: false,
+        showConfirmButton: false,
+        data: {
+          tipoDocumentoId: tipoDoc.tipoDocumentoId,
+          tipoDocumentoNombre: tipoDoc.title,
+          modoReemplazo: false,
+          documentoExistente: null
+        }
+      }).afterClosed().subscribe((result: any) => {
+        if (result && result.success) {
+          this.notificationService.success(`${tipoDoc.title} cargado exitosamente.`);
+          this.documentosService.invalidarCache();
+          this.cargarDatos(true);
+          setTimeout(() => this.cdr.detectChanges(), 200);
+        } else if (result && result.cancelled) {
+          this.loggingService.debug(`[DocumentosEmbebidos] Carga de documento cancelada.`, undefined, 'DocumentosEmbebidos');
+        } else if (result !== null && result !== undefined) {
+          this.notificationService.error(`Error al cargar ${tipoDoc.title}.`);
+        }
+      });
+      return;
+    }
 
-    this.dialog.open(DocumentoUploadDialogComponent, {
-      title: `${esReemplazo ? 'Reemplazar' : 'Cargar'} ${tipoDoc.title}`,
-      showFooter: false, // Disable external footer buttons
-      showCancelButton: false, // Disable external cancel button
-      showConfirmButton: false, // Disable external confirm button
-      data: {
-        tipoDocumentoId: tipoDoc.tipoDocumentoId,
-        tipoDocumentoNombre: tipoDoc.title,
-        modoReemplazo: esReemplazo,
-        documentoExistente: documentoExistente
-      }
-    }).afterClosed().subscribe((result: any) => {
-      if (result && result.success) {
-        this.notificationService.success(`${tipoDoc.title} ${esReemplazo ? 'reemplazado' : 'cargado'} exitosamente.`);
-        this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
-      } else if (result && result.cancelled) {
-        this.loggingService.debug(`[DocumentosEmbebidos] ${esReemplazo ? 'Reemplazo' : 'Carga'} de documento cancelada.`, undefined, 'DocumentosEmbebidos');
-      } else if (result !== null && result !== undefined) {
-        this.notificationService.error(`Error al ${esReemplazo ? 'reemplazar' : 'cargar'} ${tipoDoc.title}.`);
-      }
-    });
+    // --- NUEVO FLUJO DE REEMPLAZO ROBUSTO ---
+    // Abrir selector de archivo para reemplazo
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/pdf';
+    input.onchange = () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      this.documentosService.replaceDocumento(documentoExistente!.id!, file).subscribe({
+        next: (resp: DocumentoReplaceResponse) => {
+          if (resp.warning && resp.impactedEntities && resp.impactedEntities.length > 0) {
+            const detalle = resp.impactedEntities.map(e => `<li>${e}</li>`).join('');
+            this.dialog.openConfirm({
+              title: 'Advertencia de reemplazo',
+              icon: 'warning',
+              message: `${resp.warning}<ul>${detalle}</ul><p>¿Deseas continuar y reemplazar el documento?</p>`,
+              confirmButtonText: 'Reemplazar',
+              cancelButtonText: 'Cancelar',
+              size: 'medium',
+            }).afterClosed().subscribe((confirmado: boolean | undefined) => {
+              if (confirmado) {
+                this.documentosService.replaceDocumento(documentoExistente!.id!, file, undefined, true).subscribe({
+                  next: (resp2: DocumentoReplaceResponse) => {
+                    this.notificationService.success(resp2.message || `${tipoDoc.title} reemplazado exitosamente.`);
+                    this.documentosService.invalidarCache();
+                    this.cargarDatos(true);
+                    setTimeout(() => this.cdr.detectChanges(), 200);
+                  },
+                  error: (err) => {
+                    this.notificationService.error(err?.message || `Error al reemplazar ${tipoDoc.title}.`);
+                  }
+                });
+              }
+            });
+          } else {
+            this.notificationService.success(resp.message || `${tipoDoc.title} reemplazado exitosamente.`);
+            this.documentosService.invalidarCache();
+            this.cargarDatos(true);
+            setTimeout(() => this.cdr.detectChanges(), 200);
+          }
+        },
+        error: (err) => {
+          this.notificationService.error(err?.message || `Error al reemplazar ${tipoDoc.title}.`);
+        }
+      });
+    };
+    input.click();
   }
 
   /**
@@ -1350,7 +1449,17 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
             // CRITICAL FIX: Eliminar notificación duplicada
             // El componente hijo ya maneja las notificaciones en finalizarProceso()
             // this.notificationService.success('Documentos cargados exitosamente.');
+
+            // CRITICAL FIX: Invalidar cache y recargar datos para forzar actualización de UI
+            this.documentosService.invalidarCache();
             this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
+
+            // CRITICAL FIX: Forzar actualización inmediata de la UI después de carga múltiple
+            setTimeout(() => {
+              this.cdr.detectChanges();
+              this.loggingService.debug('[DocumentosEmbebidos] UI actualizada después de carga múltiple exitosa', undefined, 'DocumentosEmbebidos');
+            }, 300);
+
           } else if (result && result.cancelled) {
             this.loggingService.debug('[DocumentosEmbebidos] Carga múltiple de documentos cancelada.', undefined, 'DocumentosEmbebidos');
           } else if (result !== null && result !== undefined) {
@@ -1392,6 +1501,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
   /**
    * Deletes an uploaded document after confirmation.
+   * CRITICAL FIX: Reemplaza modal nativo con componente personalizado y corrige manejo de respuesta
    * @param documento The DocumentoUsuario object to delete.
    */
   eliminarDocumento(documento: DocumentoUsuario | undefined): void {
@@ -1402,29 +1512,37 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
     this.loggingService.debug(`[DocumentosEmbebidos] Confirmando eliminación para documento: ${documento.nombreArchivo}`, undefined, 'DocumentosEmbebidos');
 
-    // Usar un diálogo de confirmación simple
-    if (confirm(`¿Está seguro de que desea eliminar el documento "${documento.nombreArchivo}"? Esta acción no se puede deshacer.`)) {
-      this.loggingService.debug(`[DocumentosEmbebidos] Eliminando documento: ${documento.id}`, undefined, 'DocumentosEmbebidos');
-      if (!documento.id) {
-        this.notificationService.error('ID de documento no válido.');
-        return;
-      }
-      this.documentosService.deleteDocumento(documento.id).pipe(
-          finalize(() => this.isLoading = false),
-          catchError(error => {
-            console.error('[DocumentosEmbebidos] Error al eliminar documento:', error);
-            this.notificationService.error(`Error al eliminar ${documento.nombreArchivo}.`);
-            return of(null);
-          })
-        ).subscribe(success => {
-          if (success) {
-            this.notificationService.success(`"${documento.nombreArchivo}" eliminado exitosamente.`);
-            this.cargarDatos(true); // Recargar datos para actualizar la UI
-          } else {
-            this.notificationService.error(`Error al eliminar ${documento.nombreArchivo}.`);
-          }
-        });
-      }
+    this.confirmationService
+      .danger(
+        'Eliminar Documento',
+        `¿Está seguro de que desea eliminar el documento "${documento.nombreArchivo}"?`,
+        'Esta acción no se puede deshacer.',
+        'Eliminar',
+        'Cancelar'
+      )
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.loggingService.debug(`[DocumentosEmbebidos] Eliminando documento: ${documento.id}`, undefined, 'DocumentosEmbebidos');
+
+          this.isLoading = true;
+          this.documentosService.deleteDocumento(documento.id!).pipe(
+            finalize(() => {
+              this.isLoading = false;
+              this.loggingService.debug('[DocumentosEmbebidos] Operación de eliminación finalizada', undefined, 'DocumentosEmbebidos');
+            })
+          ).subscribe(success => {
+            if (success) {
+              this.loggingService.debug('[DocumentosEmbebidos] Documento eliminado exitosamente', undefined, 'DocumentosEmbebidos');
+              this.notificationService.success(`"${documento.nombreArchivo}" eliminado exitosamente.`);
+              this.cargarDatos(true);
+            } else {
+              this.notificationService.error(`Error al eliminar ${documento.nombreArchivo}.`);
+            }
+          });
+        } else {
+          this.loggingService.debug('[DocumentosEmbebidos] Eliminación cancelada por el usuario', undefined, 'DocumentosEmbebidos');
+        }
+      });
   }
 
   /**

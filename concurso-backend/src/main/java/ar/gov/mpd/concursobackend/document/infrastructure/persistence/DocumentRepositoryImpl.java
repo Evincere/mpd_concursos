@@ -6,9 +6,12 @@ import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentSpringRepository;
+
 import ar.gov.mpd.concursobackend.document.infrastructure.mapper.DocumentEntityMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,10 +27,40 @@ public class DocumentRepositoryImpl implements IDocumentRepository {
     private final IDocumentSpringRepository documentSpringRepository;
     private final DocumentEntityMapper documentEntityMapper;
 
+    // Logger específico para versioning debug
+    private static final Logger versioningLog = LoggerFactory.getLogger("VERSIONING_DEBUG");
+
     @Override
     public Document save(Document document) {
+        // LOGGING CRÍTICO: Capturar stack trace para ver quién llama
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        String caller = "Unknown";
+        for (int i = 3; i < Math.min(8, stackTrace.length); i++) {
+            String className = stackTrace[i].getClassName();
+            if (className.contains("ar.gov.mpd.concursobackend") &&
+                !className.contains("DocumentRepositoryImpl")) {
+                caller = className.substring(className.lastIndexOf('.') + 1) +
+                        "." + stackTrace[i].getMethodName() + ":" + stackTrace[i].getLineNumber();
+                break;
+            }
+        }
+
+        // LOGGING CRÍTICO: Estado antes de mapear a entity
+        versioningLog.error("💾 [REPO] BEFORE_MAPPING | ID: {} | Domain File: {} | FilePath: {} | Caller: {}",
+            document.getId().value(), document.getFileName().value(), document.getFilePath(), caller);
+
         var entity = documentEntityMapper.toEntity(document);
+
+        // LOGGING CRÍTICO: Estado después de mapear a entity
+        versioningLog.error("💾 [REPO] AFTER_MAPPING  | ID: {} | Entity Version: {} | Entity File: {} | Entity FilePath: {}",
+            entity.getId(), entity.getVersion(), entity.getFileName(), entity.getFilePath());
+
         var savedEntity = documentSpringRepository.save(entity);
+
+        // LOGGING CRÍTICO: Estado después de save
+        versioningLog.error("💾 [REPO] AFTER_JPA_SAVE | ID: {} | Final Version: {} | Final File: {} | Final FilePath: {}",
+            savedEntity.getId(), savedEntity.getVersion(), savedEntity.getFileName(), savedEntity.getFilePath());
+
         return documentEntityMapper.toDomain(savedEntity);
     }
 
@@ -100,6 +133,15 @@ public class DocumentRepositoryImpl implements IDocumentRepository {
     }
 
     @Override
+    public Optional<Document> findLatestActiveByUserAndType(UUID userId, DocumentTypeId documentTypeId) {
+        log.debug("🔍 [DocumentRepository] Searching latest active document for userId: {} and documentTypeId: {}",
+                userId, documentTypeId.value());
+
+        return documentSpringRepository.findLatestActiveByUserAndType(userId, documentTypeId.value())
+                .map(documentEntityMapper::toDomain);
+    }
+
+    @Override
     public List<Document> findArchivedByUserId(UUID userId) {
         log.debug("🔍 [DocumentRepository] Searching archived documents for userId: {}", userId);
 
@@ -113,11 +155,11 @@ public class DocumentRepositoryImpl implements IDocumentRepository {
 
     @Override
     public List<Document> findVersionHistory(UUID userId, DocumentTypeId documentTypeId) {
-        log.debug("🔍 [DocumentRepository] Searching version history for userId: {} and documentTypeId: {}",
+        log.debug("🔍 [DocumentRepository] Searching document history for userId: {} and documentTypeId: {}",
                 userId, documentTypeId.value());
 
         List<DocumentEntity> entities = documentSpringRepository.findVersionHistory(userId, documentTypeId.value());
-        log.debug("📊 [DocumentRepository] Found {} versions in history", entities.size());
+        log.debug("📊 [DocumentRepository] Found {} documents in history", entities.size());
 
         return entities.stream()
                 .map(documentEntityMapper::toDomain)
@@ -134,5 +176,12 @@ public class DocumentRepositoryImpl implements IDocumentRepository {
         return entities.stream()
                 .map(documentEntityMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Document> findByIdWithPessimisticLock(DocumentId id) {
+        log.debug("🔒 [DocumentRepository] Finding document by ID with PESSIMISTIC_WRITE lock: {}", id.value());
+        return documentSpringRepository.findByIdWithPessimisticLock(id.value())
+                .map(documentEntityMapper::toDomain);
     }
 }

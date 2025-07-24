@@ -16,6 +16,7 @@ import { DocumentosService } from './core/services/documentos/documentos.service
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
+import { concurrencyConflictInterceptor } from './core/interceptors/concurrency-conflict.interceptor';
 // CV Mock interceptor removed - CV functionality will be reimplemented
 import { urlTransformInterceptor } from './core/interceptors/url-transform.interceptor';
 import { environment } from '../environments/environment';
@@ -91,6 +92,7 @@ export const appConfig: ApplicationConfig = {
 function getInterceptors() {
   return [
     AuthInterceptor,
+    concurrencyConflictInterceptor,
     ErrorInterceptor,
     debugInterceptor,
     urlTransformInterceptor
