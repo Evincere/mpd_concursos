@@ -22,6 +22,11 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
   - Cálculo inteligente de completitud (datos personales + documentos)
   - Estados específicos para documentos requeridos vs opcionales
   - Alertas de vencimientos próximos integradas
+- **🚀 Deployment Automatizado**: Sistema de deployment mejorado para producción
+  - Script automatizado con validaciones
+  - Backup automático de base de datos
+  - Configuración de variables de entorno segura
+  - Monitoreo y logging mejorado
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -363,7 +368,7 @@ Los siguientes archivos están listos para futuras implementaciones:
 - **SO**: Ubuntu 22.04 con Docker
 - **Puertos**: 80, 443, 5250, 8090
 
-### Deployment Automático
+### Deployment Automático Mejorado
 
 1. **Clonar el repositorio en el servidor:**
    ```bash
@@ -371,15 +376,39 @@ Los siguientes archivos están listos para futuras implementaciones:
    cd concursos-mpd
    ```
 
-2. **Ejecutar el script de deployment:**
+2. **Configurar variables de entorno:**
    ```bash
-   ./deploy-production.sh
+   # El script creará automáticamente .env.production si no existe
+   # Editar el archivo con las credenciales correctas
+   nano .env.production
    ```
 
-3. **Verificar el deployment:**
+3. **Ejecutar deployment con validaciones:**
    ```bash
-   ./verify-production.sh
+   # Deployment completo con validaciones automáticas
+   ./deploy-production.sh deploy
+
+   # Solo validar configuración
+   ./deploy-production.sh validate
+
+   # Ver estado de servicios
+   ./deploy-production.sh status
    ```
+
+4. **Monitorear el deployment:**
+   ```bash
+   # Ver logs en tiempo real
+   ./deploy-production.sh logs
+   ```
+
+### Características del Nuevo Sistema de Deployment
+
+- ✅ **Validación automática** de variables de entorno
+- ✅ **Backup automático** de base de datos antes del deployment
+- ✅ **Configuración mejorada** con valores por defecto seguros
+- ✅ **Logging detallado** con colores y estados claros
+- ✅ **Rollback fácil** en caso de problemas
+- ✅ **Monitoreo integrado** de recursos y estado
 
 ### URLs de Acceso en Producción
 - **Frontend**: http://149.50.132.23:8000

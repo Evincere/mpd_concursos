@@ -1,4 +1,5 @@
-version: '3.8'
+# Docker Compose para producción - MPD Concursos
+# Nota: version removido para compatibilidad con versiones recientes de Docker Compose
 
 services:
   mysql:
@@ -48,18 +49,33 @@ services:
         condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-mpd_concursos}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-mpd_user}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-mpd_password}
-      # CORREGIDO: Cambiado de "validate" a "none" para evitar conflictos con schema.sql
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Variables de base de datos
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-mpd_concursos}
+      DB_USERNAME: ${MYSQL_USER:-mpd_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-mpd_password}
+      # Variables de configuración JPA
+      HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
-      # CORREGIDO: Deshabilitar inicialización de scripts SQL en producción
       SPRING_SQL_INIT_MODE: never
-      SPRING_MVC_CORS_ALLOWED_ORIGINS: https://vps-4778464-x.dattaweb.com
-      JAVA_OPTS: "-Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+      # Variables de seguridad
+      JWT_SECRET: ${JWT_SECRET:-production_jwt_secret_key_change_this_in_production_environment_minimum_256_bits_required}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      # Configuración CORS
+      SPRING_MVC_CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://vps-4778464-x.dattaweb.com,https://149.50.132.23:8000,http://149.50.132.23:8000}
+      # Configuración de servidor
       SERVER_PORT: 8080
+      CONTEXT_PATH: ""
+      # Configuración de pool de base de datos
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      DB_MIN_IDLE: 5
+      DB_CONNECTION_TIMEOUT: 30000
+      DB_IDLE_TIMEOUT: 600000
+      DB_MAX_LIFETIME: 1800000
+      # Configuración de memoria Java
+      JAVA_OPTS: "${JAVA_OPTS:--Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200}"
+      # Configuración de logging
       LOGGING_LEVEL_ROOT: WARN
       LOGGING_LEVEL_AR_GOV_MPD: INFO
     ports:

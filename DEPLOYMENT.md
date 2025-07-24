@@ -1,0 +1,184 @@
+# Guía de Deployment en Producción - MPD Concursos
+
+## Problemas Resueltos
+
+### 1. Inconsistencias en Configuración
+- ✅ **Corregido**: `docker-compose.prod.yml` ahora usa perfil `prod` correctamente
+- ✅ **Corregido**: Variables de entorno con valores por defecto seguros
+- ✅ **Corregido**: Configuración JPA más flexible (`update` en lugar de `validate`)
+
+### 2. Variables de Entorno Mejoradas
+- ✅ **Agregado**: Soporte para todas las variables de configuración necesarias
+- ✅ **Agregado**: Valores por defecto seguros para desarrollo
+- ✅ **Agregado**: Configuración de pool de conexiones de base de datos
+
+### 3. Script de Deployment Automatizado
+- ✅ **Creado**: Script `deploy-production.sh` con validaciones
+- ✅ **Agregado**: Backup automático de base de datos
+- ✅ **Agregado**: Validación de variables de entorno
+- ✅ **Agregado**: Logging mejorado y manejo de errores
+
+## Requisitos Previos
+
+1. **Docker y Docker Compose** instalados
+2. **Archivo `.env.production`** configurado correctamente
+3. **Acceso al servidor** de producción
+4. **Base de datos MySQL** disponible
+
+## Configuración de Variables de Entorno
+
+### Archivo `.env.production`
+
+El archivo `.env.production` debe contener las siguientes variables:
+
+```bash
+# Base de datos MySQL
+MYSQL_ROOT_PASSWORD=tu_password_root_seguro
+MYSQL_DATABASE=mpd_concursos
+MYSQL_USER=mpd_user
+MYSQL_PASSWORD=tu_password_usuario_seguro
+
+# Configuración del servidor
+SERVER_HOST=149.50.132.23
+SERVER_PORT_FRONTEND=8000
+SERVER_PORT_BACKEND=8080
+SERVER_PORT_MYSQL=3307
+
+# Configuración de seguridad JWT
+JWT_SECRET=tu_jwt_secret_muy_largo_y_seguro_minimo_256_bits
+JWT_EXPIRATION=86400000
+
+# Configuración CORS
+CORS_ALLOWED_ORIGINS=https://149.50.132.23:8000,http://149.50.132.23:8000
+
+# Configuración de base de datos
+DB_POOL_SIZE=10
+DB_CONNECTION_TIMEOUT=30000
+DB_IDLE_TIMEOUT=600000
+
+# Configuración de memoria Java
+JAVA_OPTS=-Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+```
+
+## Comandos de Deployment
+
+### 1. Deployment Completo
+```bash
+./deploy-production.sh deploy
+```
+
+### 2. Solo Validar Configuración
+```bash
+./deploy-production.sh validate
+```
+
+### 3. Solo Hacer Backup
+```bash
+./deploy-production.sh backup
+```
+
+### 4. Ver Logs
+```bash
+./deploy-production.sh logs
+```
+
+### 5. Ver Estado de Servicios
+```bash
+./deploy-production.sh status
+```
+
+## Proceso de Deployment
+
+1. **Validación**: El script valida que todas las variables de entorno estén configuradas
+2. **Backup**: Se crea un backup automático de la base de datos existente
+3. **Limpieza**: Se detienen servicios existentes y se limpian imágenes antiguas
+4. **Build**: Se construyen las nuevas imágenes Docker
+5. **Deploy**: Se levantan los servicios en producción
+6. **Verificación**: Se verifica el estado de los servicios y se muestran los logs
+
+## Solución de Problemas
+
+### Error: Variables de entorno faltantes
+```bash
+# Ejecutar validación para ver qué variables faltan
+./deploy-production.sh validate
+```
+
+### Error: Conexión a base de datos
+1. Verificar que las credenciales en `.env.production` sean correctas
+2. Verificar que el puerto de MySQL (3307) esté disponible
+3. Revisar logs del contenedor MySQL:
+```bash
+docker-compose -f docker-compose.prod.yml logs mysql
+```
+
+### Error: CORS en frontend
+1. Verificar que `CORS_ALLOWED_ORIGINS` incluya la URL correcta del frontend
+2. Verificar que el frontend esté configurado para usar la URL correcta del backend
+
+### Error: JWT Token
+1. Verificar que `JWT_SECRET` tenga al menos 256 bits (32 caracteres)
+2. Verificar que `JWT_EXPIRATION` esté configurado correctamente
+
+## Monitoreo
+
+### Ver logs en tiempo real
+```bash
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+### Ver logs específicos del backend
+```bash
+docker-compose -f docker-compose.prod.yml logs -f backend
+```
+
+### Ver estado de recursos
+```bash
+docker stats
+```
+
+## Rollback
+
+En caso de problemas, puedes hacer rollback:
+
+1. **Detener servicios actuales**:
+```bash
+docker-compose -f docker-compose.prod.yml down
+```
+
+2. **Restaurar backup de base de datos**:
+```bash
+# Encontrar el backup más reciente en ./backups/
+# Restaurar usando docker exec
+```
+
+3. **Levantar versión anterior**:
+```bash
+# Usar imagen anterior o código anterior
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## URLs de Producción
+
+Después del deployment exitoso, los servicios estarán disponibles en:
+
+- **Frontend**: http://149.50.132.23:8000
+- **Backend**: http://149.50.132.23:8080
+- **API**: http://149.50.132.23:8080/api
+- **Health Check**: http://149.50.132.23:8080/actuator/health
+
+## Notas Importantes
+
+1. **Seguridad**: Nunca commitear el archivo `.env.production` al repositorio
+2. **Backups**: Los backups se guardan en `./backups/` con timestamp
+3. **Logs**: Los logs de aplicación se guardan en `./logs/`
+4. **Certificados**: Para HTTPS, configurar certificados SSL adicionales
+5. **Firewall**: Asegurar que los puertos 8000 y 8080 estén abiertos en el servidor
+
+## Contacto
+
+Para problemas con el deployment, revisar:
+1. Logs del script de deployment
+2. Logs de Docker Compose
+3. Logs específicos de cada servicio
+4. Estado de la red y conectividad
