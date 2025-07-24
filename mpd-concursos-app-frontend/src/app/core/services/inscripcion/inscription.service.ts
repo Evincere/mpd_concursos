@@ -403,29 +403,8 @@ export class InscriptionService {
             }),
             catchError(secondError => {
               this.loggingService.debug('[InscriptionService] Error with alternative old endpoint:', secondError.status, 'Inscription');
-              // If it also fails, return an empty array to avoid UI errors
-              this.inscriptions$.next([]);
-              const emptyPage: Page<IInscriptionResponse> = {
-                content: [],
-                totalElements: 0,
-                totalPages: 0,
-                number: 0,
-                size: 10,
-                pageable: {
-                  sort: { sorted: false, unsorted: true, empty: true },
-                  pageNumber: 0,
-                  pageSize: 10,
-                  offset: 0,
-                  paged: true,
-                  unpaged: false
-                },
-                last: true,
-                sort: { sorted: false, unsorted: true, empty: true },
-                first: true,
-                numberOfElements: 0,
-                empty: true
-              };
-              return of(emptyPage);
+              // If it also fails, re-throw the error to be caught by the calling service
+              return throwError(() => secondError);
             })
           );
         }

@@ -74,9 +74,10 @@ export class ConcursoFormDialogComponent implements OnInit, OnDestroy {
 
   statusOptions: { value: ContestStatus, label: string }[] = [
     { value: 'DRAFT', label: 'Borrador' },
-    { value: 'INSCRIPTION_OPEN', label: 'Inscripciones Abiertas' },
+    { value: 'SCHEDULED', label: 'Programado' },
+    { value: 'ACTIVE', label: 'Activo' },
+    { value: 'CLOSED', label: 'Cerrado' },
     { value: 'IN_EVALUATION', label: 'En Evaluación' },
-    { value: 'INSCRIPTION_CLOSED', label: 'Inscripciones Cerradas' },
     { value: 'CANCELLED', label: 'Cancelado' }
   ];
 

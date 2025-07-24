@@ -1,5 +1,6 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.persistence;
 
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
@@ -52,6 +53,23 @@ public class ContestPersistenceAdapter implements ContestRepository {
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Contest> findByStatus(ContestStatus status) {
+        try {
+            log.debug("Buscando concursos con estado: {}", status);
+            List<ContestEntity> entities = repository.findByStatus(status);
+            log.debug("Se encontraron {} concursos con estado {}", entities.size(), status);
+
+            return entities.stream()
+                .map(mapper::toDomain)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error al obtener concursos por estado: {}", status, e);
+            throw new RuntimeException("Error al obtener concursos por estado: " + e.getMessage(), e);
+        }
     }
 
     @Override

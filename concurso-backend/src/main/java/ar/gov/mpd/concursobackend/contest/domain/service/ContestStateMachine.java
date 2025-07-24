@@ -19,22 +19,21 @@ public class ContestStateMachine {
     private static Map<ContestStatus, Set<ContestStatus>> createTransitionsMap() {
         Map<ContestStatus, Set<ContestStatus>> transitions = new HashMap<>();
 
-        // Estados administrativos principales
-        transitions.put(ContestStatus.DRAFT, Set.of(ContestStatus.PUBLISHED, ContestStatus.CANCELLED));
-        transitions.put(ContestStatus.PUBLISHED, Set.of(ContestStatus.INSCRIPTION_OPEN, ContestStatus.PAUSED, ContestStatus.CANCELLED));
-        transitions.put(ContestStatus.PAUSED, Set.of(ContestStatus.PUBLISHED, ContestStatus.CANCELLED));
-        transitions.put(ContestStatus.CANCELLED, Set.of()); // Final state
-        transitions.put(ContestStatus.FINISHED, Set.of(ContestStatus.ARCHIVED));
-        transitions.put(ContestStatus.ARCHIVED, Set.of()); // Final state
+        // Estados administrativos principales - flujo simplificado
+        transitions.put(ContestStatus.DRAFT, Set.of(ContestStatus.SCHEDULED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.SCHEDULED, Set.of(ContestStatus.ACTIVE, ContestStatus.PAUSED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.ACTIVE, Set.of(ContestStatus.CLOSED, ContestStatus.PAUSED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.CLOSED, Set.of(ContestStatus.IN_EVALUATION, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.PAUSED, Set.of(ContestStatus.SCHEDULED, ContestStatus.CANCELLED));
 
-        // Estados dinámicos específicos
-        transitions.put(ContestStatus.INSCRIPTION_PENDING, Set.of(ContestStatus.INSCRIPTION_OPEN, ContestStatus.CANCELLED));
-        transitions.put(ContestStatus.INSCRIPTION_OPEN, Set.of(ContestStatus.INSCRIPTION_CLOSED, ContestStatus.PAUSED, ContestStatus.CANCELLED));
-        transitions.put(ContestStatus.INSCRIPTION_CLOSED, Set.of(ContestStatus.IN_EVALUATION, ContestStatus.CANCELLED));
+        // Estados de proceso
         transitions.put(ContestStatus.IN_EVALUATION, Set.of(ContestStatus.RESULTS_PUBLISHED, ContestStatus.CANCELLED));
         transitions.put(ContestStatus.RESULTS_PUBLISHED, Set.of(ContestStatus.FINISHED, ContestStatus.CANCELLED));
 
-
+        // Estados finales
+        transitions.put(ContestStatus.FINISHED, Set.of(ContestStatus.ARCHIVED));
+        transitions.put(ContestStatus.CANCELLED, Set.of()); // Final state
+        transitions.put(ContestStatus.ARCHIVED, Set.of()); // Final state
 
         return Map.copyOf(transitions);
     }
@@ -92,14 +91,13 @@ public class ContestStateMachine {
 
     /**
      * Checks if a status allows inscriptions
-     * REFACTORING: Usa estados específicos y dinámicos
+     * REFACTORING: Estados simplificados y claros
      *
      * @param status Status to check
      * @return true if inscriptions are allowed, false otherwise
      */
     public boolean allowsInscriptions(ContestStatus status) {
-        return status == ContestStatus.PUBLISHED ||
-               status == ContestStatus.INSCRIPTION_OPEN;
+        return status == ContestStatus.ACTIVE;
     }
 
     /**
@@ -109,8 +107,7 @@ public class ContestStateMachine {
      * @return true if contest is active, false otherwise
      */
     public boolean isActiveStatus(ContestStatus status) {
-        return status == ContestStatus.PUBLISHED ||
-               status == ContestStatus.INSCRIPTION_OPEN;
+        return status == ContestStatus.ACTIVE;
     }
 
     /**
@@ -122,22 +119,21 @@ public class ContestStateMachine {
     public String getStatusDescription(ContestStatus status) {
         return switch (status) {
             // Estados administrativos
-            case DRAFT -> "Concurso en preparación. Puede ser publicado o cancelado.";
-            case PUBLISHED -> "Concurso publicado. Las inscripciones se abren automáticamente según fechas.";
+            case DRAFT -> "Concurso en preparación. Puede ser programado o cancelado.";
+            case SCHEDULED -> "Concurso programado. Las inscripciones se abren automáticamente según fechas.";
+            case ACTIVE -> "Concurso activo. Los usuarios pueden inscribirse.";
+            case CLOSED -> "Inscripciones cerradas. En espera de evaluación.";
             case PAUSED -> "Concurso pausado temporalmente. Puede reactivarse o cancelarse.";
             case CANCELLED -> "Concurso cancelado. Estado final.";
             case FINISHED -> "Concurso finalizado. Solo puede archivarse.";
             case ARCHIVED -> "Concurso archivado. Estado final.";
 
-            // Estados dinámicos (calculados automáticamente)
-            case INSCRIPTION_PENDING -> "Próximamente. Las inscripciones aún no han comenzado.";
-            case INSCRIPTION_OPEN -> "Inscripciones abiertas. Los usuarios pueden inscribirse.";
-            case INSCRIPTION_CLOSED -> "Inscripciones cerradas. En espera de evaluación.";
+            // Estados de proceso
             case IN_EVALUATION -> "En evaluación. Proceso de selección en curso.";
             case RESULTS_PUBLISHED -> "Resultados publicados. Proceso completado.";
 
             // Estados legacy (para compatibilidad temporal)
-            default -> "Estado legacy: " + status.getSpanishName() + ". Se recomienda migrar a estados específicos.";
+            default -> "Estado desconocido: " + status.getSpanishName() + ".";
         };
     }
 

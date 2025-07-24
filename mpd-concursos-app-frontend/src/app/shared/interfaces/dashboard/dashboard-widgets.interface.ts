@@ -93,6 +93,37 @@ export interface SimpleDashboardData {
   pendingDocuments: number;
   availableExams: number;
   upcomingDeadlines: SimpleDeadline[];
+  // ✅ MEJORA: Datos detallados para widget expandible
+  profileDetails?: ProfileCompletionDetails;
+}
+
+// ✅ MEJORA: Interfaz para detalles de completitud del perfil
+export interface ProfileCompletionDetails {
+  personalDataPercentage: number;
+  requiredDocumentsPercentage: number;
+  optionalDocumentsPercentage: number;
+  globalPercentage: number;
+  requiredDocuments: DocumentStatus[];
+  optionalDocuments: DocumentStatus[];
+  upcomingExpirations: DocumentExpiration[];
+}
+
+export interface DocumentStatus {
+  id: string;
+  name: string;
+  status: 'completed' | 'pending' | 'rejected' | 'missing';
+  required: boolean;
+  expirationDate?: string;
+  // ✅ NOTA: daysUntilExpiration solo se usa para plazos de inscripción específicos,
+  // no para vencimiento inherente de documentos
+  daysUntilExpiration?: number;
+}
+
+export interface DocumentExpiration {
+  documentName: string;
+  expirationDate: string;
+  daysUntilExpiration: number;
+  priority: 'high' | 'medium' | 'low';
 }
 
 export interface SimpleDeadline {
@@ -110,8 +141,8 @@ export enum TipoVencimiento {
 }
 
 export enum PrioridadVencimiento {
-  ALTA = 'ALTA',    // < 3 días
-  MEDIA = 'MEDIA',  // 3-7 días
+  ALTA = 'ALTA',    // ≤ 1 día (alineado con backend)
+  MEDIA = 'MEDIA',  // 2-7 días (alineado con backend)
   BAJA = 'BAJA'     // > 7 días
 }
 
@@ -132,8 +163,12 @@ export enum TipoNotificacion {
 
 // Utilidades para cálculos
 export class DashboardUtils {
+  /**
+   * ✅ CORREGIDO: Alineado con lógica del backend (UserDeadline.calculatePriority)
+   * Backend: ≤1 día = HIGH, 2-7 días = MEDIUM, >7 días = LOW
+   */
   static calcularPrioridadVencimiento(diasRestantes: number): PrioridadVencimiento {
-    if (diasRestantes < 3) return PrioridadVencimiento.ALTA;
+    if (diasRestantes <= 1) return PrioridadVencimiento.ALTA;
     if (diasRestantes <= 7) return PrioridadVencimiento.MEDIA;
     return PrioridadVencimiento.BAJA;
   }

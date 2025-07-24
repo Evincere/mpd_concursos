@@ -161,7 +161,7 @@
     &.alert-warning {
       background: rgba(245, 158, 11, 0.1);
       border: 1px solid rgba(245, 158, 11, 0.3);
-      color: #92400e;
+      color: #ffffff; /* ✅ CORRECCIÓN: Texto blanco para mejor contraste */
 
       i {
         color: #f59e0b;

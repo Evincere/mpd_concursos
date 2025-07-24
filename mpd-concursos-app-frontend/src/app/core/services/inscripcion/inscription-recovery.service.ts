@@ -158,11 +158,13 @@ export class InscriptionRecoveryService {
   }
 
   /**
-   * Limpia todas las inscripciones inválidas del localStorage
-   * Útil para casos donde se reinicia la base de datos o hay inconsistencias
+   * Limpia inscripciones inválidas del localStorage de forma conservadora
+   * ✅ CORRECCIÓN: Método mejorado para evitar eliminación incorrecta de inscripciones válidas
+   * Solo debe ejecutarse en casos específicos donde hay inconsistencias reales detectadas
+   * @param forceCleanup Si es true, fuerza la limpieza (usar con precaución)
    */
-  cleanupInvalidInscriptions(): void {
-    this.loggingService.info('[InscriptionRecoveryService] Starting cleanup of invalid inscriptions from local storage.', undefined, 'InscriptionRecovery');
+  cleanupInvalidInscriptions(forceCleanup: boolean = false): void {
+    this.loggingService.info('[InscriptionRecoveryService] Starting conservative cleanup of invalid inscriptions from local storage.', { forceCleanup }, 'InscriptionRecovery');
 
     // Obtener inscripciones locales del estado
     const localInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
@@ -171,42 +173,66 @@ export class InscriptionRecoveryService {
       this.loggingService.info('[InscriptionRecoveryService] No local inscriptions found for cleanup. Skipping cleanup.', undefined, 'InscriptionRecovery');
       return;
     }
+
+    // ✅ CORRECCIÓN: Solo proceder si se fuerza la limpieza o hay una razón específica
+    if (!forceCleanup) {
+      this.loggingService.info('[InscriptionRecoveryService] Cleanup not forced. Skipping automatic cleanup to prevent incorrect deletion of valid inscriptions.', undefined, 'InscriptionRecovery');
+      return;
+    }
+
     this.loggingService.debug(`[InscriptionRecoveryService] Found ${localInscriptions.length} local inscriptions for potential cleanup.`, localInscriptions, 'InscriptionRecovery');
 
+    // ✅ MEJORA: Verificar cada inscripción individualmente en lugar de confiar en listas que pueden estar filtradas
+    let cleanedCount = 0;
+    let processedCount = 0;
 
-    // Obtener inscripciones del backend para validar
-    this.inscriptionService.inscriptions.pipe(take(1)).subscribe({
-      next: (backendInscriptions) => {
-        let cleanedCount = 0;
-        // backendInscriptions is already IInscription[], no need to access .content
-        this.loggingService.debug(`[InscriptionRecoveryService] Received ${backendInscriptions.length} backend inscriptions for cleanup validation.`, backendInscriptions, 'InscriptionRecovery');
+    localInscriptions.forEach(localInscription => {
+      // Verificar individualmente cada inscripción en el backend usando el método existente
+      this.inscriptionService.verifyInscriptionState(localInscription.inscriptionId).pipe(
+        take(1),
+        catchError(error => {
+          // Si hay error 404, la inscripción no existe en el backend
+          if (error.status === 404) {
+            this.loggingService.warn(`[InscriptionRecoveryService] Inscription ${localInscription.inscriptionId} not found in backend (404). Marking for cleanup.`, undefined, 'InscriptionRecovery');
+            return of(null); // Retornar null para indicar que no existe
+          }
+          // Para otros errores, asumir que la inscripción existe para ser conservadores
+          this.loggingService.warn(`[InscriptionRecoveryService] Error checking inscription ${localInscription.inscriptionId}. Keeping it to be safe.`, error, 'InscriptionRecovery');
+          return of('EXISTS'); // Retornar string que indica existencia
+        })
+      ).subscribe({
+        next: (inscriptionState) => {
+          processedCount++;
 
-        localInscriptions.forEach(localInscription => {
-          const existsInBackend = backendInscriptions.some(backend =>
-            backend.id === localInscription.inscriptionId
-          );
-
-          if (!existsInBackend) {
-            // Limpiar inscripción inválida del localStorage
+          if (inscriptionState === null) {
+            // La inscripción realmente no existe en el backend
             this.inscriptionStateService.clearInscriptionState(localInscription.inscriptionId);
             cleanedCount++;
-            this.loggingService.info(`[InscriptionRecoveryService] Cleared invalid local inscription ${localInscription.inscriptionId} (not found in backend).`, undefined, 'InscriptionRecovery');
+            this.loggingService.info(`[InscriptionRecoveryService] Cleared truly invalid local inscription ${localInscription.inscriptionId} (confirmed not found in backend).`, undefined, 'InscriptionRecovery');
           } else {
-            this.loggingService.debug(`[InscriptionRecoveryService] Local inscription ${localInscription.inscriptionId} exists in backend. Keeping it.`, undefined, 'InscriptionRecovery');
+            this.loggingService.debug(`[InscriptionRecoveryService] Local inscription ${localInscription.inscriptionId} exists in backend with state: ${inscriptionState}. Keeping it.`, undefined, 'InscriptionRecovery');
           }
-        });
 
-        if (cleanedCount > 0) {
-          this.loggingService.info(`[InscriptionRecoveryService] Cleanup completed. Removed ${cleanedCount} invalid local inscriptions.`, undefined, 'InscriptionRecovery');
-          this.notificationService.info(`Se han limpiado ${cleanedCount} inscripciones inválidas de tu almacenamiento local.`);
-        } else {
-          this.loggingService.info('[InscriptionRecoveryService] No invalid local inscriptions found to clean up.', undefined, 'InscriptionRecovery');
+          // Si hemos procesado todas las inscripciones, mostrar resultado final
+          if (processedCount === localInscriptions.length) {
+            if (cleanedCount > 0) {
+              this.loggingService.info(`[InscriptionRecoveryService] Conservative cleanup completed. Removed ${cleanedCount} truly invalid local inscriptions.`, undefined, 'InscriptionRecovery');
+              this.notificationService.info(`Se han limpiado ${cleanedCount} inscripciones realmente inválidas de tu almacenamiento local.`);
+            } else {
+              this.loggingService.info('[InscriptionRecoveryService] No truly invalid local inscriptions found to clean up.', undefined, 'InscriptionRecovery');
+            }
+          }
+        },
+        error: (error) => {
+          processedCount++;
+          this.loggingService.error(`[InscriptionRecoveryService] Error validating inscription ${localInscription.inscriptionId} during cleanup:`, error, 'InscriptionRecovery');
+
+          // Si hemos procesado todas las inscripciones (incluso con errores), mostrar resultado
+          if (processedCount === localInscriptions.length && cleanedCount > 0) {
+            this.notificationService.info(`Se han limpiado ${cleanedCount} inscripciones inválidas de tu almacenamiento local.`);
+          }
         }
-      },
-      error: (error) => {
-        this.loggingService.error('[InscriptionRecoveryService] Error validating inscriptions during cleanup:', error, 'InscriptionRecovery');
-        this.notificationService.error('Error al intentar limpiar inscripciones. Por favor, revise la consola.');
-      }
+      });
     });
   }
 }

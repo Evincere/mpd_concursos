@@ -293,8 +293,7 @@ public class ContestMapper {
      * Usa los nuevos estados pero mantiene compatibilidad con legacy
      */
     private boolean isActiveStatus(ContestStatus status) {
-        return status == ContestStatus.PUBLISHED ||
-               status == ContestStatus.INSCRIPTION_OPEN;
+        return status == ContestStatus.ACTIVE;
     }
 
     /**
@@ -302,8 +301,7 @@ public class ContestMapper {
      * Usa los nuevos estados pero mantiene compatibilidad con legacy
      */
     private boolean allowsInscriptions(ContestStatus status) {
-        return status == ContestStatus.PUBLISHED ||
-               status == ContestStatus.INSCRIPTION_OPEN;
+        return status == ContestStatus.ACTIVE;
     }
 
     /**

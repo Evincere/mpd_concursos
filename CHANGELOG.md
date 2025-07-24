@@ -7,6 +7,50 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Agregado
+- **🎯 Dashboard Mejorado con Información Contextual**: Implementadas mejoras significativas en la interfaz del dashboard
+  - **Cards con Subtítulos Informativos**: Todas las cards principales ahora muestran información contextual detallada
+    - "Concursos Activos": Desglose entre publicados y próximos a abrir
+    - "Mis Postulaciones": Estados específicos (incompletas vs esperando validación)
+    - "Próximos a Vencer": Coherencia entre número principal y subtítulo
+  - **Widget Estado del Perfil Expandible**: Nuevo widget con funcionalidad expandible bajo demanda
+    - Porcentaje global inteligente: combina datos personales (40%) + documentos requeridos (60%)
+    - Desglose por categorías: datos personales vs documentación
+    - Vista expandible con detalles completos de documentación requerida y opcional
+    - Estados específicos para documentos: completados, pendientes, rechazados, faltantes
+    - Alertas de vencimientos próximos integradas
+    - Acciones contextuales: botones específicos para completar perfil y gestionar documentos
+  - **Cálculo Inteligente de Completitud**: Algoritmo mejorado para calcular porcentaje de perfil
+  - **Animaciones Suaves**: Transiciones elegantes para expandir/contraer manteniendo glassmorphism
+  - **Responsive Design**: Todas las mejoras completamente adaptables a móviles y tablets
+
+### Mejorado
+- **Coherencia de Datos**: Eliminadas inconsistencias entre números principales y subtítulos en cards
+- **Experiencia de Usuario**: Información más clara y contextual sin saturar la interfaz
+- **Arquitectura de Servicios**: Nuevos métodos para obtener estadísticas de documentación
+- **Interfaces TypeScript**: Nuevas interfaces para `ProfileCompletionDetails`, `DocumentStatus`, `DocumentExpiration`
+
+### Corregido
+- **🚨 CRÍTICO - Limpieza Incorrecta de Inscripciones**: Solucionado problema que eliminaba inscripciones válidas
+  - **Problema**: El sistema eliminaba automáticamente inscripciones en estado `COMPLETED_PENDING_DOCS` cuando el usuario cerraba sesión durante el proceso de carga de documentos
+  - **Causa**: Ejecución automática de `cleanupInvalidInscriptions()` en cada navegación al dashboard que comparaba inscripciones locales con listas del backend potencialmente filtradas
+  - **Solución**:
+    - Eliminada ejecución automática de limpieza en `main.component.ts`
+    - Mejorado método `cleanupInvalidInscriptions()` para ser más conservador
+    - Implementada verificación individual de inscripciones en lugar de comparación con listas
+    - Agregado parámetro `forceCleanup` para ejecutar limpieza solo cuando sea explícitamente necesario
+  - **Resultado**: Las inscripciones válidas en proceso de documentación se preservan correctamente y pueden ser retomadas por el usuario
+  - **Impacto**: Evita pérdida de progreso del usuario y mensajes confusos de "inscripción limpiada"
+
+- **🔄 Actualización de UI después de cargar documentos**: Corregido problema donde las cards de documentación no se actualizaban después de cargar un documento exitosamente
+  - **Problema**: Después de cargar un documento, la card no reflejaba el nuevo estado y seguía mostrando el documento como pendiente
+  - **Causa**: Suscripción a `documentoActualizado$` estaba comentada, impidiendo que el componente se enterara de las actualizaciones
+  - **Solución**:
+    - Restaurada suscripción a `documentosService.documentoActualizado$` con debounce y distinctUntilChanged para evitar actualizaciones excesivas
+    - Agregada actualización automática del estado de documentación después de cada upload exitoso
+    - Implementada detección de cambios forzada para actualizar la UI inmediatamente
+  - **Resultado**: Las cards de documentación se actualizan correctamente después de cargar documentos, mostrando el estado real
+
 ### Seguridad
 - **Aplicación del Principio de "Denegación por Defecto"**: Mejorada configuración de Spring Security
   - Reemplazada regla amplia `.requestMatchers("/api/concursos/**").permitAll()` con rutas específicas:

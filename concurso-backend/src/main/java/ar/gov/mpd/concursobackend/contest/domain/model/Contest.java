@@ -47,28 +47,13 @@ public class Contest {
      * @return true if inscriptions are open, false otherwise
      */
     public boolean isInscriptionOpen() {
-        // CORRECCIÓN INMEDIATA: Para concursos PUBLISHED, verificar fechas
-        if (status == ContestStatus.PUBLISHED) {
-            LocalDateTime now = LocalDateTime.now();
-
-            // Si hay fechas específicas de inscripción, usarlas
-            if (inscriptionStartDate != null && inscriptionEndDate != null) {
-                return now.isAfter(inscriptionStartDate) && now.isBefore(inscriptionEndDate);
-            }
-
-            // Fallback: usar fechas generales del concurso (asumiendo que son fechas de inscripción)
-            if (startDate != null && endDate != null) {
-                return now.isAfter(startDate) && now.isBefore(endDate);
-            }
-        }
-
-        // Lógica para estados específicos
-        return status == ContestStatus.INSCRIPTION_OPEN; // Estado específico que indica inscripciones abiertas
+        // Usar estado dinámico calculado
+        return getCurrentStatus() == ContestStatus.ACTIVE;
     }
 
     /**
      * Calcula el estado actual del concurso basado en fechas
-     * REFACTORING: Estado dinámico calculado automáticamente
+     * REFACTORING: Estados claros sin ambigüedad
      *
      * @return Estado actual del concurso
      */
@@ -81,30 +66,32 @@ public class Contest {
         if (status == ContestStatus.PAUSED) return ContestStatus.PAUSED;
         if (status == ContestStatus.FINISHED) return ContestStatus.FINISHED;
         if (status == ContestStatus.ARCHIVED) return ContestStatus.ARCHIVED;
+        if (status == ContestStatus.IN_EVALUATION) return ContestStatus.IN_EVALUATION;
+        if (status == ContestStatus.RESULTS_PUBLISHED) return ContestStatus.RESULTS_PUBLISHED;
 
-        // Estados dinámicos (solo para PUBLISHED)
-        if (status == ContestStatus.PUBLISHED) {
+        // Estados dinámicos (solo para SCHEDULED)
+        if (status == ContestStatus.SCHEDULED) {
             // Si hay fechas específicas de inscripción, usarlas
             if (inscriptionStartDate != null && inscriptionEndDate != null) {
                 if (now.isBefore(inscriptionStartDate)) {
-                    return ContestStatus.INSCRIPTION_PENDING;
+                    return ContestStatus.SCHEDULED;  // Aún programado
                 }
                 if (now.isBefore(inscriptionEndDate)) {
-                    return ContestStatus.INSCRIPTION_OPEN;
+                    return ContestStatus.ACTIVE;     // Activo para inscripciones
                 }
-                // Después de inscripciones, determinar siguiente fase
-                return ContestStatus.INSCRIPTION_CLOSED;
+                // Después de inscripciones, cerrado automáticamente
+                return ContestStatus.CLOSED;
             }
 
             // Fallback: usar fechas generales del concurso
             if (startDate != null && endDate != null) {
                 if (now.isBefore(startDate)) {
-                    return ContestStatus.INSCRIPTION_PENDING;
+                    return ContestStatus.SCHEDULED;
                 }
                 if (now.isBefore(endDate)) {
-                    return ContestStatus.INSCRIPTION_OPEN;
+                    return ContestStatus.ACTIVE;
                 }
-                return ContestStatus.INSCRIPTION_CLOSED;
+                return ContestStatus.CLOSED;
             }
         }
 
@@ -119,19 +106,17 @@ public class Contest {
      */
     public boolean allowsInscriptionsNow() {
         ContestStatus currentStatus = getCurrentStatus();
-        return currentStatus == ContestStatus.INSCRIPTION_OPEN ||
-               currentStatus == ContestStatus.PUBLISHED;
+        return currentStatus == ContestStatus.ACTIVE;
     }
     
     /**
      * Check if the contest is active
-     * REFACTORING: Usar nuevos estados específicos con compatibilidad legacy
+     * REFACTORING: Estados simplificados y claros
      *
      * @return true if the contest allows inscriptions, false otherwise
      */
     public boolean isActive() {
-        return status == ContestStatus.INSCRIPTION_OPEN ||
-               status == ContestStatus.PUBLISHED;
+        return getCurrentStatus() == ContestStatus.ACTIVE;
     }
     
     /**

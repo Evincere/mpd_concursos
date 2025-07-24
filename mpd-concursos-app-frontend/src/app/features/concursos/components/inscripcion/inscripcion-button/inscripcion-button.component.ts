@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
@@ -9,6 +9,7 @@ import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interfac
   selector: 'app-inscripcion-button',
   standalone: true,
   imports: [CommonModule, CustomButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="inscription-button-container">
       <app-custom-button
@@ -43,17 +44,116 @@ import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interfac
   `,
   styleUrls: ['./inscripcion-button.component.scss']
 })
-export class InscripcionButtonComponent {
+export class InscripcionButtonComponent implements OnChanges {
   @Input() contest!: Concurso;
   @Input() userPostulation: Postulacion | null = null;
   @Output() inscripcionClick = new EventEmitter<Concurso>();
   @Output() continuarClick = new EventEmitter<Concurso>();
 
+  // Cache para optimizar cálculos repetitivos
+  private _cachedContestState: {
+    isOpen: boolean;
+    buttonText: string;
+    buttonTooltip: string;
+    buttonVariant: 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+    buttonIcon: string;
+    lastCalculated: number;
+    contestId?: string | number;
+    contestStatus?: string;
+    userPostulationState?: string;
+    // Debug info
+    debugInfo?: {
+      backendStatus: string;
+      calculationMethod: string;
+      inscriptionDates?: any;
+      generalDates?: any;
+      currentTime: string;
+    };
+  } | null = null;
+
+  // Flag para habilitar logging temporal de debug
+  private readonly DEBUG_STATE_CHANGES = true;
+
   constructor(private router: Router) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Invalidar cache cuando cambien los inputs críticos
+    if (changes['contest'] || changes['userPostulation']) {
+      if (this.DEBUG_STATE_CHANGES) {
+        console.log('[InscripcionButton] DEBUG: Input changes detected, invalidating cache', {
+          contestChanged: !!changes['contest'],
+          userPostulationChanged: !!changes['userPostulation'],
+          previousCache: this._cachedContestState,
+          newContest: this.contest,
+          newUserPostulation: this.userPostulation
+        });
+      }
+      this._cachedContestState = null;
+    }
+  }
 
   // Getter para acceder al concurso
   get currentContest(): Concurso {
     return this.contest;
+  }
+
+  /**
+   * Calcula y cachea el estado del concurso para evitar cálculos repetitivos
+   */
+  private _getOrCalculateContestState() {
+    const now = Date.now();
+    const contestId = this.currentContest?.id;
+    const contestStatus = this.currentContest?.status;
+    const userPostulationState = this.userPostulation?.estado;
+
+    // Verificar si el cache es válido (mismo concurso, mismo estado, calculado hace menos de 30 segundos)
+    if (this._cachedContestState &&
+        this._cachedContestState.contestId === contestId &&
+        this._cachedContestState.contestStatus === contestStatus &&
+        this._cachedContestState.userPostulationState === userPostulationState &&
+        (now - this._cachedContestState.lastCalculated) < 30000) {
+
+      if (this.DEBUG_STATE_CHANGES) {
+        console.log('[InscripcionButton] DEBUG: Using cached state', this._cachedContestState);
+      }
+      return this._cachedContestState;
+    }
+
+    if (this.DEBUG_STATE_CHANGES) {
+      console.log('[InscripcionButton] DEBUG: Cache miss, recalculating state', {
+        contestId,
+        contestStatus,
+        userPostulationState,
+        cacheAge: this._cachedContestState ? now - this._cachedContestState.lastCalculated : 'no cache'
+      });
+    }
+
+    // Calcular nuevo estado
+    const { isOpen, debugInfo } = this._calculateIsContestOpenForInscriptionWithDebug();
+    const buttonText = this._calculateButtonText();
+    const buttonTooltip = this._calculateButtonTooltip();
+    const buttonVariant = this._calculateButtonVariant();
+    const buttonIcon = this._calculateButtonIcon();
+
+    // Guardar en cache
+    this._cachedContestState = {
+      isOpen,
+      buttonText,
+      buttonTooltip,
+      buttonVariant,
+      buttonIcon,
+      lastCalculated: now,
+      contestId,
+      contestStatus,
+      userPostulationState,
+      debugInfo
+    };
+
+    if (this.DEBUG_STATE_CHANGES) {
+      console.log('[InscripcionButton] DEBUG: New state calculated and cached', this._cachedContestState);
+    }
+
+    return this._cachedContestState;
   }
 
   get shouldShowButton(): boolean {
@@ -89,35 +189,44 @@ export class InscripcionButtonComponent {
       }
     }
 
-    // Si no hay postulación, mostrar según estado del concurso
-    return this.getContestButtonText();
+    // Si no hay postulación, usar cache para evitar cálculos repetitivos
+    return this._getOrCalculateContestState().buttonText;
   }
 
   /**
-   * Determina el texto del botón según el estado del concurso
+   * Calcula el texto del botón según el estado del concurso
+   * REFACTORING: Solo usar estados que existen en el backend
    */
-  private getContestButtonText(): string {
+  private _calculateButtonText(): string {
     const status = this.currentContest?.status?.toUpperCase();
 
     switch (status) {
-      case 'INSCRIPTION_OPEN':
+      case 'ACTIVE':
         return 'Inscribirse';
-      case 'PUBLISHED':
-        // Verificar fechas para determinar si está abierto
-        return this.isContestOpenForInscription() ? 'Inscribirse' : 'Próximamente';
-      case 'INSCRIPTION_PENDING':
+      case 'SCHEDULED':
         return 'Próximamente';
       case 'CLOSED':
-      case 'INSCRIPTION_CLOSED':
         return 'Inscripciones Cerradas';
+      case 'PAUSED':
+        return 'Pausado';
       case 'CANCELLED':
         return 'Cancelado';
       case 'FINISHED':
         return 'Finalizado';
+      case 'ARCHIVED':
+        return 'Archivado';
+      case 'IN_EVALUATION':
+        return 'En Evaluación';
+      case 'RESULTS_PUBLISHED':
+        return 'Resultados Publicados';
+      case 'DRAFT':
+        return 'En Preparación';
       default:
         return 'Ver Detalles';
     }
   }
+
+
 
   get buttonTooltip(): string {
     if (this.userPostulation) {
@@ -141,23 +250,22 @@ export class InscripcionButtonComponent {
       }
     }
 
-    // Si no hay postulación, mostrar tooltip según estado del concurso
-    return this.getContestButtonTooltip();
+    // Si no hay postulación, usar cache para evitar cálculos repetitivos
+    return this._getOrCalculateContestState().buttonTooltip;
   }
 
   /**
-   * Determina el tooltip del botón según el estado del concurso
+   * Calcula el tooltip del botón según el estado del concurso
    */
-  private getContestButtonTooltip(): string {
+  private _calculateButtonTooltip(): string {
     const status = this.currentContest?.status?.toUpperCase();
 
     switch (status) {
       case 'INSCRIPTION_OPEN':
         return 'Iniciar proceso de inscripción al concurso';
       case 'PUBLISHED':
-        return this.isContestOpenForInscription()
-          ? 'Iniciar proceso de inscripción al concurso'
-          : 'Las inscripciones aún no han comenzado';
+        // Usar la misma lógica que el texto del botón
+        return this._calculatePublishedContestTooltip();
       case 'INSCRIPTION_PENDING':
         return 'Las inscripciones aún no han comenzado';
       case 'CLOSED':
@@ -170,6 +278,49 @@ export class InscripcionButtonComponent {
       default:
         return 'Ver detalles del concurso';
     }
+  }
+
+  /**
+   * Calcula el tooltip para concursos con estado PUBLISHED basándose en fechas
+   */
+  private _calculatePublishedContestTooltip(): string {
+    if (!this.currentContest) return 'Ver detalles del concurso';
+
+    const now = new Date();
+
+    // Verificar fechas específicas de inscripción primero
+    const inscriptionDate = this.currentContest.dates?.find(date => date.type === 'inscription');
+    if (inscriptionDate && inscriptionDate.startDate && inscriptionDate.endDate) {
+      const startDate = new Date(inscriptionDate.startDate);
+      const endDate = new Date(inscriptionDate.endDate);
+
+      if (now < startDate) {
+        return `Las inscripciones abren el ${startDate.toLocaleDateString('es-AR')}`;
+      } else if (now > endDate) {
+        return `Las inscripciones cerraron el ${endDate.toLocaleDateString('es-AR')}`;
+      } else {
+        return 'Iniciar proceso de inscripción al concurso';
+      }
+    }
+
+    // Fallback: usar fechas generales del concurso
+    if (this.currentContest.startDate && this.currentContest.endDate) {
+      const startDate = new Date(this.currentContest.startDate);
+      const endDate = new Date(this.currentContest.endDate);
+
+      if (now < startDate) {
+        return `El concurso inicia el ${startDate.toLocaleDateString('es-AR')}`;
+      } else if (now > endDate) {
+        return `El concurso finalizó el ${endDate.toLocaleDateString('es-AR')}`;
+      } else {
+        return 'Iniciar proceso de inscripción al concurso';
+      }
+    }
+
+    // Si no hay fechas, usar lógica de inscripción
+    return this._calculateIsContestOpenForInscription()
+      ? 'Iniciar proceso de inscripción al concurso'
+      : 'Ver detalles del concurso';
   }
 
   get buttonVariant(): 'primary' | 'secondary' | 'success' | 'warning' | 'danger' {
@@ -193,33 +344,81 @@ export class InscripcionButtonComponent {
       }
     }
 
-    // Si no hay postulación, mostrar color según estado del concurso
-    return this.getContestButtonVariant();
+    // Si no hay postulación, usar cache para evitar cálculos repetitivos
+    return this._getOrCalculateContestState().buttonVariant;
   }
 
   /**
-   * Determina el color del botón según el estado del concurso
+   * Calcula el color del botón según el estado del concurso
    */
-  private getContestButtonVariant(): 'primary' | 'secondary' | 'success' | 'warning' | 'danger' {
+  private _calculateButtonVariant(): 'primary' | 'secondary' | 'success' | 'warning' | 'danger' {
     const status = this.currentContest?.status?.toUpperCase();
 
     switch (status) {
-      case 'INSCRIPTION_OPEN':
+      case 'ACTIVE':
         return 'success';    // 🟢 Verde - Inscripciones abiertas
-      case 'PUBLISHED':
-        return this.isContestOpenForInscription() ? 'success' : 'secondary';
-      case 'INSCRIPTION_PENDING':
+      case 'SCHEDULED':
         return 'secondary';  // 🔵 Azul - Próximamente
       case 'CLOSED':
-      case 'INSCRIPTION_CLOSED':
         return 'secondary';  // 🔵 Azul gris - Cerrado
+      case 'PAUSED':
+        return 'warning';    // 🟡 Amarillo - Pausado
       case 'CANCELLED':
         return 'danger';     // 🔴 Rojo - Cancelado
       case 'FINISHED':
         return 'secondary';  // 🔵 Azul gris - Finalizado
+      case 'ARCHIVED':
+        return 'secondary';  // 🔵 Azul gris - Archivado
+      case 'IN_EVALUATION':
+        return 'warning';    // 🟡 Amarillo - En proceso
+      case 'RESULTS_PUBLISHED':
+        return 'primary';    // 🔵 Azul primario - Resultados
+      case 'DRAFT':
+        return 'secondary';  // 🔵 Azul - En preparación
       default:
         return 'secondary';  // 🔵 Azul - Por defecto
     }
+  }
+
+  /**
+   * Calcula la variante del botón para concursos con estado PUBLISHED basándose en fechas
+   */
+  private _calculatePublishedContestVariant(): 'primary' | 'secondary' | 'success' | 'warning' | 'danger' {
+    if (!this.currentContest) return 'secondary';
+
+    const now = new Date();
+
+    // Verificar fechas específicas de inscripción primero
+    const inscriptionDate = this.currentContest.dates?.find(date => date.type === 'inscription');
+    if (inscriptionDate && inscriptionDate.startDate && inscriptionDate.endDate) {
+      const startDate = new Date(inscriptionDate.startDate);
+      const endDate = new Date(inscriptionDate.endDate);
+
+      if (now < startDate) {
+        return 'secondary';  // 🔵 Azul - Próximamente
+      } else if (now > endDate) {
+        return 'secondary';  // 🔵 Azul gris - Cerrado
+      } else {
+        return 'success';    // 🟢 Verde - Abierto
+      }
+    }
+
+    // Fallback: usar fechas generales del concurso
+    if (this.currentContest.startDate && this.currentContest.endDate) {
+      const startDate = new Date(this.currentContest.startDate);
+      const endDate = new Date(this.currentContest.endDate);
+
+      if (now < startDate) {
+        return 'secondary';  // 🔵 Azul - Próximamente
+      } else if (now > endDate) {
+        return 'secondary';  // 🔵 Azul gris - Cerrado
+      } else {
+        return 'success';    // 🟢 Verde - Abierto
+      }
+    }
+
+    // Si no hay fechas, usar lógica de inscripción (sin logs)
+    return this._calculateIsContestOpenForInscription() ? 'success' : 'secondary';
   }
 
   get buttonIcon(): string {
@@ -243,33 +442,81 @@ export class InscripcionButtonComponent {
       }
     }
 
-    // Si no hay postulación, mostrar icono según estado del concurso
-    return this.getContestButtonIcon();
+    // Si no hay postulación, usar cache para evitar cálculos repetitivos
+    return this._getOrCalculateContestState().buttonIcon;
   }
 
   /**
-   * Determina el icono del botón según el estado del concurso
+   * Calcula el icono del botón según el estado del concurso
    */
-  private getContestButtonIcon(): string {
+  private _calculateButtonIcon(): string {
     const status = this.currentContest?.status?.toUpperCase();
 
     switch (status) {
-      case 'INSCRIPTION_OPEN':
+      case 'ACTIVE':
         return 'fas fa-user-plus';       // ➕ Inscribirse
-      case 'PUBLISHED':
-        return this.isContestOpenForInscription() ? 'fas fa-user-plus' : 'fas fa-clock';
-      case 'INSCRIPTION_PENDING':
+      case 'SCHEDULED':
         return 'fas fa-clock';           // 🕐 Próximamente
       case 'CLOSED':
-      case 'INSCRIPTION_CLOSED':
         return 'fas fa-times-circle';    // ❌ Cerrado
+      case 'PAUSED':
+        return 'fas fa-pause';           // ⏸️ Pausado
       case 'CANCELLED':
         return 'fas fa-ban';             // 🚫 Cancelado
       case 'FINISHED':
         return 'fas fa-flag-checkered';  // 🏁 Finalizado
+      case 'ARCHIVED':
+        return 'fas fa-archive';         // 📦 Archivado
+      case 'IN_EVALUATION':
+        return 'fas fa-clipboard-check'; // 📋 En evaluación
+      case 'RESULTS_PUBLISHED':
+        return 'fas fa-trophy';          // 🏆 Resultados
+      case 'DRAFT':
+        return 'fas fa-edit';            // ✏️ En preparación
       default:
         return 'fas fa-eye';             // 👁️ Ver detalles
     }
+  }
+
+  /**
+   * Determina el icono del botón para concursos con estado PUBLISHED basándose en fechas
+   */
+  private getPublishedContestIcon(): string {
+    if (!this.currentContest) return 'fas fa-eye';
+
+    const now = new Date();
+
+    // Verificar fechas específicas de inscripción primero
+    const inscriptionDate = this.currentContest.dates?.find(date => date.type === 'inscription');
+    if (inscriptionDate && inscriptionDate.startDate && inscriptionDate.endDate) {
+      const startDate = new Date(inscriptionDate.startDate);
+      const endDate = new Date(inscriptionDate.endDate);
+
+      if (now < startDate) {
+        return 'fas fa-clock';           // 🕐 Próximamente
+      } else if (now > endDate) {
+        return 'fas fa-times-circle';    // ❌ Cerrado
+      } else {
+        return 'fas fa-user-plus';       // ➕ Inscribirse
+      }
+    }
+
+    // Fallback: usar fechas generales del concurso
+    if (this.currentContest.startDate && this.currentContest.endDate) {
+      const startDate = new Date(this.currentContest.startDate);
+      const endDate = new Date(this.currentContest.endDate);
+
+      if (now < startDate) {
+        return 'fas fa-clock';           // 🕐 Próximamente
+      } else if (now > endDate) {
+        return 'fas fa-times-circle';    // ❌ Cerrado
+      } else {
+        return 'fas fa-user-plus';       // ➕ Inscribirse
+      }
+    }
+
+    // Si no hay fechas, usar lógica de inscripción (sin logs)
+    return this._calculateIsContestOpenForInscription() ? 'fas fa-user-plus' : 'fas fa-eye';
   }
 
   get isDisabled(): boolean {
@@ -279,69 +526,65 @@ export class InscripcionButtonComponent {
       return finalStates.includes(this.userPostulation.estado);
     }
 
-    // Si no hay postulación, verificar estado del concurso
-    return !this.isContestOpenForInscription();
+    // Si no hay postulación, usar cache para evitar cálculos repetitivos
+    return !this._getOrCalculateContestState().isOpen;
   }
 
   /**
-   * Verifica si el concurso está abierto para inscripciones
+   * Calcula si el concurso está abierto para inscripciones (sin logs para evitar spam)
    * SECURITY: Validación del lado del cliente para mejorar UX, pero el backend siempre tiene la autoridad final
    */
-  isContestOpenForInscription(): boolean {
+  private _calculateIsContestOpenForInscription(): boolean {
     if (!this.currentContest) return false;
 
     const status = this.currentContest?.status?.toUpperCase();
+
+    // REFACTORING: Solo ACTIVE permite inscripciones (según backend ContestStatus.allowsInscriptions())
+    return status === 'ACTIVE';
+  }
+
+  /**
+   * Calcula si el concurso está abierto para inscripciones con información de debug
+   */
+  private _calculateIsContestOpenForInscriptionWithDebug(): { isOpen: boolean; debugInfo: any } {
+    if (!this.currentContest) {
+      return {
+        isOpen: false,
+        debugInfo: {
+          backendStatus: 'NO_CONTEST',
+          calculationMethod: 'no_contest',
+          currentTime: new Date().toISOString()
+        }
+      };
+    }
+
+    const status = this.currentContest.status?.toUpperCase();
     const now = new Date();
 
-    // Estados que explícitamente permiten inscripciones
-    if (status === 'INSCRIPTION_OPEN') {
-      return true;
+    const debugInfo = {
+      backendStatus: status || 'UNKNOWN',
+      calculationMethod: '',
+      currentTime: now.toISOString(),
+      inscriptionDates: null as any,
+      generalDates: null as any
+    };
+
+    // REFACTORING: Solo ACTIVE permite inscripciones (según backend)
+    if (status === 'ACTIVE') {
+      debugInfo.calculationMethod = 'backend_active';
+      return { isOpen: true, debugInfo };
     }
 
-    // Para PUBLISHED, verificar fechas de inscripción específicas si están disponibles
-    if (status === 'PUBLISHED') {
-      // Buscar fechas específicas de inscripción en el array dates
-      const inscriptionDate = this.currentContest.dates?.find(date => date.type === 'inscription');
-      if (inscriptionDate && inscriptionDate.startDate && inscriptionDate.endDate) {
-        const inscriptionStartDate = new Date(inscriptionDate.startDate);
-        const inscriptionEndDate = new Date(inscriptionDate.endDate);
-        const isWithinInscriptionPeriod = now >= inscriptionStartDate && now <= inscriptionEndDate;
+    // Todos los demás estados NO permiten inscripciones
+    debugInfo.calculationMethod = 'backend_not_active';
+    return { isOpen: false, debugInfo };
+  }
 
-        console.log(`[InscripcionButton] Contest ${this.currentContest.id} specific inscription period check:`, {
-          now: now.toISOString(),
-          inscriptionStart: inscriptionStartDate.toISOString(),
-          inscriptionEnd: inscriptionEndDate.toISOString(),
-          isWithinPeriod: isWithinInscriptionPeriod
-        });
-
-        return isWithinInscriptionPeriod;
-      }
-
-      // Fallback: usar fechas generales del concurso
-      if (this.currentContest.startDate && this.currentContest.endDate) {
-        const startDate = new Date(this.currentContest.startDate);
-        const endDate = new Date(this.currentContest.endDate);
-        const isWithinGeneralPeriod = now >= startDate && now <= endDate;
-
-        console.log(`[InscripcionButton] Contest ${this.currentContest.id} general period check:`, {
-          now: now.toISOString(),
-          generalStart: startDate.toISOString(),
-          generalEnd: endDate.toISOString(),
-          isWithinPeriod: isWithinGeneralPeriod
-        });
-
-        return isWithinGeneralPeriod;
-      }
-    }
-
-    // Estados que explícitamente NO permiten inscripciones
-    const closedStates = ['INSCRIPTION_CLOSED', 'CLOSED', 'CANCELLED', 'FINISHED'];
-    if (closedStates.includes(status || '')) {
-      return false;
-    }
-
-    // Para otros estados, asumir que no está abierto
-    return false;
+  /**
+   * Método público para usar en el template - usa cache para evitar cálculos repetitivos
+   */
+  isContestOpenForInscription(): boolean {
+    return this._getOrCalculateContestState().isOpen;
   }
 
   get shouldShowUrgencyIndicator(): boolean {

@@ -55,10 +55,10 @@ echo "📝 Para detener la aplicación, presiona Ctrl+C"
 echo ""
 
 # Ejecutar la aplicación (usar mvn si mvnw no está disponible)
-if [ -f "./mvnw.cmd" ]; then
-    ./mvnw.cmd spring-boot:run
-elif [ -f "./mvnw" ]; then
+if [ -f "./mvnw" ]; then
     ./mvnw spring-boot:run
+elif [ -f "./mvnw.cmd" ]; then
+    cmd //c "mvnw.cmd spring-boot:run"
 else
     mvn spring-boot:run
 fi

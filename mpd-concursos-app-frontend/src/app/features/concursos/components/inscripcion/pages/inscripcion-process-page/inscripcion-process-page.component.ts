@@ -6,7 +6,7 @@ import { CustomButtonComponent } from '@shared/components/custom-button/custom-b
 import { CustomCheckboxComponent } from '@shared/components/custom-form/custom-checkbox/custom-checkbox.component';
 import { NotificationService } from '@shared/services/notification.service';
 import { Subject, of, throwError, forkJoin, Observable } from 'rxjs'; // Import forkJoin
-import { takeUntil, finalize, map, catchError, switchMap, tap } from 'rxjs/operators'; // Import tap
+import { takeUntil, finalize, map, catchError, switchMap, tap, debounceTime, distinctUntilChanged } from 'rxjs/operators'; // Import tap
 import { HttpClient } from '@angular/common/http';
 
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
@@ -241,17 +241,21 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.onProvisionalAcceptanceChange(value);
     });
 
-    // CRITICAL FIX: Eliminar suscripción duplicada que causa condiciones de carrera
-    // La actualización de documentos se manejará a través del cache del servicio
-    // y la comunicación entre componentes, no mediante múltiples suscriptores
-    // this.documentosService.documentoActualizado$.pipe(
-    //   takeUntil(this.destroy$)
-    // ).subscribe(() => {
-    //   this.loggingService.debug('[InscripcionProcess] Documento actualizado detectado - actualizando estado', undefined, 'InscripcionProcessPage');
-    //   setTimeout(() => {
-    //     this.actualizarEstadoDocumentos();
-    //   }, 500);
-    // });
+    // ✅ CORRECCIÓN: Restaurar suscripción a actualizaciones de documentos para actualizar UI
+    // Esta suscripción es necesaria para que la card se actualice después de cargar un documento
+    this.documentosService.documentoActualizado$.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(300), // Evitar actualizaciones muy frecuentes
+      distinctUntilChanged() // Solo procesar cambios reales
+    ).subscribe(() => {
+      this.loggingService.debug('[InscripcionProcess] Documento actualizado detectado - actualizando estado de UI', undefined, 'InscripcionProcessPage');
+      // Actualizar estado de documentos para reflejar cambios en la UI
+      setTimeout(() => {
+        this.actualizarEstadoDocumentos();
+        // Forzar detección de cambios para actualizar la UI inmediatamente
+        this.cdr.detectChanges();
+      }, 100);
+    });
   }
 
   /**

@@ -53,18 +53,18 @@ export class ContestStatusBadgeComponent {
       borderColor: 'rgba(245, 158, 11, 0.3)',
       icon: 'fas fa-edit'
     },
-    'PUBLISHED': {
-      value: 'PUBLISHED',
-      label: 'Publicado',
-      color: '#f0fdf4',
-      backgroundColor: 'rgba(16, 185, 129, 0.15)',
-      borderColor: 'rgba(16, 185, 129, 0.3)',
-      icon: 'fas fa-play-circle'
+    'SCHEDULED': {
+      value: 'SCHEDULED',
+      label: 'Programado',
+      color: '#3b82f6',
+      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+      borderColor: 'rgba(59, 130, 246, 0.3)',
+      icon: 'fas fa-calendar-alt'
     },
     'CLOSED': {
       value: 'CLOSED',
       label: 'Cerrado',
-      color: '#f3f4f6',
+      color: '#374151', // Gris más oscuro para mejor contraste
       backgroundColor: 'rgba(107, 114, 128, 0.15)',
       borderColor: 'rgba(107, 114, 128, 0.3)',
       icon: 'fas fa-times-circle'
@@ -90,7 +90,7 @@ export class ContestStatusBadgeComponent {
     'CANCELLED': {
       value: 'CANCELLED',
       label: 'Cancelado',
-      color: '#f9fafb',
+      color: '#374151', // Gris más oscuro para mejor contraste
       backgroundColor: 'rgba(107, 114, 128, 0.15)',
       borderColor: 'rgba(107, 114, 128, 0.3)',
       icon: 'fas fa-ban'
@@ -98,35 +98,19 @@ export class ContestStatusBadgeComponent {
     'ARCHIVED': {
       value: 'ARCHIVED',
       label: 'Archivado',
-      color: '#f9fafb',
+      color: '#374151', // Gris más oscuro para mejor contraste
       backgroundColor: 'rgba(75, 85, 99, 0.15)',
       borderColor: 'rgba(75, 85, 99, 0.3)',
       icon: 'fas fa-archive'
     },
     // Estados dinámicos basados en fechas
-    'INSCRIPTION_PENDING': {
-      value: 'INSCRIPTION_PENDING',
-      label: 'Próximamente',
-      color: '#eff6ff',
-      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-      borderColor: 'rgba(59, 130, 246, 0.3)',
-      icon: 'fas fa-clock'
-    },
-    'INSCRIPTION_OPEN': {
-      value: 'INSCRIPTION_OPEN',
-      label: 'Inscripciones Abiertas',
-      color: '#f0fdf4',
-      backgroundColor: 'rgba(76, 175, 80, 0.15)',
-      borderColor: 'rgba(76, 175, 80, 0.3)',
-      icon: 'fas fa-user-plus'
-    },
-    'INSCRIPTION_CLOSED': {
-      value: 'INSCRIPTION_CLOSED',
-      label: 'Inscripciones Cerradas',
-      color: '#f3f4f6',
-      backgroundColor: 'rgba(107, 114, 128, 0.15)',
-      borderColor: 'rgba(107, 114, 128, 0.3)',
-      icon: 'fas fa-times-circle'
+    'ACTIVE': {
+      value: 'ACTIVE',
+      label: 'Activo',
+      color: '#10b981',
+      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+      borderColor: 'rgba(16, 185, 129, 0.3)',
+      icon: 'fas fa-play-circle'
     },
     'IN_EVALUATION': {
       value: 'IN_EVALUATION',
@@ -209,7 +193,7 @@ export class ContestStatusBadgeComponent {
     'FROZEN': {
       value: 'FROZEN',
       label: 'Congelada',
-      color: '#f3f4f6',
+      color: '#374151', // Gris más oscuro para mejor contraste
       backgroundColor: 'rgba(107, 114, 128, 0.15)',
       borderColor: 'rgba(107, 114, 128, 0.3)',
       icon: 'fas fa-snowflake'
@@ -234,7 +218,7 @@ export class ContestStatusBadgeComponent {
     'CANCELLED': {
       value: 'CANCELLED',
       label: 'Cancelada',
-      color: '#f9fafb',
+      color: '#374151', // Gris más oscuro para mejor contraste
       backgroundColor: 'rgba(107, 114, 128, 0.15)',
       borderColor: 'rgba(107, 114, 128, 0.3)',
       icon: 'fas fa-ban'

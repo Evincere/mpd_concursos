@@ -991,24 +991,9 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     // Calculate deadline on init if available
     this.calculateDocumentationDeadline();
 
-    // CRITICAL FIX: Restaurar suscripción con protección contra ciclos infinitos
-    // Suscribirse a actualizaciones de documentos pero con debounce y validación de estado
-    this.subscription = this.documentosService.documentoActualizado$
-      .pipe(
-        debounceTime(1000), // Esperar 1 segundo para evitar múltiples actualizaciones
-        distinctUntilChanged() // Solo procesar si realmente cambió
-      )
-      .subscribe((timestamp) => {
-        this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Verificando si debe recargar...', { timestamp }, 'DocumentosEmbebidos');
-
-        // Solo recargar si no hay una operación en progreso
-        if (!this.documentosService.isOperationInProgress() && !this.isLoading) {
-          this.loggingService.debug('[DocumentosEmbebidos] Recargando datos después de actualización de documento', undefined, 'DocumentosEmbebidos');
-          this.cargarDatos(true); // Force reload all data
-        } else {
-          this.loggingService.debug('[DocumentosEmbebidos] Recarga omitida - operación en progreso o ya cargando', undefined, 'DocumentosEmbebidos');
-        }
-      });
+    // CRITICAL FIX: Eliminar suscripción automática que causaba bucle infinito
+    // Las actualizaciones se manejan manualmente después de operaciones específicas
+    // (subir, eliminar, reemplazar documentos) para evitar ciclos infinitos
 
     // Update deadlines every minute
     this.deadlineInterval = setInterval(() => {
@@ -1227,7 +1212,6 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
    * CRITICAL FIX: Solo considera documentos marcados como 'required: true' para el progreso
    */
   calcularProgreso(): void {
-    console.log('🔥 MÉTODO calcularProgreso() EJECUTÁNDOSE - CORRECCIÓN APLICADA');
     this.loggingService.debug('[DocumentosEmbebidos] Recalculando progreso de documentos...', undefined, 'DocumentosEmbebidos');
 
     // ✅ ACTUALIZAR ESTADO DE COMPLETITUD PARA TODOS LOS DOCUMENTOS (obligatorios y opcionales)
@@ -1319,13 +1303,6 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     }
     // Verificación estándar para todos los documentos (incluidos DNI frente y dorso por separado)
     const isUploaded = this.documentoSubidoCache[tipoDocumentoId] === true;
-
-    // Log para debugging
-    this.loggingService.debug(`[DocumentosEmbebidos] Verificando documento ${tipoDocumentoId}: ${isUploaded ? 'SUBIDO' : 'NO SUBIDO'}`, {
-      tipoDocumentoId,
-      cacheValue: this.documentoSubidoCache[tipoDocumentoId],
-      allCache: this.documentoSubidoCache
-    }, 'DocumentosEmbebidos');
 
     return isUploaded;
   }

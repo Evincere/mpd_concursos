@@ -20,12 +20,11 @@ public class ContestValidator {
 
     private static final Set<ContestStatus> VALID_STATUSES = Set.of(
         // Estados administrativos fijos
-        ContestStatus.DRAFT, ContestStatus.PUBLISHED, ContestStatus.PAUSED,
-        ContestStatus.CANCELLED, ContestStatus.FINISHED, ContestStatus.ARCHIVED,
-        // Estados dinámicos basados en fechas
-        ContestStatus.INSCRIPTION_PENDING, ContestStatus.INSCRIPTION_OPEN,
-        ContestStatus.INSCRIPTION_CLOSED, ContestStatus.IN_EVALUATION,
-        ContestStatus.RESULTS_PUBLISHED
+        ContestStatus.DRAFT, ContestStatus.SCHEDULED, ContestStatus.ACTIVE,
+        ContestStatus.CLOSED, ContestStatus.PAUSED, ContestStatus.CANCELLED,
+        ContestStatus.FINISHED, ContestStatus.ARCHIVED,
+        // Estados de proceso
+        ContestStatus.IN_EVALUATION, ContestStatus.RESULTS_PUBLISHED
     );
 
     public ContestValidator(ContestStateMachine stateMachine) {

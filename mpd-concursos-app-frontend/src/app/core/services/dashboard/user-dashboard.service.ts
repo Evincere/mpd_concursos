@@ -274,25 +274,43 @@ export class UserDashboardService {
 
   /**
    * Datos mock para fallback en caso de error
+   * ✅ CORREGIDO: Prioridades alineadas con lógica del backend
    */
   private getMockDeadlines(): UserDeadline[] {
     return [
       {
         id: 'mock-1',
         type: 'INSCRIPTION',
-        title: 'Inscripción: Concurso de Ejemplo',
-        description: 'Cierre de inscripciones',
+        title: 'Inscripción: Co-Defensor Penal y Penal Juvenil',
+        description: 'Cierre de inscripciones para 1ra-4ta Circunscripciones Judiciales',
         deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         daysRemaining: 5,
-        priority: 'MEDIUM',
-        contestId: 'mock-contest',
+        priority: 'MEDIUM', // ✅ CORRECTO: 5 días = MEDIUM (2-7 días)
+        contestId: 'mock-contest-1',
         actionRequired: 'Completar inscripción',
-        route: '/dashboard/concursos/mock-contest',
+        route: '/dashboard/concursos/mock-contest-1',
         isUrgent: false,
         status: 'ACTIVE',
-        contestTitle: 'Concurso de Ejemplo',
-        contestDepartment: 'Departamento de Ejemplo',
+        contestTitle: 'Co-Defensor Penal y Penal Juvenil',
+        contestDepartment: 'Ministerio Público de la Defensa',
         hoursRemaining: 120
+      },
+      {
+        id: 'mock-2',
+        type: 'DOCUMENTS',
+        title: 'Documentos: Co-Defensor Civil',
+        description: 'Completar documentación pendiente',
+        deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+        daysRemaining: 1,
+        priority: 'HIGH', // ✅ CORRECTO: 1 día = HIGH (≤1 día)
+        contestId: 'mock-contest-2',
+        actionRequired: 'Subir documentos faltantes',
+        route: '/dashboard/perfil?activeTab=docs',
+        isUrgent: true,
+        status: 'ACTIVE',
+        contestTitle: 'Co-Defensor Civil',
+        contestDepartment: 'Ministerio Público de la Defensa',
+        hoursRemaining: 24
       }
     ];
   }

@@ -36,7 +36,7 @@ import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enu
       <!-- Header: Estado del concurso -->
       <div class="card-header">
         <app-contest-status-badge
-          [status]="concurso.status"
+          [status]="getDisplayStatus()"
           [showIcon]="true">
         </app-contest-status-badge>
       </div>
@@ -123,6 +123,69 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Calcula el estado dinámico del concurso para mostrar en el badge
+   * Prioriza estados dinámicos basados en fechas sobre el estado base
+   */
+  getDisplayStatus(): string {
+    if (!this.concurso?.status) return 'DRAFT';
+
+    const status = this.concurso.status.toUpperCase();
+
+    // Para estado PUBLISHED, calcular estado dinámico basado en fechas
+    if (status === 'PUBLISHED') {
+      const now = new Date();
+
+      // Verificar fechas específicas de inscripción primero
+      const inscriptionDate = this.concurso.dates?.find(date => date.type === 'inscription');
+      if (inscriptionDate && inscriptionDate.startDate && inscriptionDate.endDate) {
+        const startDate = new Date(inscriptionDate.startDate);
+        const endDate = new Date(inscriptionDate.endDate);
+
+        // Ajustar fechas para incluir todo el día
+        const startOfStartDate = new Date(startDate);
+        startOfStartDate.setHours(0, 0, 0, 0);
+
+        const endOfEndDate = new Date(endDate);
+        endOfEndDate.setHours(23, 59, 59, 999);
+
+        if (now < startOfStartDate) {
+          return 'INSCRIPTION_PENDING';
+        } else if (now <= endOfEndDate) {
+          return 'INSCRIPTION_OPEN';
+        } else {
+          return 'INSCRIPTION_CLOSED';
+        }
+      }
+
+      // Fallback: usar fechas generales del concurso
+      if (this.concurso.startDate && this.concurso.endDate) {
+        const startDate = new Date(this.concurso.startDate);
+        const endDate = new Date(this.concurso.endDate);
+
+        const startOfStartDate = new Date(startDate);
+        startOfStartDate.setHours(0, 0, 0, 0);
+
+        const endOfEndDate = new Date(endDate);
+        endOfEndDate.setHours(23, 59, 59, 999);
+
+        if (now < startOfStartDate) {
+          return 'INSCRIPTION_PENDING';
+        } else if (now <= endOfEndDate) {
+          return 'INSCRIPTION_OPEN';
+        } else {
+          return 'INSCRIPTION_CLOSED';
+        }
+      }
+
+      // Si no hay fechas, mantener PUBLISHED
+      return 'PUBLISHED';
+    }
+
+    // Para otros estados, devolver el estado original
+    return status;
+  }
+
+  /**
    * Determina si se debe mostrar el botón de inscripción
    * Considera todos los estados dinámicos del concurso y la inscripción del usuario
    */
@@ -131,9 +194,8 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
 
     // Estados que permiten mostrar botón de inscripción
     const allowedContestStates = [
-      'PUBLISHED',           // Estado base que permite inscripciones
-      'INSCRIPTION_OPEN',    // Inscripciones explícitamente abiertas
-      'INSCRIPTION_PENDING'  // Próximamente - mostrar para informar
+      'SCHEDULED',           // Concurso programado - próximamente
+      'ACTIVE'               // Concurso activo - inscripciones abiertas
     ];
 
     // Si el concurso no está en un estado que permita inscripciones, no mostrar botón
@@ -147,7 +209,7 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
     }
 
     // Si no hay inscripción, solo mostrar para estados que permiten nueva inscripción
-    const newInscriptionStates = ['PUBLISHED', 'INSCRIPTION_OPEN'];
+    const newInscriptionStates = ['ACTIVE'];
     return newInscriptionStates.includes(this.concurso.status);
   }
 

@@ -1497,8 +1497,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     // Emitir evento de confirmación para que el componente padre actualice el estado
     this.documentosSubidos.emit(this.documentosParaSubir.filter(doc => doc.estado === 'completado'));
 
-    // Usar el mismo mecanismo que la cruz que sí funciona
-    this.basicDialogService.closeAll();
+    // CRITICAL FIX: Cerrar con resultado de éxito para que el componente padre actualice las cards
+    const documentosCompletados = this.documentosParaSubir.filter(doc => doc.estado === 'completado');
+    this.dialogRef.close({ success: true, documentos: documentosCompletados });
   }
 
   /**
@@ -1532,10 +1533,12 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     const documentosCompletados = this.documentosParaSubir.filter(doc => doc.estado === 'completado');
     if (documentosCompletados.length > 0) {
       this.documentosSubidos.emit(documentosCompletados);
+      // CRITICAL FIX: Cerrar con resultado de éxito si hay documentos completados
+      this.dialogRef.close({ success: true, documentos: documentosCompletados });
+    } else {
+      // Cerrar sin resultado de éxito si no hay documentos completados
+      this.dialogRef.close({ success: false, cancelled: true });
     }
-
-    // Usar el mismo mecanismo que la cruz que sí funciona
-    this.basicDialogService.closeAll();
   }
 
   getEstadoTexto(estado: string): string {

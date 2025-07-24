@@ -16,6 +16,12 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
   - Exportación a PDF con múltiples plantillas
   - Drag & drop para reordenamiento
   - Autocompletado inteligente
+- **🆕 Dashboard Mejorado**: Interfaz de usuario optimizada con información contextual
+  - Cards con subtítulos informativos y métricas detalladas
+  - Widget Estado del Perfil expandible con desglose de documentación
+  - Cálculo inteligente de completitud (datos personales + documentos)
+  - Estados específicos para documentos requeridos vs opcionales
+  - Alertas de vencimientos próximos integradas
 
 ## 🛠️ Tecnologías Utilizadas
 

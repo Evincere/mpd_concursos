@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,8 +68,8 @@ public class ContestDataInitializationService implements CommandLineRunner {
         LocalDate today = LocalDate.now();
         LocalDate contestEndDate = today.plusDays(60);
 
-        // Concurso 1: Co-Defensor Penal y Penal Juvenil - Clase 3 Multifuero
-        ContestEntity contest1 = createTestContest(
+        // Concurso 1: Co-Defensor Penal y Penal Juvenil - Clase 3 Multifuero (ACTIVO para testing)
+        ContestEntity contest1 = createActiveTestContest(
             "Co-Defensor Penal y Penal Juvenil - Clase 03 Multifuero",
             "FUNCIONARIOS Y PERSONAL JERARQUICO",
             "03",
@@ -81,8 +82,8 @@ public class ContestDataInitializationService implements CommandLineRunner {
             "/api/files/contest-descriptions/codefensor_penal_clase03_descripcion.pdf"
         );
 
-        // Concurso 2: Co-Defensor Civil - Clase 3 Multifuero
-        ContestEntity contest2 = createTestContest(
+        // Concurso 2: Co-Defensor Civil - Clase 3 Multifuero (ACTIVO para testing)
+        ContestEntity contest2 = createActiveTestContest(
             "Co-Defensor Civil - Clase 03 Multifuero",
             "FUNCIONARIOS Y PERSONAL JERARQUICO",
             "03",
@@ -161,16 +162,52 @@ public class ContestDataInitializationService implements CommandLineRunner {
                                           String functions, String department, String position,
                                           LocalDate startDate, LocalDate endDate,
                                           String basesUrl, String descriptionUrl) {
+        // Configurar fechas de inscripción: desde las 00:00 del día de inicio hasta las 23:59 del día final
+        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
+        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
+
         return ContestEntity.builder()
             .title(title)
             .category(category)
             .class_(class_)
             .functions(functions)
-            .status(ContestStatus.PUBLISHED) // Estado que permite inscripciones
+            .status(ContestStatus.SCHEDULED) // Estado programado que se activa automáticamente
             .department(department)
             .position(position)
             .startDate(startDate)
             .endDate(endDate)
+            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
+            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
+            .basesUrl(basesUrl)
+            .descriptionUrl(descriptionUrl)
+            .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después
+            .build();
+    }
+
+    /**
+     * Crea un concurso de prueba ACTIVO (permite inscripciones inmediatamente)
+     * TESTING: Para probar la hipótesis de estados vs fechas
+     */
+    private ContestEntity createActiveTestContest(String title, String category, String class_,
+                                                String functions, String department, String position,
+                                                LocalDate startDate, LocalDate endDate,
+                                                String basesUrl, String descriptionUrl) {
+        // Configurar fechas de inscripción: desde las 00:00 del día de inicio hasta las 23:59 del día final
+        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
+        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
+
+        return ContestEntity.builder()
+            .title(title)
+            .category(category)
+            .class_(class_)
+            .functions(functions)
+            .status(ContestStatus.ACTIVE) // ✅ Estado ACTIVO que permite inscripciones
+            .department(department)
+            .position(position)
+            .startDate(startDate)
+            .endDate(endDate)
+            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
+            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
             .basesUrl(basesUrl)
             .descriptionUrl(descriptionUrl)
             .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después
@@ -185,16 +222,22 @@ public class ContestDataInitializationService implements CommandLineRunner {
                                                                String functions, String department, String position,
                                                                LocalDate startDate, LocalDate endDate,
                                                                String basesUrl, String descriptionUrl) {
+        // Para concursos cerrados, las fechas de inscripción ya pasaron
+        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
+        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
+
         return ContestEntity.builder()
             .title(title)
             .category(category)
             .class_(class_)
             .functions(functions)
-            .status(ContestStatus.INSCRIPTION_CLOSED) // Estado que NO permite inscripciones
+            .status(ContestStatus.CLOSED) // Estado que NO permite inscripciones
             .department(department)
             .position(position)
             .startDate(startDate)
             .endDate(endDate)
+            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
+            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
             .basesUrl(basesUrl)
             .descriptionUrl(descriptionUrl)
             .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después

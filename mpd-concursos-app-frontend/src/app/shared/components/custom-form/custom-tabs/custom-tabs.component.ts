@@ -1,4 +1,4 @@
-import { Component, ContentChildren, QueryList, AfterContentInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, ContentChildren, QueryList, AfterContentInit, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CustomTabComponent } from './custom-tab.component';
 
@@ -174,7 +174,7 @@ import { CustomTabComponent } from './custom-tab.component';
     }
   `]
 })
-export class CustomTabsComponent implements AfterContentInit {
+export class CustomTabsComponent implements AfterContentInit, OnChanges {
   @ContentChildren(CustomTabComponent) tabComponents!: QueryList<CustomTabComponent>;
 
   @Input() selectedIndex = 0;
@@ -183,6 +183,16 @@ export class CustomTabsComponent implements AfterContentInit {
   @Output() tabChange = new EventEmitter<number>();
 
   tabs: { label: string; icon?: string; badge?: string; disabled?: boolean }[] = [];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // ✅ MEJORA: Detectar cambios en selectedIndex y actualizar pestañas
+    if (changes['selectedIndex'] && !changes['selectedIndex'].firstChange) {
+      // Usar setTimeout para asegurar que las pestañas estén inicializadas
+      setTimeout(() => {
+        this.selectTab(this.selectedIndex);
+      }, 0);
+    }
+  }
 
   ngAfterContentInit(): void {
     this.tabs = this.tabComponents.map(tab => ({

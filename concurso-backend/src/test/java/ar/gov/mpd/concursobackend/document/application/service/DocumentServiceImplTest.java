@@ -16,6 +16,7 @@ import ar.gov.mpd.concursobackend.document.application.mapper.DocumentMapper;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
+import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionDeadlineService;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,8 @@ class DocumentServiceImplTest {
     private DocumentMapper documentMapper;
     private IUserRepository userRepository;
     private DocumentAuditService auditService;
+    private InscriptionDeadlineService inscriptionDeadlineService;
+    private InscriptionRepository inscriptionRepo;
     private InscriptionRepository inscriptionRepository;
     private DocumentOperationLockService operationLockService;
     private DocumentConcurrencyService concurrencyService;
@@ -53,6 +56,8 @@ class DocumentServiceImplTest {
         documentMapper = new DocumentMapper();
         userRepository = mock(IUserRepository.class);
         auditService = mock(DocumentAuditService.class);
+        inscriptionDeadlineService = mock(InscriptionDeadlineService.class);
+        inscriptionRepo = mock(InscriptionRepository.class);
         inscriptionRepository = mock(InscriptionRepository.class);
         operationLockService = mock(DocumentOperationLockService.class);
         concurrencyService = mock(DocumentConcurrencyService.class);
@@ -77,6 +82,8 @@ class DocumentServiceImplTest {
             documentMapper,
             userRepository,
             auditService,
+            inscriptionDeadlineService,
+            inscriptionRepo,
             inscriptionRepository,
             operationLockService,
             concurrencyService
