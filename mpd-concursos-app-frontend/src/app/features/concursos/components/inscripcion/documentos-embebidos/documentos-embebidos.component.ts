@@ -10,10 +10,10 @@ import { DocumentoUsuario, TipoDocumento, EstadoDocumento, DocumentoReplaceRespo
 import { DocumentoUploadDialogComponent } from './documento-upload-dialog/documento-upload-dialog.component';
 import { DocumentoMultipleUploadDialogComponent } from './documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
-import { DocumentManagerService } from '@core/services/documentos/document-manager.service';
+import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { LoggingService } from '@core/services/logging/logging.service';
 
-import { finalize, catchError, map, debounceTime, distinctUntilChanged, filter, take } from 'rxjs/operators'; // Import map
+import { finalize, catchError, map, debounceTime, distinctUntilChanged } from 'rxjs/operators'; // Import map
 import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
@@ -170,22 +170,14 @@ interface DialogResult {
                 </span>
               </div>
               <p class="documento-descripcion" *ngIf="tipo.description">{{tipo.description}}</p>
-              <!-- Mensaje específico para Título Universitario y Certificado Analítico -->
-              <div *ngIf="tipo.tipoDocumentoId === 'TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO'" class="documento-info-especial">
-                <i class="fas fa-info-circle"></i>
-                <small>
-                  <strong>Importante:</strong> Combine ambos documentos (título universitario y certificado analítico) en un solo archivo PDF antes de cargar.
-                </small>
-              </div>
             </div>
 
             <!-- Acciones -->
             <div class="documento-actions">
               <app-custom-button
-                *ngIf="!isDocumentoSubido(tipo.tipoDocumentoId)"
                 variant="primary"
-                label="Cargar"
-                icon="upload"
+                [label]="isDocumentoSubido(tipo.tipoDocumentoId) ? 'Reemplazar' : 'Cargar'"
+                [icon]="isDocumentoSubido(tipo.tipoDocumentoId) ? 'sync' : 'upload'"
                 size="small"
                 (buttonClick)="cargarDocumentoTipo(tipo.tipoDocumentoId)">
               </app-custom-button>
@@ -204,14 +196,14 @@ interface DialogResult {
       </div>
 
       <!-- Estado vacío -->
-      <div class="empty-state" *ngIf="documentosRequeridos.length === 0 && !(documentManager.loading$ | async)">
+      <div class="empty-state" *ngIf="documentosRequeridos.length === 0 && !isLoading">
         <i class="fas fa-folder-open"></i>
         <h4>No hay documentos requeridos para este concurso</h4>
         <p>Puedes continuar con el proceso de inscripción</p>
       </div>
 
       <!-- Loading state -->
-      <div class="loading-state" *ngIf="documentManager.loading$ | async">
+      <div class="loading-state" *ngIf="isLoading">
         <div class="custom-spinner"></div>
         <p>Cargando documentos...</p>
       </div>
@@ -617,36 +609,6 @@ interface DialogResult {
       overflow-wrap: break-word;
     }
 
-    .documento-info-especial {
-      margin-top: 0.75rem;
-      padding: 0.75rem;
-      background: rgba(33, 150, 243, 0.1);
-      border: 1px solid rgba(33, 150, 243, 0.2);
-      border-radius: 6px;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-      backdrop-filter: blur(4px);
-
-      i {
-        color: #3b82f6;
-        font-size: 0.9rem;
-        margin-top: 0.1rem;
-        flex-shrink: 0;
-      }
-
-      small {
-        margin: 0;
-        line-height: 1.4;
-        color: #90caf9;
-        font-size: 0.85rem;
-
-        strong {
-          color: #3b82f6;
-        }
-      }
-    }
-
     .documento-estado {
       flex-shrink: 0;
       /* CRITICAL FIX: Agregar margen derecho para evitar superposición con botón eliminar */
@@ -990,6 +952,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   // SIMPLIFICADO: Solo mantener datos básicos, la lógica de validación está centralizada
   documentosRequeridos: { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] = [];
   documentosUsuario: DocumentoUsuario[] = [];
+  isLoading = true;
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
   todosDocumentosCompletos = false;
@@ -1016,7 +979,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   constructor(
     private dialog: UnifiedDialogService,
     private notificationService: NotificationService,
-    public documentManager: DocumentManagerService, // Public for template access
+    private documentosService: DocumentosService,
     private loggingService: LoggingService,
     private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationService
@@ -1024,79 +987,24 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loggingService.debug('[DocumentosEmbebidos] Componente inicializado.', undefined, 'DocumentosEmbebidos');
-    this.setupSubscriptions();
-    this.cargarTiposDocumento(); // ✅ CRITICAL FIX: Cargar tipos de documentos requeridos
 
-    // ✅ CRITICAL FIX: Forzar carga inicial de documentos del usuario
-    // para asegurar que las cards muestren el estado correcto desde el inicio
-    this.documentManager.cargarDocumentos(true);
+    // CRITICAL FIX: Reset flag de notificación al inicializar
+    this.documentacionCompletadaNotificada = false;
 
+    // Force data reload on init
+    this.cargarDatos(true);
+
+    // Calculate deadline on init if available
     this.calculateDocumentationDeadline();
+
+    // CRITICAL FIX: Eliminar suscripción automática que causaba bucle infinito
+    // Las actualizaciones se manejan manualmente después de operaciones específicas
+    // (subir, eliminar, reemplazar documentos) para evitar ciclos infinitos
+
+    // Update deadlines every minute
     this.deadlineInterval = setInterval(() => {
       this.calculateTimeUntilDeadline();
     }, 60000); // Update every minute
-  }
-
-  private setupSubscriptions(): void {
-    this.subscription = new Subscription();
-
-    this.subscription.add(
-      this.documentManager.documentos$.subscribe(documentos => {
-        this.loggingService.debug('[DocumentosEmbebidos] 📥 Documentos recibidos del DocumentManager', {
-          count: documentos.length,
-          documentos: documentos.map(d => ({ id: d.id, tipoDocumento: d.tipoDocumento?.code, estado: d.estado }))
-        }, 'DocumentosEmbebidos');
-
-        this.documentosUsuario = documentos;
-
-        // ✅ CRITICAL FIX: Actualizar cache de documentos subidos
-        this.actualizarCacheDocumentos(documentos);
-
-        this.calcularProgreso();
-        this.cdr.markForCheck();
-      })
-    );
-
-    // No need to subscribe to loading$, can use it directly in the template
-  }
-
-  /**
-   * ✅ CRITICAL FIX: Cargar tipos de documentos requeridos desde el backend
-   * Este método faltaba y es la causa del problema "No hay documentos requeridos"
-   */
-  private cargarTiposDocumento(): void {
-    this.loggingService.debug('[DocumentosEmbebidos] 🔄 Cargando tipos de documentos desde el backend...', undefined, 'DocumentosEmbebidos');
-
-    this.documentManager.getTiposDocumento().subscribe({
-      next: (tipos) => {
-        this.loggingService.debug('[DocumentosEmbebidos] ✅ Tipos de documento recibidos del backend', {
-          totalTipos: tipos.length,
-          tiposRecibidos: tipos.map(t => ({ id: t.id, nombre: t.nombre, requerido: t.requerido }))
-        }, 'DocumentosEmbebidos');
-
-        // Procesar los tipos de documento usando el método existente
-        this.documentosRequeridos = this.processRequiredDocumentTypes(tipos);
-
-        // Recalcular progreso después de cargar los tipos
-        this.calcularProgreso();
-        this.cdr.markForCheck();
-
-        this.loggingService.debug('[DocumentosEmbebidos] ✅ Documentos requeridos procesados', {
-          totalDocumentosRequeridos: this.documentosRequeridos.length,
-          documentosObligatorios: this.documentosRequeridos.filter(d => d.required).length,
-          documentosOpcionales: this.documentosRequeridos.filter(d => !d.required).length
-        }, 'DocumentosEmbebidos');
-      },
-      error: (error) => {
-        this.loggingService.error('[DocumentosEmbebidos] ❌ Error cargando tipos de documento:', error, 'DocumentosEmbebidos');
-        this.notificationService.error('Error al cargar los tipos de documentos requeridos.');
-
-        // Usar documentos de emergencia como fallback
-        this.documentosRequeridos = this.getEmergencyBaseDocuments();
-        this.calcularProgreso();
-        this.cdr.markForCheck();
-      }
-    });
   }
 
   ngOnDestroy(): void {
@@ -1111,7 +1019,62 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     this.loggingService.debug('[DocumentosEmbebidos] Componente destruido. Suscripciones y timers limpiados.', undefined, 'DocumentosEmbebidos');
   }
 
+  /**
+   * Loads all required documents and user's uploaded documents.
+   * @param forceReload Whether to force a reload from the service.
+   */
+  cargarDatos(forceReload = false): void {
+    this.isLoading = true;
+    this.loggingService.debug(`[DocumentosEmbebidos] Cargando datos (forzarRecarga: ${forceReload})...`, undefined, 'DocumentosEmbebidos');
 
+    // Use forkJoin to fetch both types of documents in parallel
+    forkJoin({
+      tiposDocumento: this.documentosService.getTiposDocumento(forceReload),
+      documentosUsuario: this.documentosService.getDocumentosUsuario(forceReload)
+    }).pipe(
+      map(({ tiposDocumento, documentosUsuario }) => {
+        // First, process and consolidate required document types
+        const processedRequiredDocs = this.processRequiredDocumentTypes(tiposDocumento);
+        this.documentosRequeridos = processedRequiredDocs;
+
+        // Then, update user's uploaded documents and caches
+        this.documentosUsuario = documentosUsuario || [];
+        this.documentoSubidoCache = {}; // Reset cache
+        this.documentoCache = {}; // Reset cache
+        for (const documento of this.documentosUsuario) {
+          if (documento.tipoDocumentoId) {
+            // CRITICAL FIX: Marcar como subido independientemente del estado de aprobación
+            this.documentoSubidoCache[documento.tipoDocumentoId] = true;
+            this.documentoCache[documento.tipoDocumentoId] = documento;
+
+            // Log para debugging
+            this.loggingService.debug(`[DocumentosEmbebidos] Documento en cache: ${documento.tipoDocumentoId}`, {
+              tipoDocumentoId: documento.tipoDocumentoId,
+              estado: documento.estado,
+              nombreArchivo: documento.nombreArchivo
+            }, 'DocumentosEmbebidos');
+          }
+        }
+      }),
+      finalize(() => {
+        this.isLoading = false;
+        this.loggingService.debug('[DocumentosEmbebidos] Carga de datos finalizada. Calculando progreso...', undefined, 'DocumentosEmbebidos');
+        this.calcularProgreso(); // Calculate progress after both lists are loaded and caches updated
+
+        // CRITICAL FIX: Forzar detección de cambios después de actualizar datos
+        setTimeout(() => {
+          this.cdr.detectChanges();
+          this.loggingService.debug('[DocumentosEmbebidos] Detección de cambios forzada después de cargar datos', undefined, 'DocumentosEmbebidos');
+        }, 100);
+      }),
+      catchError(error => {
+        console.error('[DocumentosEmbebidos] Error al cargar datos combinados:', error);
+        this.mostrarError('Error al cargar la documentación. Por favor, intente nuevamente.');
+        this.isLoading = false;
+        return of(null); // Return observable of null to gracefully handle errors
+      })
+    ).subscribe();
+  }
 
   /**
    * Processes the raw list of document types, consolidating DNI front/back if present.
@@ -1335,63 +1298,6 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ CRITICAL FIX: Actualiza el cache de documentos subidos basado en los documentos del usuario
-   * Este método es esencial para que isDocumentoSubido() funcione correctamente
-   */
-  private actualizarCacheDocumentos(documentos: DocumentoUsuario[]): void {
-    // Limpiar cache existente
-    this.documentoSubidoCache = {};
-    this.documentoCache = {};
-
-    // Actualizar cache con documentos actuales
-    documentos.forEach(documento => {
-      if (documento.tipoDocumento?.id) {
-        // ✅ CRITICAL FIX: Usar el ID del tipo de documento (UUID) que es lo que usan las cards
-        // No el código, porque las cards usan tipo.id como tipoDocumentoId
-        const tipoDocumentoId = documento.tipoDocumento.id;
-
-        this.documentoSubidoCache[tipoDocumentoId] = true;
-        this.documentoCache[tipoDocumentoId] = documento;
-
-        this.loggingService.debug('[DocumentosEmbebidos] 📝 Cache actualizado', {
-          tipoDocumentoId: tipoDocumentoId,
-          codigoBackend: documento.tipoDocumento.code,
-          nombreTipo: documento.tipoDocumento.nombre,
-          documentoId: documento.id
-        }, 'DocumentosEmbebidos');
-      }
-    });
-
-    this.loggingService.debug('[DocumentosEmbebidos] ✅ Cache de documentos actualizado', {
-      totalDocumentos: documentos.length,
-      cacheKeys: Object.keys(this.documentoSubidoCache)
-    }, 'DocumentosEmbebidos');
-  }
-
-
-
-  /**
-   * CRITICAL FIX: Método para forzar actualización del estado de documentación
-   * Usado después de cargas individuales para asegurar que las cards se actualicen correctamente
-   * Aplica el mismo patrón exitoso del perfil
-   */
-  actualizarEstadoDocumentacion(): void {
-    this.loggingService.debug('[DocumentosEmbebidos] 🔄 Forzando actualización del estado de documentación', {
-      documentosRequeridosCount: this.documentosRequeridos.length,
-      documentosUsuarioCount: this.documentosUsuario.length
-    }, 'DocumentosEmbebidos');
-
-    // Recalcular el estado de completitud y progreso
-    this.calcularProgreso();
-
-    this.loggingService.debug('[DocumentosEmbebidos] ✅ Estado de documentación actualizado', {
-      progresoDocumentacion: this.progresoDocumentacion,
-      documentosFaltantes: this.documentosFaltantes,
-      todosDocumentosCompletos: this.todosDocumentosCompletos
-    }, 'DocumentosEmbebidos');
-  }
-
-  /**
    * SIMPLIFICADO: Verifica si un documento específico ha sido subido
    * @param tipoDocumentoId The ID of the document type to check.
    * @returns True if the document is uploaded, false otherwise.
@@ -1435,7 +1341,6 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
   /**
    * Opens the single document upload dialog for a specific document type.
-   * ✅ CRITICAL FIX: Suscribirse al resultado del modal para actualizar las cards
    * @param tipoDocumentoId The ID of the document type to upload.
    */
   cargarDocumentoTipo(tipoDocumentoId: string): void {
@@ -1445,65 +1350,144 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const dialogRef = this.dialog.open(DocumentoUploadDialogComponent, {
-      title: `Cargar ${tipoDoc.title}`,
-      showFooter: false,
-      showCancelButton: false,
-      showConfirmButton: false,
-      data: {
-        tipoDocumentoId: tipoDoc.tipoDocumentoId,
-        tipoDocumentoNombre: tipoDoc.title,
-      }
-    });
+    // Verificar si es un reemplazo (documento ya subido)
+    const esReemplazo = this.isDocumentoSubido(tipoDocumentoId);
+    const documentoExistente = esReemplazo ? this.getDocumento(tipoDocumentoId) : null;
 
-    // ✅ CRITICAL FIX: Suscribirse al resultado del modal
-    dialogRef.afterClosed().subscribe((result: any) => {
-      if (result && result.documento) {
-        console.log('[DocumentosEmbebidos] ✅ Documento subido exitosamente - actualizando cards');
+    if (!esReemplazo) {
+      // Flujo original para carga nueva
+      this.dialog.open(DocumentoUploadDialogComponent, {
+        title: `Cargar ${tipoDoc.title}`,
+        showFooter: false,
+        showCancelButton: false,
+        showConfirmButton: false,
+        data: {
+          tipoDocumentoId: tipoDoc.tipoDocumentoId,
+          tipoDocumentoNombre: tipoDoc.title,
+          modoReemplazo: false,
+          documentoExistente: null
+        }
+      }).afterClosed().subscribe((result: unknown) => {
+        if (result && typeof result === 'object' && 'success' in result && (result as DialogResult).success) {
+          this.notificationService.success(`${tipoDoc.title} cargado exitosamente.`);
+          this.documentosService.invalidarCache();
+          this.cargarDatos(true);
+          setTimeout(() => this.cdr.detectChanges(), 200);
+        } else if (result && typeof result === 'object' && 'cancelled' in result && (result as DialogResult).cancelled) {
+          this.loggingService.debug(`[DocumentosEmbebidos] Carga de documento cancelada.`, undefined, 'DocumentosEmbebidos');
+        } else if (result !== null && result !== undefined) {
+          this.notificationService.error(`Error al cargar ${tipoDoc.title}.`);
+        }
+      });
+      return;
+    }
 
-        // Forzar actualización inmediata de los datos
-        setTimeout(() => {
-          this.actualizarEstadoDocumentacion();
-        }, 500); // Pequeño delay para que el backend procese
-      } else if (result) {
-        console.log('[DocumentosEmbebidos] ❌ Resultado del modal sin documento:', result);
+    // --- NUEVO FLUJO DE REEMPLAZO ROBUSTO ---
+    // Abrir selector de archivo para reemplazo
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/pdf';
+    input.onchange = () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      this.documentosService.replaceDocumento(documentoExistente!.id!, file).subscribe({
+        next: (resp: DocumentoReplaceResponse) => {
+          if (resp.warning && resp.impactedEntities && resp.impactedEntities.length > 0) {
+            const detalle = resp.impactedEntities.map(e => `<li>${e}</li>`).join('');
+            this.dialog.openConfirm({
+              title: 'Advertencia de reemplazo',
+              icon: 'warning',
+              message: `${resp.warning}<ul>${detalle}</ul><p>¿Deseas continuar y reemplazar el documento?</p>`,
+              confirmButtonText: 'Reemplazar',
+              cancelButtonText: 'Cancelar',
+              size: 'medium',
+            }).afterClosed().subscribe((confirmado: boolean | undefined) => {
+              if (confirmado) {
+                this.documentosService.replaceDocumento(documentoExistente!.id!, file, undefined, true).subscribe({
+                  next: (resp2: DocumentoReplaceResponse) => {
+                    this.notificationService.success(resp2.message || `${tipoDoc.title} reemplazado exitosamente.`);
+                    this.documentosService.invalidarCache();
+                    this.cargarDatos(true);
+                    setTimeout(() => this.cdr.detectChanges(), 200);
+                  },
+                  error: (err) => {
+                    this.notificationService.error(err?.message || `Error al reemplazar ${tipoDoc.title}.`);
+                  }
+                });
+              }
+            });
+          } else {
+            this.notificationService.success(resp.message || `${tipoDoc.title} reemplazado exitosamente.`);
+            this.documentosService.invalidarCache();
+            this.cargarDatos(true);
+            setTimeout(() => this.cdr.detectChanges(), 200);
+          }
+        },
+        error: (err) => {
+          this.notificationService.error(err?.message || `Error al reemplazar ${tipoDoc.title}.`);
+        }
+      });
+    };
+    input.click();
+  }
+
+  /**
+   * Opens the multiple document upload dialog.
+   */
+  abrirCargaMultiple(): void {
+    this.loggingService.debug('[DocumentosEmbebidos] Abriendo diálogo de carga múltiple.', undefined, 'DocumentosEmbebidos');
+
+    // CRITICAL FIX: Convert documentosRequeridos to TipoDocumento format expected by the dialog
+    // First, get all document types from the service to have the complete TipoDocumento objects
+    this.documentosService.getTiposDocumento().subscribe({
+      next: (tiposDocumento) => {
+        this.dialog.open(DocumentoMultipleUploadDialogComponent, {
+          title: 'Carga Múltiple de Documentos',
+          showFooter: false, // Disable external footer buttons
+          showCancelButton: false, // Disable external cancel button
+          showConfirmButton: false, // Disable external confirm button
+          data: {
+            tiposDocumento: tiposDocumento, // Pass the complete TipoDocumento array
+            concursoId: this.concursoId // Pass contest ID if needed by multi-upload
+          }
+        }).afterClosed().subscribe((result: unknown) => {
+          if (result && typeof result === 'object' && 'success' in result && (result as DialogResult).success) {
+            // CRITICAL FIX: Eliminar notificación duplicada
+            // El componente hijo ya maneja las notificaciones en finalizarProceso()
+            // this.notificationService.success('Documentos cargados exitosamente.');
+
+            // CRITICAL FIX: Invalidar cache y recargar datos para forzar actualización de UI
+            this.documentosService.invalidarCache();
+            this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
+
+            // CRITICAL FIX: Forzar actualización inmediata de la UI después de carga múltiple
+            setTimeout(() => {
+              this.cdr.detectChanges();
+              this.loggingService.debug('[DocumentosEmbebidos] UI actualizada después de carga múltiple exitosa', undefined, 'DocumentosEmbebidos');
+            }, 300);
+
+          } else if (result && typeof result === 'object' && 'cancelled' in result && (result as DialogResult).cancelled) {
+            this.loggingService.debug('[DocumentosEmbebidos] Carga múltiple de documentos cancelada.', undefined, 'DocumentosEmbebidos');
+          } else if (result !== null && result !== undefined) {
+            // CRITICAL FIX: Eliminar notificación de error duplicada también
+            // El componente hijo ya maneja las notificaciones de error
+            // this.notificationService.error('Error al cargar documentos.');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('[DocumentosEmbebidos] Error al cargar tipos de documento para diálogo múltiple:', error);
+        this.notificationService.error('Error al cargar los tipos de documento disponibles.');
       }
     });
   }
 
   /**
-   * Opens the multiple document upload dialog.
-   * ✅ CRITICAL FIX: Suscribirse al resultado del modal para actualizar las cards
+   * Opens the document viewer for an uploaded document.
+   * @param documento The DocumentoUsuario object to view.
    */
-  abrirCargaMultiple(): void {
-    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
-      title: 'Carga Múltiple de Documentos',
-      showFooter: false,
-      showCancelButton: false,
-      showConfirmButton: false,
-      data: {
-        concursoId: this.concursoId
-      }
-    });
-
-    // ✅ CRITICAL FIX: Suscribirse al resultado del modal
-    dialogRef.afterClosed().subscribe((result: any) => {
-      if (result) {
-        console.log('[DocumentosEmbebidos] ✅ Carga múltiple completada - actualizando cards');
-
-        // Forzar actualización inmediata de los datos
-        setTimeout(() => {
-          this.actualizarEstadoDocumentacion();
-        }, 500); // Pequeño delay para que el backend procese
-
-      }
-
-      /**
-       * Opens the document viewer for an uploaded document.
-       * @param documento The DocumentoUsuario object to view.
-       */
-      verDocumento(documento: DocumentoUsuario | undefined): void {
-        if(!documento || !documento.id) {
+  verDocumento(documento: DocumentoUsuario | undefined): void {
+    if (!documento || !documento.id) {
       this.notificationService.warning('Documento no disponible para ver.');
       return;
     }
@@ -1523,7 +1507,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
   /**
    * Deletes an uploaded document after confirmation.
-   * ✅ FIXED: Implementa suscripción al evento de eliminación para feedback y actualización automática
+   * CRITICAL FIX: Reemplaza modal nativo con componente personalizado y corrige manejo de respuesta
    * @param documento The DocumentoUsuario object to delete.
    */
   eliminarDocumento(documento: DocumentoUsuario | undefined): void {
@@ -1531,6 +1515,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       this.notificationService.error('Documento no válido para eliminar.');
       return;
     }
+
+    this.loggingService.debug(`[DocumentosEmbebidos] Confirmando eliminación para documento: ${documento.nombreArchivo}`, undefined, 'DocumentosEmbebidos');
 
     this.confirmationService
       .danger(
@@ -1542,30 +1528,25 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       )
       .subscribe((confirmed) => {
         if (confirmed) {
-          this.loggingService.debug('[DocumentosEmbebidos] 🗑️ Iniciando eliminación de documento:', documento.nombreArchivo, 'DocumentosEmbebidos');
+          this.loggingService.debug(`[DocumentosEmbebidos] Eliminando documento: ${documento.id}`, undefined, 'DocumentosEmbebidos');
 
-          // ✅ FIXED: Suscribirse al evento de documento eliminado para mostrar mensaje de éxito
-          const eliminacionSubscription = this.documentManager.documentoEliminado$.pipe(
-            filter(documentoId => documentoId === documento.id),
-            take(1)
-          ).subscribe(() => {
-            this.loggingService.debug('[DocumentosEmbebidos] ✅ Documento eliminado exitosamente, mostrando mensaje de éxito', undefined, 'DocumentosEmbebidos');
-            this.notificationService.success(`Documento "${documento.nombreArchivo}" eliminado exitosamente`);
-
-            // ✅ FIXED: Forzar recarga inmediata para actualizar la interfaz
-            setTimeout(() => {
-              this.loggingService.debug('[DocumentosEmbebidos] 🔄 Forzando recarga después de eliminación', undefined, 'DocumentosEmbebidos');
-              this.actualizarEstadoDocumentacion();
-            }, 500);
+          this.isLoading = true;
+          this.documentosService.deleteDocumento(documento.id!).pipe(
+            finalize(() => {
+              this.isLoading = false;
+              this.loggingService.debug('[DocumentosEmbebidos] Operación de eliminación finalizada', undefined, 'DocumentosEmbebidos');
+            })
+          ).subscribe(success => {
+            if (success) {
+              this.loggingService.debug('[DocumentosEmbebidos] Documento eliminado exitosamente', undefined, 'DocumentosEmbebidos');
+              this.notificationService.success(`"${documento.nombreArchivo}" eliminado exitosamente.`);
+              this.cargarDatos(true);
+            } else {
+              this.notificationService.error(`Error al eliminar ${documento.nombreArchivo}.`);
+            }
           });
-
-          // Agregar la suscripción para limpiarla después
-          if (this.subscription) {
-            this.subscription.add(eliminacionSubscription);
-          }
-
-          // Ejecutar la eliminación
-          this.documentManager.eliminarDocumento(documento.id!);
+        } else {
+          this.loggingService.debug('[DocumentosEmbebidos] Eliminación cancelada por el usuario', undefined, 'DocumentosEmbebidos');
         }
       });
   }
@@ -1667,5 +1648,37 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   private mostrarError(message: string): void {
     this.notificationService.error(message);
   }
-}
 
+  // Agregar estas propiedades al componente
+  hasError = false;
+  errorMessage = '';
+
+  /**
+   * Obtiene un mensaje de error descriptivo basado en el tipo de error
+   */
+  getErrorMessage(error: unknown): string {
+    // Verificar si el error es un objeto con propiedad status
+    if (error && typeof error === 'object' && 'status' in error) {
+      const httpError = error as { status: number };
+
+      if (httpError.status === 404) {
+        return 'El servicio de documentos no está disponible en este momento.';
+      } else if (httpError.status === 401) {
+        return 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.';
+      } else if (httpError.status === 403) {
+        return 'No tiene permisos para acceder a esta información.';
+      } else if (httpError.status === 500) {
+        return 'Error interno del servidor. Por favor, intente más tarde.';
+      }
+    }
+
+    // Si es un error con mensaje
+    if (error && typeof error === 'object' && 'message' in error) {
+      const msgError = error as { message: string };
+      return `Error: ${msgError.message}`;
+    }
+
+    // Mensaje genérico para cualquier otro tipo de error
+    return 'No se pudieron cargar los documentos. Por favor, intente nuevamente.';
+  }
+}

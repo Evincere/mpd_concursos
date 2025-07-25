@@ -2934,7 +2934,6 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
 
     return cuitWithoutVerifier + verifier.toString();
   }
-<<<<<<< HEAD
 
   /**
    * ✅ SOLUCIÓN PROBLEMA 17: Implementación del método requerido por CanComponentDeactivate
@@ -3213,4 +3212,5 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
       ).subscribe();
     }
   }
+
 }
