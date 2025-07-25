@@ -17,6 +17,12 @@ import { finalize, catchError, map, debounceTime, distinctUntilChanged, filter, 
 import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
+// Interface for dialog results
+interface DialogResult {
+  success?: boolean;
+  cancelled?: boolean;
+}
+
 @Component({
   selector: 'app-documentos-embebidos',
   standalone: true,
@@ -989,7 +995,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   todosDocumentosCompletos = false;
 
   private subscription: Subscription | undefined;
-  private deadlineInterval: any; // Para limpiar el setInterval
+  private deadlineInterval: NodeJS.Timeout | null = null; // Para limpiar el setInterval
 
   // NUEVA FUNCIONALIDAD: Plazos perentorios
   hoursUntilDeadline = -1;
@@ -998,7 +1004,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   private lastNotificationHour = -1; // Para evitar notificaciones duplicadas
 
   // CRITICAL FIX: Flag para controlar notificación de documentación completada
-  private documentacionCompletadaNotificada: boolean = false;
+  private documentacionCompletadaNotificada = false;
 
   // Cache para evitar múltiples verificaciones
   private documentoSubidoCache: Record<string, boolean> = {};
@@ -1014,7 +1020,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     private loggingService: LoggingService,
     private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loggingService.debug('[DocumentosEmbebidos] Componente inicializado.', undefined, 'DocumentosEmbebidos');
@@ -1135,8 +1141,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     // ✅ CORRECCIÓN: Identificación más específica del documento DNI general para evitar que aparezca en la interfaz
     const dniGeneral = rawTipos.find(tipo =>
       (tipo.id === 'dni' || tipo.code === 'dni' ||
-       tipo.nombre.toLowerCase() === 'documento nacional de identidad' ||
-       tipo.nombre.toLowerCase() === 'dni') &&
+        tipo.nombre.toLowerCase() === 'documento nacional de identidad' ||
+        tipo.nombre.toLowerCase() === 'dni') &&
       !tipo.nombre.toLowerCase().includes('frente') &&
       !tipo.nombre.toLowerCase().includes('dorso')
     );
@@ -1489,16 +1495,15 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.actualizarEstadoDocumentacion();
         }, 500); // Pequeño delay para que el backend procese
-      }
-    });
-  }
 
-  /**
-   * Opens the document viewer for an uploaded document.
-   * @param documento The DocumentoUsuario object to view.
-   */
-  verDocumento(documento: DocumentoUsuario | undefined): void {
-    if (!documento || !documento.id) {
+      }
+
+      /**
+       * Opens the document viewer for an uploaded document.
+       * @param documento The DocumentoUsuario object to view.
+       */
+      verDocumento(documento: DocumentoUsuario | undefined): void {
+        if(!documento || !documento.id) {
       this.notificationService.warning('Documento no disponible para ver.');
       return;
     }
@@ -1663,3 +1668,4 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     this.notificationService.error(message);
   }
 }
+

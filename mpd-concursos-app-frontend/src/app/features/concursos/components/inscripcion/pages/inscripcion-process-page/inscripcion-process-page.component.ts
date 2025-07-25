@@ -35,14 +35,14 @@ import { Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { DocumentosEmbebidosComponent } from '../../documentos-embebidos/documentos-embebidos.component';
 import { CustomAddressAutocompleteComponent } from '@shared/components/custom-address-autocomplete/custom-address-autocomplete.component';
-    FinalStepValidationComponent
+FinalStepValidationComponent
 import { FinalStepValidationComponent } from '../../final-step-validation/final-step-validation.component';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { IInscriptionUpdateRequest, IInscriptionStepRequest } from '@shared/interfaces/inscripcion/inscription.interface';
 import { InscriptionDocumentationService, InscriptionDocumentationState } from '@core/services/inscripcion/inscription-documentation.service';
 import { RequiredDocument } from '@core/services/documentos/documento-validation.service';
-import { DocumentoUsuario, TipoDocumento } from '@core/models/documento.model'; // Import TipoDocumento
+import { DocumentoUsuario } from '@core/models/documento.model';
 import { LoggingService } from '@core/services/logging/logging.service';
 import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
 import { CanComponentDeactivate } from '../../guards/inscription-deactivate.guard';
@@ -55,6 +55,33 @@ import {
   convertirFormatoASeleccion,
   validarSeleccionCircunscripciones
 } from '@shared/constants/circunscripciones.constants';
+
+// Interface for circunscripcion objects
+interface Circunscripcion {
+  id: string;
+  [key: string]: unknown;
+}
+
+// Interface for inscription objects from backend
+interface InscriptionResponse {
+  id: string;
+  estado: string;
+  [key: string]: unknown;
+}
+
+// Interface for saved state objects
+interface SavedState {
+  currentStep: number;
+  formData: {
+    termsAccepted: boolean;
+    centroDeVida: string;
+    selectedCircunscripciones: string[];
+    documentosCompletos: boolean;
+    confirmedPersonalData: boolean;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
 
 /**
  * Componente para el proceso de inscripción a concursos
@@ -170,7 +197,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   private _canProceedToNextStep = false;
 
   // Contenido de términos y condiciones
-  termsAndConditionsContent: string = '';
+  termsAndConditionsContent = '';
 
   // Referencia al contenedor principal para scroll
   @ViewChild('processContainer', { static: false }) processContainer?: ElementRef;
@@ -362,7 +389,6 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
       currentStep: this.currentStep,
       contestId: this.contestId
     });
-
     this.loggingService.debug('[InscripcionProcess] initializeInscriptionProcess llamado:', {
       isResume,
       inscriptionId: this.inscriptionId,
@@ -721,14 +747,14 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
    * Actualiza la URL con el paso actual para permitir navegación directa y bookmarking
    */
   private updateUrlWithCurrentStep(): void {
-    const queryParams: any = {
+    const queryParams: Record<string, unknown> = {
       contestId: this.contestId,
       step: this.currentStep
     };
 
     // Solo agregar inscriptionId si existe
     if (this.inscriptionId) {
-      queryParams.inscriptionId = this.inscriptionId;
+      queryParams['inscriptionId'] = this.inscriptionId;
     }
 
     // ✅ SOLUCIÓN PROBLEMA 10: Marcar como navegación interna con contexto detallado
@@ -1082,7 +1108,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     const canFinish = formValid && personalDataConfirmed && documentationValid;
 
     // CRITICAL FIX: Debugging detallado del formulario para identificar campos inválidos
-    const invalidControls: any = {};
+    const invalidControls: Record<string, unknown> = {};
     Object.keys(this.inscriptionForm.controls).forEach(key => {
       const control = this.inscriptionForm.get(key);
       if (control && control.invalid) {
@@ -1422,7 +1448,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
         this.loggingService.debug('[InscripcionProcess] Current inscription state:', inscription.estado, 'InscripcionProcessPage');
 
         // Determinar el paso inicial basado en el estado
-        switch (inscription.estado) {
+        switch ((inscription as InscriptionResponse).estado) {
           case 'COMPLETED_PENDING_DOCS':
             // NUEVO: Guardar el estado actual para los nuevos métodos
             this.currentInscriptionState = InscripcionState.COMPLETED_PENDING_DOCS;
@@ -1430,7 +1456,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
             if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
               this.loggingService.debug('[InscripcionProcess] Navegación directa detectada para COMPLETED_PENDING_DOCS - respetando paso de URL:', {
                 requestedStep: this.requestedStepFromUrl,
-                inscriptionState: inscription.estado
+                inscriptionState: (inscription as InscriptionResponse).estado
               }, 'InscripcionProcessPage');
 
               // Mantener el paso ya establecido desde la URL
@@ -1439,7 +1465,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
               // Para documentación pendiente, ir directamente al paso 3 (comportamiento por defecto)
               this.loggingService.debug('[InscripcionProcess] Estado COMPLETED_PENDING_DOCS detectado - navegando al paso 3', {
                 inscriptionId: this.inscriptionId,
-                estado: inscription.estado
+                estado: (inscription as InscriptionResponse).estado
               }, 'InscripcionProcessPage');
 
               this.currentStep = 3;
@@ -1475,7 +1501,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
             if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
               this.loggingService.debug('[InscripcionProcess] Navegación directa detectada - respetando paso de URL:', {
                 requestedStep: this.requestedStepFromUrl,
-                inscriptionState: inscription.estado
+                inscriptionState: (inscription as InscriptionResponse).estado
               }, 'InscripcionProcessPage');
 
               // Mantener el paso ya establecido desde la URL
@@ -1491,7 +1517,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
             if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
               this.loggingService.debug('[InscripcionProcess] Navegación directa detectada para estado:', {
                 requestedStep: this.requestedStepFromUrl,
-                inscriptionState: inscription.estado
+                inscriptionState: (inscription as InscriptionResponse).estado
               }, 'InscripcionProcessPage');
 
               // Mantener el paso ya establecido desde la URL
@@ -1500,7 +1526,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
               // Si no hay navegación directa, cargar estado guardado
               this.cargarEstadoGuardado();
             }
-            this.loggingService.debug(`[InscripcionProcess] Using saved state for inscription status: ${inscription.estado}`, undefined, 'InscripcionProcessPage');
+            this.loggingService.debug(`[InscripcionProcess] Using saved state for inscription status: ${(inscription as InscriptionResponse).estado}`, undefined, 'InscripcionProcessPage');
         }
 
         // ✅ SOLUCIÓN: Forzar validación después de cargar todos los datos
@@ -1544,9 +1570,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
           this.cargarEstadoDesdeLocalStorage(interruptedProcess);
           return of(null);
         })
-      ).subscribe((inscription: any) => {
-        if (inscription) {
-          this.inscriptionId = inscription.id;
+      ).subscribe((inscription: unknown) => {
+        if (inscription && typeof inscription === 'object' && inscription !== null && 'id' in inscription) {
+          this.inscriptionId = (inscription as InscriptionResponse).id;
           this.loggingService.debug('[InscripcionProcess] Retrieved inscription ID from backend:', this.inscriptionId, 'InscripcionProcessPage');
 
           // Cargar estado combinando backend y localStorage
@@ -1566,17 +1592,18 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   /**
    * Carga el estado desde localStorage cuando no hay conexión con backend
    */
-  private cargarEstadoDesdeLocalStorage(savedState: any): void {
-    if (savedState) {
-      this.currentStep = Number(savedState.currentStep) || 1;
+  private cargarEstadoDesdeLocalStorage(savedState: unknown): void {
+    if (savedState && typeof savedState === 'object' && savedState !== null) {
+      const state = savedState as SavedState;
+      this.currentStep = Number(state.currentStep) || 1;
 
-      if (savedState.formData) {
+      if (state.formData) {
         this.inscriptionForm.patchValue({
-          termsAccepted: savedState.formData.termsAccepted || false,
-          centroDeVida: savedState.formData.centroDeVida || '',
-          selectedCircunscripciones: savedState.formData.selectedCircunscripciones || [],
-          documentosCompletos: savedState.formData.documentosCompletos || false,
-          confirmedPersonalData: savedState.formData.confirmedPersonalData || false
+          termsAccepted: state.formData.termsAccepted || false,
+          centroDeVida: state.formData.centroDeVida || '',
+          selectedCircunscripciones: state.formData.selectedCircunscripciones || [],
+          documentosCompletos: state.formData.documentosCompletos || false,
+          confirmedPersonalData: state.formData.confirmedPersonalData || false
         });
       }
 
@@ -2039,7 +2066,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   }
 
   // Actualizar el perfil del usuario con el centro de vida (versión asíncrona)
-  actualizarPerfilConCentroDeVidaAsync(): Observable<any> {
+  actualizarPerfilConCentroDeVidaAsync(): Observable<unknown> {
     const centroDeVida = this.centroDeVidaControl.value;
     if (!centroDeVida) {
       this.loggingService.warn('[InscripcionProcess] Centro de vida no proporcionado para actualizar el perfil.', undefined, 'InscripcionProcessPage');
@@ -2119,7 +2146,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   actualizarPerfilConCentroDeVida(): void {
     this.actualizarPerfilConCentroDeVidaAsync().pipe(
       takeUntil(this.destroy$),
-      catchError(error => {
+      catchError(_error => {
         // Error ya manejado en la versión async
         return of(null);
       })
@@ -2256,7 +2283,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
         }, 'InscripcionProcessPage');
 
         // ✅ CRITICAL FIX: Usar la propiedad 'requerido' del backend para determinar si es obligatorio
-        let docsRequeridos: { title: string, required: boolean, completed: boolean, tipoDocumentoId: string }[] =
+        const docsRequeridos: { title: string, required: boolean, completed: boolean, tipoDocumentoId: string }[] =
           tiposDocumento.map(tipo => ({
             title: tipo.nombre,
             required: tipo.requerido, // ✅ USAR LA PROPIEDAD DEL BACKEND
@@ -2516,12 +2543,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   // Métodos wrapper temporales para resolver problemas de TypeScript
   private cancelInscriptionWrapper(inscriptionId: string): Observable<void> {
     // TODO: Usar this.inscriptionService.cancelInscription cuando TypeScript lo reconozca
-    return (this.inscriptionService as any).cancelInscription(inscriptionId);
+    return (this.inscriptionService as unknown as { cancelInscription: (id: string) => Observable<void> }).cancelInscription(inscriptionId);
   }
 
-  private updateInscriptionStatusWrapper(inscriptionId: string, request: IInscriptionUpdateRequest): Observable<any> {
+  private updateInscriptionStatusWrapper(inscriptionId: string, request: IInscriptionUpdateRequest): Observable<unknown> {
     // TODO: Usar this.inscriptionService.updateInscriptionStatus cuando TypeScript lo reconozca
-    return (this.inscriptionService as any).updateInscriptionStatus(inscriptionId, request);
+    return (this.inscriptionService as unknown as { updateInscriptionStatus: (id: string, req: IInscriptionUpdateRequest) => Observable<unknown> }).updateInscriptionStatus(inscriptionId, request);
   }
 
   // Método finish() para el template
@@ -2833,12 +2860,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
         return of(null);
       })
     ).subscribe({
-      next: (response: any) => {
+      next: (response: unknown) => {
         // CONCURRENCY FIX: Resetear bandera al completar exitosamente
         this.isCreatingInscription = false;
 
-        if (response && response.id) {
-          this.inscriptionId = response.id;
+        if (response && typeof response === 'object' && response !== null && 'id' in response) {
+          this.inscriptionId = (response as InscriptionResponse).id;
           this.loggingService.debug('[InscripcionProcess] Using inscription with ID:', this.inscriptionId, 'InscripcionProcessPage');
 
           this.showValidationErrors = false;
@@ -2907,6 +2934,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
 
     return cuitWithoutVerifier + verifier.toString();
   }
+<<<<<<< HEAD
 
   /**
    * ✅ SOLUCIÓN PROBLEMA 17: Implementación del método requerido por CanComponentDeactivate
@@ -3146,14 +3174,14 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
    */
   onFinalValidationComplete(isValid: boolean): void {
     this.loggingService.debug('[InscripcionProcess] Final validation complete:', { isValid }, 'InscripcionProcessPage');
-    
+
     if (isValid) {
       // Marcar que todos los datos están listos para finalizar
       this.confirmedPersonalDataControl.setValue(true);
-      
+
       // Forzar actualización de propiedades computadas
       this.updateComputedProperties();
-      
+
       // Forzar detección de cambios
       this.cdr.detectChanges();
     }
@@ -3164,7 +3192,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
    */
   onValidationDataUpdated(): void {
     this.loggingService.debug('[InscripcionProcess] Validation data updated - refreshing form data', undefined, 'InscripcionProcessPage');
-    
+
     // Recargar datos de la inscripción desde el backend
     if (this.inscriptionId) {
       this.inscriptionService.getInscriptionDetails(this.inscriptionId).pipe(
@@ -3172,7 +3200,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
         tap(inscriptionDetails => {
           // Aplicar datos actualizados al formulario
           this.aplicarDatosDeInscripcionAlFormulario(inscriptionDetails);
-          
+
           // Forzar validación
           setTimeout(() => {
             this.forceValidationUpdate();

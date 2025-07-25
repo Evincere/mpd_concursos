@@ -7,14 +7,15 @@
   },
   "scripts": {
     "ng": "ng",
-    "start": "node fix-colorette.js && cross-env NODE_OPTIONS=--no-deprecation ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
+    "start": "node fix-colorette.js && cross-env NODE_OPTIONS=\"--max-old-space-size=8192 --no-deprecation\" ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
     "start:simple": "node fix-colorette.js && ng serve",
     "fix-colorette": "node fix-colorette.js",
     "start:clean": "npm cache clean --force && ng serve --configuration development",
-    "start:dev": "ng serve --configuration development --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
-    "start:reset": "rimraf .angular/cache && npm run start:dev",
+    "start:dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" ng serve --configuration development --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
+    "start:reset": "rimraf .angular/cache && rimraf node_modules/.cache && npm run start:dev",
+    "start:memory": "cross-env NODE_OPTIONS=\"--max-old-space-size=12288 --no-deprecation\" ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
     "start:webpack": "webpack serve --config webpack.dev.js",
-    "build": "ng build --configuration production",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:quick": "ng test --watch=false --browsers=ChromeHeadless --code-coverage=false",
@@ -29,7 +30,8 @@
     "cv:migrate:routes": "node scripts/migrate-cv-routes.js",
     "cv:cleanup:legacy": "node scripts/cleanup-legacy-cv.js",
     "cv:migration:execute": "node scripts/execute-cv-migration.js",
-    "cv:activate:now": "node scripts/activate-cv-migration-now.js"
+    "cv:activate:now": "node scripts/activate-cv-migration-now.js",
+    "diagnose": "node diagnose-memory.js"
   },
   "private": true,
   "dependencies": {

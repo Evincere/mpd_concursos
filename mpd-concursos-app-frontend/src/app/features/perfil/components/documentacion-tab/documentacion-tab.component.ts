@@ -13,7 +13,7 @@ import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.ser
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
-import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento, DocumentoReplaceResponse, DocumentoSummary } from '../../../../core/models/documento.model';
+import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento, DocumentoSummary } from '../../../../core/models/documento.model';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentManagerService } from '@core/services/documentos/document-manager.service';
 import { TiposDocumentoService } from '@core/services/documentos/tipos-documento.service';
@@ -844,7 +844,8 @@ interface DocumentoCardViewModel {
   `]
 })
 export class DocumentacionTabComponent implements OnInit, OnDestroy {
-
+  isLoading = true;
+  isReplacing: Record<string, boolean> = {};
   documentosUsuario: DocumentoUsuario[] = [];
   documentosSummary: DocumentoSummary[] = []; // Resumen de documentos agrupados por tipo
   tiposDocumento: TipoDocumento[] = []; // This will hold all document types from the backend
@@ -1184,8 +1185,8 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe((result: any) => {
-      if (result && result.success) {
+    dialogRef.afterClosed().subscribe((result: unknown) => {
+      if (result && typeof result === 'object' && 'success' in result && result.success) {
         this.notification.success(`${tipoDocumento.nombre} cargado exitosamente`);
         console.log('[DocumentacionTab] 📄 Documento individual cargado exitosamente - forzando recarga inmediata');
 
@@ -1196,7 +1197,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           this.documentManager.cargarDocumentos(true);
         }, 500); // Pequeño delay para que el backend procese
 
-      } else if (result && result.cancelled) {
+      } else if (result && typeof result === 'object' && 'cancelled' in result && result.cancelled) {
         console.log('[DocumentacionTab] ❌ Carga de documento cancelada por el usuario');
       }
     });
@@ -1247,7 +1248,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
         // Rechazamos la promesa solo si no se ha seleccionado un archivo todavía
         // Se usa un pequeño timeout para asegurar que el evento onchange se dispare primero si hubo una selección.
         setTimeout(() => {
-            reject(new Error('Selección de archivo cancelada.'));
+          reject(new Error('Selección de archivo cancelada.'));
         }, 300);
       }, { once: true });
 
@@ -1303,7 +1304,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       });
   }
 
-  onTableAction(event: { action: string; data?: DocumentoUsuario; row?: any }): void {
+  onTableAction(event: { action: string; data?: DocumentoUsuario; row?: unknown }): void {
     const documento = event.data || (event.row as DocumentoUsuario);
 
     switch (event.action) {
@@ -1342,7 +1343,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   /**
    * Maneja las acciones de la tabla de resumen de documentos
    */
-  onSummaryTableAction(event: { action: string; data?: DocumentoSummary; row?: any }): void {
+  onSummaryTableAction(event: { action: string; data?: DocumentoSummary; row?: unknown }): void {
     const summary = event.data || (event.row as DocumentoSummary);
 
     // Crear un DocumentoUsuario temporal para compatibilidad con métodos existentes
@@ -1351,7 +1352,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       tipoDocumentoId: summary.tipoDocumentoId,
       tipoDocumento: summary.tipoDocumento,
       nombreArchivo: summary.nombreArchivo,
-      estado: summary.estado as any,
+      estado: summary.estado as EstadoDocumento,
       comentarios: summary.comentarios,
       fechaCarga: summary.fechaCarga,
       validadoPor: summary.validadoPor,
@@ -1424,18 +1425,20 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   /**
    * Obtiene los elementos del ViewModel que corresponden a documentos obligatorios
    */
-  getObligatoriosViewModel(): any[] {
+  getObligatoriosViewModel(): DocumentoCardViewModel[] {
     return this.documentosViewModel.filter(vm => vm.tipo.requerido);
   }
 
   /**
    * Obtiene los elementos del ViewModel que corresponden a documentos opcionales
    */
-  getOpcionalesViewModel(): any[] {
+  getOpcionalesViewModel(): DocumentoCardViewModel[] {
     return this.documentosViewModel.filter(vm => !vm.tipo.requerido);
   }
+
 
 
 }
 
 
+}
