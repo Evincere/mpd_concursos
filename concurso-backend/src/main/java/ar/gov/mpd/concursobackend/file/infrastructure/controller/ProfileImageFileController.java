@@ -7,10 +7,10 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -48,7 +48,8 @@ public class ProfileImageFileController {
      * @return Archivo de imagen como Resource
      */
     @GetMapping("/{userId}/{filename:.+}")
-    @PreAuthorize("hasRole('ROLE_USER')")
+    // ✅ CRITICAL FIX: Remover @PreAuthorize para permitir acceso público a imágenes de perfil
+    // Las imágenes de perfil necesitan ser accesibles sin autenticación para mostrarse en <img> tags
     public ResponseEntity<Resource> serveProfileImage(
             @PathVariable String userId,
             @PathVariable String filename) {
@@ -56,13 +57,10 @@ public class ProfileImageFileController {
         try {
             log.debug("Sirviendo imagen de perfil: userId={}, filename={}", userId, filename);
 
-            // Verificar autorización: solo el propietario puede acceder a su imagen
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String currentUsername = authentication.getName();
-
-            // TODO: Implementar verificación de que el userId corresponde al usuario actual
-            // Por ahora, registramos el acceso para auditoría
-            log.info("Usuario {} accediendo a imagen de perfil de userId: {}", currentUsername, userId);
+            // ✅ CRITICAL FIX: Acceso público a imágenes de perfil
+            // Las imágenes de perfil son ahora públicas para permitir su visualización en <img> tags
+            // Registrar acceso para auditoría sin verificar autenticación
+            log.info("Acceso público a imagen de perfil de userId: {}", userId);
 
             // Construir ruta del archivo
             Path filePath = Paths.get(uploadDir, PROFILE_IMAGES_DIR, userId, filename);

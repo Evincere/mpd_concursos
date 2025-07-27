@@ -1,6 +1,6 @@
 /**
  * Componente Contenedor del Sistema CV
- * 
+ *
  * @description Componente principal que orquesta la funcionalidad completa del CV
  * @author Augment Agent
  * @date 2025-06-20
@@ -48,6 +48,11 @@ import { CvTransformService } from '@core/services/cv/cv-transform.service';
 import { CvNotificationService } from '@core/services/cv/cv-notification.service';
 import { CvPdfExportService } from '@core/services/cv/cv-pdf-export.service';
 import { CvSearchService } from '@core/services/cv/cv-search.service';
+import { ConfirmationService } from '@shared/services/confirmation.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
+
+// Componentes de visualización
+import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 // Servicios especializados de educación
 import { EducationDisplayService, FormattedDateInfo } from '@core/services/cv/education-display.service';
 import { CvDragDropService } from '@core/services/cv/cv-drag-drop.service';
@@ -219,7 +224,9 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     private readonly educationService: EducationCvService,
     private readonly cvStateService: CvStateService,
     // Servicios especializados de educación
-    private readonly educationDisplayService: EducationDisplayService
+    private readonly educationDisplayService: EducationDisplayService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly dialog: UnifiedDialogService
   ) {
     this.setupSearchSubscription();
     this.setupRefreshSubscription();
@@ -376,30 +383,64 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!confirm(`¿Está seguro de eliminar la experiencia en ${experience.company}?`)) {
+    // Usar el servicio de confirmación con estilos personalizados
+    this.confirmationService.danger(
+      'Eliminar Experiencia',
+      `¿Está seguro de eliminar la experiencia en ${experience.company}?`,
+      'Esta acción no se puede deshacer y se perderán todos los datos asociados.'
+    ).subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+
+      this.updateExperienceState(state => ({
+        ...state,
+        isLoading: true
+      }));
+
+      this.experienceService.delete(experience.id!).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Experiencia eliminada exitosamente');
+          this.refreshData(); // Recargar datos desde el servidor
+          this.updateLastModified();
+        },
+        error: (error) => {
+          this.updateExperienceState(state => ({
+            ...state,
+            isLoading: false,
+            error: 'Error al eliminar experiencia'
+          }));
+          this.notificationService.showError('Error al eliminar la experiencia');
+          console.error('[CvContainerComponent] Error deleting experience:', error);
+        }
+      });
+    });
+  }
+
+  /**
+   * Visualiza el documento probatorio de una experiencia laboral
+   */
+  viewExperienceDocument(experience: WorkExperience): void {
+    if (!experience.documentUrl) {
+      this.notificationService.showError('No hay documento disponible para esta experiencia');
       return;
     }
 
-    this.updateExperienceState(state => ({
-      ...state,
-      isLoading: true
-    }));
+    // Usar la ruta del documento como ID - el DocumentosService ya maneja documentos de CV
+    // Los documentos de CV se identifican por su ruta relativa
+    const documentId = experience.documentUrl;
 
-    this.experienceService.delete(experience.id).subscribe({
-      next: () => {
-        this.notificationService.showSuccess('Experiencia eliminada exitosamente');
-        this.refreshData(); // Recargar datos desde el servidor
-        this.updateLastModified();
-      },
-      error: (error) => {
-        this.updateExperienceState(state => ({
-          ...state,
-          isLoading: false,
-          error: 'Error al eliminar experiencia'
-        }));
-        this.notificationService.showError('Error al eliminar la experiencia');
-        console.error('[CvContainerComponent] Error deleting experience:', error);
-      }
+    console.log(`[CvContainer] 📄 Abriendo visor de documento de CV: ${documentId}`);
+
+    // Abrir el visor de documentos usando el mismo componente que el formulario
+    this.dialog.open(DocumentoViewerComponent, {
+      title: 'Documento de Experiencia Laboral',
+      icon: 'file-pdf',
+      size: 'large',
+      data: { documentoId: documentId },
+      showFooter: true,
+      showCancelButton: false,
+      showConfirmButton: true,
+      confirmButtonText: 'Cerrar',
+      panelClass: 'documento-viewer-dialog'
     });
   }
 
@@ -426,30 +467,35 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!confirm(`¿Está seguro de eliminar "${education.title}"?`)) {
-      return;
-    }
+    // Usar el servicio de confirmación con estilos personalizados (igual que experiencias)
+    this.confirmationService.danger(
+      'Eliminar Educación',
+      `¿Está seguro de eliminar la educación "${education.title}" en ${education.institution}?`,
+      'Esta acción no se puede deshacer y se perderán todos los datos asociados.'
+    ).subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
 
-    this.updateEducationState(state => ({
-      ...state,
-      isLoading: true
-    }));
+      this.updateEducationState(state => ({
+        ...state,
+        isLoading: true
+      }));
 
-    this.educationService.delete(education.id).subscribe({
-      next: () => {
-        this.notificationService.showSuccess('Educación eliminada exitosamente');
-        this.refreshData(); // Recargar datos desde el servidor
-        this.updateLastModified();
-      },
-      error: (error) => {
-        this.updateEducationState(state => ({
-          ...state,
-          isLoading: false,
-          error: 'Error al eliminar educación'
-        }));
-        this.notificationService.showError('Error al eliminar la educación');
-        console.error('[CvContainerComponent] Error deleting education:', error);
-      }
+      this.educationService.delete(education.id!).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Educación eliminada exitosamente');
+          this.refreshData(); // Recargar datos desde el servidor
+          this.updateLastModified();
+        },
+        error: (error) => {
+          this.updateEducationState(state => ({
+            ...state,
+            isLoading: false,
+            error: 'Error al eliminar educación'
+          }));
+          this.notificationService.showError('Error al eliminar la educación');
+          console.error('[CvContainerComponent] Error deleting education:', error);
+        }
+      });
     });
   }
 
@@ -502,36 +548,120 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     this.isExperienceLoading.set(true);
 
     const isEditing = this.experienceModalMode() === 'edit';
-    const serviceCall = isEditing
-      ? this.experienceService.update(this.selectedExperience()!.id!, experienceData)
-      : this.experienceService.create(this.userProfile.id, experienceData);
 
-    serviceCall.subscribe({
-      next: (savedExperience) => {
-        const message = isEditing
-          ? 'Experiencia laboral actualizada exitosamente'
-          : 'Experiencia laboral agregada exitosamente';
-
-        this.notificationService.showSuccess(message);
-
-        // Resetear el formulario solo si es modo crear
-        if (!isEditing && this.experienceModalComponent) {
-          this.experienceModalComponent.resetForm();
+    if (isEditing) {
+      // Para edición, usar el flujo original
+      this.experienceService.update(this.selectedExperience()!.id!, experienceData).subscribe({
+        next: (savedExperience) => {
+          this.notificationService.showSuccess('Experiencia laboral actualizada exitosamente');
+          this.handleExperienceSaveSuccess();
+        },
+        error: (error) => {
+          this.notificationService.showError('Error al actualizar la experiencia laboral');
+          this.handleExperienceSaveError(error);
         }
+      });
+    } else {
+      // Para creación, manejar documentos temporales
+      this.createExperienceWithDocuments(experienceData);
+    }
+  }
 
-        this.onExperienceModalClose();
-        this.refreshData(); // Recargar datos
+  /**
+   * Crea una experiencia y sube documentos temporales si existen
+   */
+  private createExperienceWithDocuments(experienceData: WorkExperienceDto): void {
+    if (!this.userProfile?.id) {
+      this.notificationService.showError('No se puede crear la experiencia sin datos de usuario');
+      this.isExperienceLoading.set(false);
+      return;
+    }
+
+    // Obtener documentos temporales del formulario
+    const tempDocuments = this.experienceModalComponent?.experienceFormComponent?.documentUploader?.getTempDocuments() || [];
+
+    console.log(`[CvContainer] 📁 Creando experiencia con ${tempDocuments.length} documentos temporales`);
+
+    // Crear la experiencia primero
+    this.experienceService.create(this.userProfile.id, experienceData).subscribe({
+      next: (savedExperience) => {
+        console.log(`[CvContainer] ✅ Experiencia creada con ID: ${savedExperience.id}`);
+
+        if (tempDocuments.length > 0 && savedExperience.id) {
+          // Subir documentos después de crear la experiencia
+          this.uploadDocumentsForExperience(savedExperience.id, tempDocuments);
+        } else {
+          // Sin documentos, completar el proceso
+          this.notificationService.showSuccess('Experiencia laboral agregada exitosamente');
+          this.handleExperienceSaveSuccess();
+        }
       },
       error: (error) => {
-        const message = isEditing
-          ? 'Error al actualizar la experiencia laboral'
-          : 'Error al agregar la experiencia laboral';
-
-        this.notificationService.showError(message);
-        console.error('[CvContainerComponent] Error saving experience:', error);
-        this.isExperienceLoading.set(false);
+        this.notificationService.showError('Error al agregar la experiencia laboral');
+        this.handleExperienceSaveError(error);
       }
     });
+  }
+
+  /**
+   * Sube documentos temporales para una experiencia creada
+   */
+  private uploadDocumentsForExperience(experienceId: string, tempDocuments: any[]): void {
+    console.log(`[CvContainer] 📤 Subiendo ${tempDocuments.length} documentos para experiencia ${experienceId}`);
+
+    // Por ahora, solo subir el primer documento (el sistema actual solo maneja uno)
+    const firstDocument = tempDocuments[0];
+    if (firstDocument && firstDocument.file) {
+      this.experienceService.uploadDocument(experienceId, firstDocument.file).subscribe({
+        next: (updatedExperience) => {
+          console.log(`[CvContainer] ✅ Documento subido exitosamente para experiencia ${experienceId}`);
+          this.notificationService.showSuccess('Experiencia laboral y documento agregados exitosamente');
+          this.handleExperienceSaveSuccess();
+        },
+        error: (error) => {
+          console.error(`[CvContainer] ❌ Error subiendo documento para experiencia ${experienceId}:`, error);
+          // La experiencia ya se creó, solo falló el documento
+          this.notificationService.showWarning('Experiencia creada, pero hubo un error al subir el documento. Puedes intentar subirlo nuevamente.');
+          this.handleExperienceSaveSuccess();
+        }
+      });
+    } else {
+      console.warn('[CvContainer] ⚠️ Documento temporal sin archivo válido');
+      this.notificationService.showSuccess('Experiencia laboral agregada exitosamente');
+      this.handleExperienceSaveSuccess();
+    }
+  }
+
+  /**
+   * Maneja el éxito al guardar experiencia
+   */
+  private handleExperienceSaveSuccess(): void {
+    // ✅ CRITICAL FIX: Notificar éxito al formulario para limpiar documentos temporales
+    if (this.experienceModalComponent?.experienceFormComponent) {
+      this.experienceModalComponent.experienceFormComponent.onSaveSuccess();
+    }
+
+    // Resetear el formulario si es modo crear
+    if (this.experienceModalMode() === 'create' && this.experienceModalComponent) {
+      this.experienceModalComponent.resetForm();
+    }
+
+    this.onExperienceModalClose();
+    this.refreshData(); // Recargar datos
+  }
+
+  /**
+   * Maneja errores al guardar experiencia
+   */
+  private handleExperienceSaveError(error: any): void {
+    console.error('[CvContainerComponent] Error saving experience:', error);
+
+    // ✅ CRITICAL FIX: Notificar error al formulario para mantener documentos temporales
+    if (this.experienceModalComponent?.experienceFormComponent) {
+      this.experienceModalComponent.experienceFormComponent.onSaveError();
+    }
+
+    this.isExperienceLoading.set(false);
   }
 
   /**

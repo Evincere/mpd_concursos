@@ -1,8 +1,8 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
+import ar.gov.mpd.concursobackend.document.application.mapper.DocumentMapper;
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentAuditEntity;
-import ar.gov.mpd.concursobackend.document.application.mapper.DocumentMapper;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentAuditSpringRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

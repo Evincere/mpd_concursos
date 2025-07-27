@@ -14,16 +14,36 @@ export interface BasicDialogConfig {
 
 export class BasicDialogRef<T = any> {
   private _afterClosed = new Subject<T | undefined>();
+  private _closeCallback?: (result?: T) => void; // ✅ CRITICAL FIX: Callback para cerrar desde el servicio
 
   afterClosed() {
     return this._afterClosed.asObservable();
   }
 
+  // ✅ CRITICAL FIX: Método interno para establecer el callback de cierre
+  _setCloseCallback(callback: (result?: T) => void) {
+    this._closeCallback = callback;
+  }
+
   close(result?: T) {
     console.log('[BasicDialogRef] 🔄 Cerrando diálogo con resultado:', result);
+
+    // ✅ CRITICAL FIX: Llamar al callback del servicio para eliminar del DOM
+    if (this._closeCallback) {
+      this._closeCallback(result);
+    } else {
+      // Fallback: solo completar el observable si no hay callback
+      this._afterClosed.next(result);
+      this._afterClosed.complete();
+    }
+
+    console.log('[BasicDialogRef] ✅ Diálogo cerrado, observable completado');
+  }
+
+  // ✅ CRITICAL FIX: Método interno para completar el observable (llamado desde el servicio)
+  _complete(result?: T) {
     this._afterClosed.next(result);
     this._afterClosed.complete();
-    console.log('[BasicDialogRef] ✅ Diálogo cerrado, observable completado');
   }
 }
 
@@ -44,6 +64,11 @@ export class BasicDialogService {
     this.loggingService.info('[BasicDialogService] Opening dialog', { component: component.name, config });
 
     const dialogRef = new BasicDialogRef();
+
+    // ✅ CRITICAL FIX: Establecer callback para que el dialogRef pueda cerrar el modal desde el DOM
+    dialogRef._setCloseCallback((result) => {
+      this.closeDialog(dialogRef, result);
+    });
 
     try {
       // Create backdrop
@@ -72,7 +97,7 @@ export class BasicDialogService {
       let width = '600px';
       if (sizeClass === 'small') width = '400px';
       if (sizeClass === 'large') width = '800px';
-      
+
       container.style.cssText = `
         background: rgba(55, 65, 81, 0.85);
         background-image: linear-gradient(135deg,
@@ -176,7 +201,7 @@ export class BasicDialogService {
             closeButton.style.transform = 'scale(1)';
           };
           closeButton.onclick = () => this.closeDialog(dialogRef);
-          
+
           header.appendChild(title);
           header.appendChild(closeButton);
         } else {
@@ -267,8 +292,8 @@ export class BasicDialogService {
     // Remove from active dialogs
     this.activeDialogs = this.activeDialogs.filter(d => d.dialogRef !== dialogRef);
 
-    // Complete the observable
-    dialog.dialogRef.close(result);
+    // ✅ CRITICAL FIX: Completar el observable sin llamar a close() para evitar recursión
+    dialog.dialogRef._complete(result);
 
     this.loggingService.info('[BasicDialogService] Dialog closed successfully', { remainingDialogs: this.activeDialogs.length });
 

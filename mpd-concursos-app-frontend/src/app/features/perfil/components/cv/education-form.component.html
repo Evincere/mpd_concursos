@@ -42,14 +42,14 @@
     (ngSubmit)="onSave()"
     class="dynamic-form"
     novalidate>
-    
+
     <!-- Campos dinámicos -->
     <div class="form-grid">
       <ng-container *ngFor="let field of visibleFields(); trackBy: trackByFieldName">
         <div
           class="form-field"
           [class.full-width]="field.type === 'textarea' || field.type === 'chips'">
-          
+
           <!-- Campo de texto -->
           <app-custom-form-field
             *ngIf="field.type === 'text'"
@@ -59,7 +59,7 @@
             [formControlName]="field.name"
             [hint]="field.helpText || ''">
           </app-custom-form-field>
-          
+
           <!-- Campo de área de texto -->
           <app-custom-form-field
             *ngIf="field.type === 'textarea'"
@@ -71,7 +71,7 @@
             type="textarea"
             rows="4">
           </app-custom-form-field>
-          
+
           <!-- Campo de fecha -->
           <app-custom-datepicker
             *ngIf="field.type === 'date'"
@@ -86,7 +86,7 @@
             *ngIf="field.type === 'select'"
             [label]="field.label"
             [options]="getSelectOptions(field.name)"
-            [control]="getFormControl(field.name)"
+            [formControlName]="field.name"
             [required]="field.required"
             [placeholder]="field.placeholder || 'Selecciona una opción'"
             [hint]="field.helpText || ''">
@@ -118,14 +118,14 @@
             </label>
             <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
           </div>
-          
+
           <!-- Campo de chips (habilidades) -->
           <div class="chips-field" *ngIf="field.type === 'chips'">
             <label class="field-label">
               {{ field.label }}
               <span class="required-indicator" *ngIf="field.required">*</span>
             </label>
-            
+
             <!-- Input para agregar chips -->
             <div class="chips-input-container">
               <input
@@ -143,7 +143,7 @@
                 <i class="material-icons">add</i>
               </button>
             </div>
-            
+
             <!-- Lista de chips -->
             <div class="chips-list" *ngIf="form() && form()!.get(field.name)?.value?.length > 0">
               <div
@@ -160,14 +160,14 @@
                 </button>
               </div>
             </div>
-            
+
             <!-- Contador de elementos -->
             <div class="chips-counter" *ngIf="form() && form()!.get(field.name)?.value?.length > 0">
               {{ form()!.get(field.name)?.value?.length }} / 15
             </div>
-            
+
             <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
-            
+
             <!-- Errores del campo -->
             <div class="field-errors" *ngIf="getFieldErrors(field.name).length > 0">
               <p class="error-message" *ngFor="let error of getFieldErrors(field.name)">

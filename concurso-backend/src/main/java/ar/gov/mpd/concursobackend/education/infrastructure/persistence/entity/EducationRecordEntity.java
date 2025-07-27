@@ -183,6 +183,11 @@ public class EducationRecordEntity {
     @JoinColumn(name = "updated_by")
     private UserEntity updatedBy;
 
+    // Campo para optimistic locking - JPA maneja automáticamente
+    @Version
+    @Column(name = "version")
+    private int version;
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();

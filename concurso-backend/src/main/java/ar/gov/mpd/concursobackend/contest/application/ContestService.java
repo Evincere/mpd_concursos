@@ -8,12 +8,12 @@ import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.contest.domain.service.ContestStateMachine;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStateResponse;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStatsResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 

@@ -1,21 +1,20 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
+import ar.gov.mpd.concursobackend.document.domain.model.Document;
+import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
+import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentAuditEntity;
+import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentAuditSpringRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-
-import ar.gov.mpd.concursobackend.document.domain.model.Document;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
-import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentAuditSpringRepository;
-import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentAuditEntity;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio para métricas y monitoreo del sistema de documentación

@@ -77,6 +77,11 @@ export class ConcursosComponent implements OnInit, OnDestroy {
   concursosSinFiltrar: Concurso[] = []; // Copia original de todos los concursos
   searchTerm = '';
   primeraConsulta = true;
+
+  // ✅ CRITICAL FIX: Cache de inscripciones para optimizar rendimiento
+  userInscriptionsMap: Map<number, any> = new Map();
+  inscriptionsLoaded = false;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -92,6 +97,9 @@ export class ConcursosComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarConcursos();
+
+    // ✅ CRITICAL FIX: Cargar inscripciones una sola vez para optimizar rendimiento
+    this.cargarInscripcionesUsuario();
 
     // Suscribirse a los cambios en los parámetros de la URL
     this.route.queryParams
@@ -295,6 +303,103 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         // No inscriptionId - will be created after terms acceptance
       }
     });
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Maneja el evento de continuar inscripción desde las cards de concursos
+   * Implementa la misma lógica que PostulacionesComponent para navegación correcta
+   */
+  onContinuarInscripcion(event: { concurso: Concurso; userPostulation: any }): void {
+    const { concurso, userPostulation } = event;
+
+    if (!userPostulation || !userPostulation.id) {
+      this.loggingService.error('[ConcursosComponent] No se puede continuar inscripción: falta información de postulación', event, 'Concursos');
+      this.notification.error('Error: No se encontró información de la inscripción.');
+      return;
+    }
+
+    // Determinar el paso correcto basado en el estado de la inscripción
+    const step = this.determinarPasoSegunEstado(userPostulation.estado);
+
+    // DEBUG: Logging para diagnosticar el problema de navegación
+    this.loggingService.debug('[ConcursosComponent] Continuando inscripción:', {
+      estado: userPostulation.estado,
+      stepCalculado: step,
+      contestId: concurso.id,
+      inscriptionId: userPostulation.id
+    }, 'Concursos');
+
+    // Navegar al proceso de inscripción con el paso apropiado
+    this.router.navigate(['/dashboard/inscripcion'], {
+      queryParams: {
+        contestId: concurso.id,
+        inscriptionId: userPostulation.id,
+        resume: 'true',
+        step: step
+      }
+    });
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Carga todas las inscripciones del usuario una sola vez para optimizar rendimiento
+   */
+  private cargarInscripcionesUsuario(): void {
+    this.inscriptionService.getUserInscriptions(0, 100)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (page) => {
+          // Crear mapa de inscripciones por contestId para acceso rápido
+          this.userInscriptionsMap.clear();
+          page.content.forEach(inscription => {
+            this.userInscriptionsMap.set(inscription.contestId, inscription);
+          });
+          this.inscriptionsLoaded = true;
+          this.loggingService.debug('[ConcursosComponent] Inscripciones cargadas:', this.userInscriptionsMap, 'Concursos');
+        },
+        error: (error) => {
+          this.loggingService.error('[ConcursosComponent] Error cargando inscripciones:', error, 'Concursos');
+          this.inscriptionsLoaded = true; // Marcar como cargado para evitar loops
+        }
+      });
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Obtiene la inscripción del usuario para un concurso específico desde el cache
+   */
+  getUserPostulationForContest(contestId: string | number): any {
+    const numericId = typeof contestId === 'string' ? parseInt(contestId, 10) : contestId;
+    const inscription = this.userInscriptionsMap.get(numericId);
+    if (inscription) {
+      return {
+        id: inscription.id,
+        estado: inscription.status,
+        contestId: numericId
+      };
+    }
+    return null;
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Determina el paso correcto del proceso de inscripción basado en el estado
+   * Misma lógica que en PostulacionesComponent para consistencia
+   */
+  private determinarPasoSegunEstado(estado: string): number {
+    switch (estado) {
+      case 'COMPLETED_PENDING_DOCS':
+        // Si la inscripción está completa pero faltan documentos, ir al paso 3 (documentación)
+        return 3;
+      case 'ACTIVE':
+        // Para inscripciones activas, ir al paso 2 (circunscripción) por defecto
+        // El componente de inscripción determinará el paso exacto basado en el estado guardado
+        return 2;
+      case 'PENDING':
+      case 'COMPLETED_WITH_DOCS':
+        // Para estados completos, ir al paso 4 (confirmación/resumen)
+        return 4;
+      default:
+        // Por defecto, ir al paso 1
+        return 1;
+    }
   }
 
   /**

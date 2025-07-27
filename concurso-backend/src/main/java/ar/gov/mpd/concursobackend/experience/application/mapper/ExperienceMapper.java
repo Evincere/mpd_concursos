@@ -31,6 +31,9 @@ public class ExperienceMapper {
                 .endDate(experience.getEndDate())
                 .description(experience.getDescription())
                 .comments(experience.getComments())
+                .location(experience.getLocation())
+                .technologies(experience.getTechnologies())
+                .achievements(experience.getAchievements())
                 .documentUrl(experience.getDocumentUrl())
                 .build();
     }
@@ -57,7 +60,7 @@ public class ExperienceMapper {
         }
 
         return Experience.builder()
-                .id(UUID.randomUUID())
+                .id(null) // ✅ CRITICAL FIX: No generar UUID para nuevas experiencias
                 .userId(userId)
                 .company(dto.getCompany())
                 .position(dto.getPosition())
@@ -65,6 +68,9 @@ public class ExperienceMapper {
                 .endDate(dto.getEndDate())
                 .description(dto.getDescription())
                 .comments(dto.getComments())
+                .location(dto.getLocation())
+                .technologies(dto.getTechnologies())
+                .achievements(dto.getAchievements())
                 .build();
     }
 
@@ -82,6 +88,9 @@ public class ExperienceMapper {
         experience.setEndDate(dto.getEndDate());
         experience.setDescription(dto.getDescription());
         experience.setComments(dto.getComments());
+        experience.setLocation(dto.getLocation());
+        experience.setTechnologies(dto.getTechnologies());
+        experience.setAchievements(dto.getAchievements());
 
         return experience;
     }

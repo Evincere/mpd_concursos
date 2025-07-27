@@ -1,6 +1,5 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.mapper;
 
-import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestDTO;
 import ar.gov.mpd.concursobackend.contest.application.dto.ContestDateDTO;
 import ar.gov.mpd.concursobackend.contest.domain.ContestDate;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
@@ -8,6 +7,7 @@ import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestDateEntity;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestCreateRequest;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestDTO;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestUpdateRequest;
 import org.springframework.stereotype.Component;

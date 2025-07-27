@@ -1,6 +1,6 @@
 /**
  * Modal para Gestión de Educación
- * 
+ *
  * @description Modal especializado que integra EducationFormComponent
  * @author Augment Agent
  * @date 2025-06-22
@@ -14,6 +14,7 @@ import { takeUntil } from 'rxjs/operators';
 
 // Modelos y servicios
 import { EducationEntry, EducationDto, FormMode } from '@core/models/cv';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 
 // Componentes
 import { ModalBaseComponent, ModalConfig } from '@shared/components/modal/modal-base/modal-base.component';
@@ -37,6 +38,11 @@ export class EducationModalComponent implements OnInit, OnDestroy {
 
   // ===== VIEW CHILD =====
   @ViewChild('educationForm') educationFormComponent!: EducationFormComponent;
+
+  // ===== CONSTRUCTOR =====
+  constructor(
+    private confirmationService: ConfirmationService
+  ) {}
 
   // ===== INPUTS =====
   @Input() isOpen = false;
@@ -143,11 +149,16 @@ export class EducationModalComponent implements OnInit, OnDestroy {
   onDelete(): void {
     if (!this.education) return;
 
-    const confirmMessage = `¿Estás seguro de eliminar la educación en ${this.education.institution}?\n\nEsta acción no se puede deshacer.`;
-
-    if (confirm(confirmMessage)) {
-      this.delete.emit(this.education);
-    }
+    // Usar el servicio de confirmación con estilos personalizados (igual que experiencias)
+    this.confirmationService.danger(
+      'Eliminar Educación',
+      `¿Estás seguro de eliminar la educación "${this.education.title}" en ${this.education.institution}?`,
+      'Esta acción no se puede deshacer y se perderán todos los datos asociados.'
+    ).subscribe((confirmed: boolean) => {
+      if (confirmed && this.education) {
+        this.delete.emit(this.education);
+      }
+    });
   }
 
   /**

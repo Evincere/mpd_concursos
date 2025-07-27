@@ -23,7 +23,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -88,8 +87,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/concursos/filtrar").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/documentos/queue/public/**").permitAll()
-                        // Imágenes de perfil requieren autenticación para prevenir enumeración
-                        .requestMatchers("/api/files/profile-images/**").authenticated()
+                        // ✅ CRITICAL FIX: Permitir acceso público a imágenes de perfil para que funcionen en <img> tags
+                        // Las imágenes de perfil necesitan ser accesibles sin autenticación para mostrarse en el navegador
+                        .requestMatchers("/api/files/profile-images/**").permitAll()
                         .requestMatchers("/api/v1/roles/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

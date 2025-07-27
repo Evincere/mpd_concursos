@@ -49,4 +49,5 @@ bazel-out/
 npm-debug.log
 yarn-error.log
 testem.log
-/typings
+/typingslogs/*.log
+backups/

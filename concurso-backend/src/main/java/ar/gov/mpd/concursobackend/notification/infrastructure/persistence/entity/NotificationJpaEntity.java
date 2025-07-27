@@ -6,7 +6,10 @@ import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
 import ar.gov.mpd.concursobackend.notification.infrastructure.persistence.converter.JsonMapConverter;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Map;

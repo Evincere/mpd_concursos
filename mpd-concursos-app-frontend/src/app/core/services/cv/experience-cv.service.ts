@@ -1,6 +1,6 @@
 /**
  * Servicio HTTP para Experiencias Laborales del CV
- * 
+ *
  * @description Servicio real para conectar con el backend /api/experiencias
  * @author Augment Agent
  * @date 2025-06-22
@@ -22,6 +22,9 @@ export interface ExperienceApiResponse {
   endDate?: string;
   description?: string;
   comments?: string;
+  location?: string;
+  technologies?: string;
+  achievements?: string;
   documentUrl?: string;
 }
 
@@ -200,10 +203,11 @@ export class ExperienceCvService {
       startDate: this.parseApiDate(response.startDate),
       endDate: response.endDate ? this.parseApiDate(response.endDate) : undefined,
       isCurrentJob: !response.endDate, // Si no hay fecha fin, es trabajo actual
-      location: '', // Campo no disponible en API actual
-      achievements: [], // Campo no disponible en API actual
-      technologies: [], // Campo no disponible en API actual
+      location: response.location || '',
+      achievements: response.achievements ? response.achievements.split(', ').filter(a => a.trim()) : [],
+      technologies: response.technologies ? response.technologies.split(', ').filter(t => t.trim()) : [],
       comments: response.comments,
+      documentUrl: response.documentUrl, // Mapeo directo de la URL del documento
       document: response.documentUrl ? {
         id: response.id + '_doc',
         fileName: response.documentUrl.split('/').pop() || 'documento.pdf',
@@ -233,7 +237,10 @@ export class ExperienceCvService {
       startDate: startDate,
       endDate: endDate,
       description: dto.description,
-      comments: dto.comments
+      comments: dto.comments,
+      location: dto.location || null,
+      technologies: dto.technologies ? dto.technologies.join(', ') : null,
+      achievements: dto.achievements ? dto.achievements.join(', ') : null
     };
 
     console.log('[ExperienceCvService] API payload:', payload);

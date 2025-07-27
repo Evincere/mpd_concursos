@@ -1,7 +1,6 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.database.entities;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.UserStatus;
-import ar.gov.mpd.concursobackend.auth.infrastructure.listener.UserRoleListener;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

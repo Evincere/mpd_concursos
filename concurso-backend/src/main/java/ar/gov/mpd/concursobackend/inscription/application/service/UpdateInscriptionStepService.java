@@ -1,15 +1,15 @@
 package ar.gov.mpd.concursobackend.inscription.application.service;
 
+import ar.gov.mpd.concursobackend.document.domain.model.Document;
+import ar.gov.mpd.concursobackend.document.domain.model.DocumentType;
+import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
+import ar.gov.mpd.concursobackend.document.domain.port.IDocumentTypeRepository;
 import ar.gov.mpd.concursobackend.inscription.application.dto.UpdateInscriptionStepRequest;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStepUseCase;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionPreferences;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentTypeRepository;
-import ar.gov.mpd.concursobackend.document.domain.model.Document;
-import ar.gov.mpd.concursobackend.document.domain.model.DocumentType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service

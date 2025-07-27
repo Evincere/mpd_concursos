@@ -16,7 +16,7 @@
   margin: 0 auto;
   padding: 1.5rem;
   min-height: 100vh;
-  
+
   // ===== HEADER DEL CV =====
   .cv-header {
     @include glassmorphism-card('primary', 'large', true);
@@ -139,7 +139,7 @@
       }
     }
   }
-  
+
   // ===== SECCIÓN DE BÚSQUEDA =====
   .cv-search-section {
     margin-bottom: var(--spacing-2xl);
@@ -149,11 +149,11 @@
       gap: var(--spacing-md);
       align-items: center;
       margin-bottom: var(--spacing-md);
-      
+
       .search-input-wrapper {
         flex: 1;
         position: relative;
-        
+
         .search-icon {
           position: absolute;
           left: var(--spacing-md);
@@ -162,7 +162,7 @@
           color: var(--color-text-secondary);
           font-size: var(--font-size-lg);
         }
-        
+
         .search-input {
           width: 100%;
           padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) var(--spacing-3xl);
@@ -173,7 +173,7 @@
           color: var(--color-text-primary);
           font-size: var(--font-size-base);
           transition: var(--transition-base);
-          
+
           &::placeholder {
             color: var(--color-text-secondary);
           }
@@ -183,13 +183,13 @@
             border-color: var(--color-primary);
             box-shadow: 0 0 0 3px var(--color-primary-alpha-10);
           }
-          
+
           &:disabled {
             opacity: 0.6;
             cursor: not-allowed;
           }
         }
-        
+
         .clear-search-btn {
           position: absolute;
           right: var(--spacing-sm);
@@ -209,7 +209,7 @@
           }
         }
       }
-      
+
       .filters-toggle-btn {
         display: flex;
         align-items: center;
@@ -236,7 +236,7 @@
         }
       }
     }
-    
+
     .filters-panel {
       background: var(--glass-bg-primary);
       backdrop-filter: var(--glass-backdrop-filter);
@@ -244,7 +244,7 @@
       border-radius: var(--radius-lg);
       padding: var(--spacing-lg);
       animation: slideDown var(--transition-base);
-      
+
       .filters-content {
         .filters-placeholder {
           display: flex;
@@ -257,10 +257,10 @@
       }
     }
   }
-  
+
   // ===== CONTENIDO PRINCIPAL =====
   .cv-content {
-    
+
     // Estado vacío con glassmorphism
     .empty-state-content {
       text-align: center;
@@ -314,7 +314,7 @@
         }
       }
     }
-    
+
     // Contenedor de tabs mejorado
     .cv-tabs-container {
       margin-bottom: var(--spacing-2xl);
@@ -394,7 +394,7 @@
         }
       }
     }
-    
+
     // Contenido de tabs con drag & drop
     .cv-tab-content {
       .tab-header {
@@ -549,6 +549,22 @@
               .item-actions {
                 display: flex;
                 gap: var(--spacing-xs);
+
+                // Botón específico para ver documentos
+                .btn-info {
+                  background-color: var(--color-info, #17a2b8);
+                  color: white;
+                  border: 1px solid var(--color-info, #17a2b8);
+
+                  &:hover {
+                    background-color: var(--color-info-dark, #138496);
+                    border-color: var(--color-info-dark, #138496);
+                  }
+
+                  .fas {
+                    color: white;
+                  }
+                }
               }
             }
 
@@ -849,7 +865,7 @@
       .cdk-drag-animating {
         transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
       }
-        
+
         // Estados de carga y error
         .loading-state,
         .error-state,
@@ -876,7 +892,7 @@
             margin: 0 0 var(--spacing-lg) 0;
           }
         }
-        
+
         // Cards de experiencias y educación
         .experience-cards,
         .education-cards {
@@ -1051,7 +1067,7 @@
                 }
               }
             }
-            
+
             .experience-content,
             .education-content {
               .experience-header,
@@ -1076,7 +1092,7 @@
                   gap: var(--spacing-xs);
                 }
               }
-              
+
               .experience-company,
               .education-institution {
                 display: flex;
@@ -1095,7 +1111,7 @@
                   color: var(--color-text-tertiary);
                 }
               }
-              
+
               .education-type {
                 display: flex;
                 gap: var(--spacing-sm);
@@ -1134,7 +1150,7 @@
                   }
                 }
               }
-              
+
               .experience-dates,
               .education-dates {
                 display: flex;
@@ -1159,7 +1175,7 @@
                   margin-left: var(--spacing-xs);
                 }
               }
-              
+
               .experience-description {
                 margin-bottom: var(--spacing-md);
 

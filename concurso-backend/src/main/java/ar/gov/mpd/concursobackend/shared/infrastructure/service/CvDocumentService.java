@@ -351,10 +351,10 @@ public class CvDocumentService {
     }
 
     /**
-     * Obtiene la ruta relativa del archivo
+     * Obtiene la ruta relativa del archivo desde el directorio base de CV documents
      */
     private String getRelativePath(Path fullPath) {
-        Path basePath = Paths.get(System.getProperty("user.dir"));
+        Path basePath = Paths.get(cvDocumentPath);
         return basePath.relativize(fullPath).toString().replace("\\", "/");
     }
 

@@ -1,6 +1,6 @@
 /**
  * Componente de Formulario Inteligente para Experiencias Laborales
- * 
+ *
  * @description Formulario adaptativo con validación en tiempo real y sanitización XSS
  * @author Augment Agent
  * @date 2025-06-20
@@ -339,7 +339,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, OnChanges, IC
     }
 
     this.runValidation(form.getRawValue());
-    
+
     // El estado de validez del formulario es la combinación de sus controles Y la validación de documentos.
     return form.valid && this.documentValidation.isValid;
   }
@@ -521,7 +521,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, OnChanges, IC
       experienceId: this.experience?.id,
       experienceData: this.experience
     });
-    
+
     if (this.isEditing && this.experience) {
       const formData = this.transformService.workExperienceEntityToDto(this.experience);
 
@@ -572,17 +572,17 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, OnChanges, IC
         this.documentValidation = { isValid: true, hasRequiredDocuments: true, errors: [], warnings: [] };
       }
     }
-    
+
     newForm.markAsPristine();
     newForm.markAsUntouched();
     this.form.set(newForm);
-    
+
     if (this.isEditing) {
       this.runValidation(newForm.getRawValue());
     } else {
       this.validationState.set({ isValid: true, errors: [], warnings: [] });
     }
-    
+
     this.cdr.markForCheck();
   }
 
@@ -665,7 +665,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, OnChanges, IC
     } else {
       form.setErrors(null);
     }
-    
+
     const errors = this.groupErrorsByField(validationResult.errors);
     const warnings = this.groupErrorsByField(validationResult.warnings);
     this.validationChange.emit({ isValid: form.valid, errors, warnings });
@@ -695,7 +695,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, OnChanges, IC
     });
     return errorMap;
   }
-  
+
   /**
    * Gestiona el cambio en los documentos
    */
@@ -715,33 +715,42 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, OnChanges, IC
 
   /**
    * Guarda la experiencia junto con los documentos temporales
+   * ✅ CRITICAL FIX: No mostrar éxito automáticamente, esperar respuesta del backend
    */
   private async saveWithDocuments(experienceData: WorkExperienceDto, tempDocuments: any[]): Promise<void> {
     try {
       this.isLoading = true;
       console.log('[ExperienceForm] 💾 Guardando experiencia con documentos...');
 
-      // Primero emitir los datos de la experiencia para que se guarde
+      // ✅ CRITICAL FIX: Solo emitir los datos, no simular éxito
+      // El componente padre manejará la respuesta del backend
       this.save.emit(experienceData);
 
-      // Nota: En una implementación completa, aquí esperaríamos la respuesta
-      // del guardado de la experiencia para obtener el ID y luego subir los documentos
-      // Por ahora, simulamos que la experiencia se guardó exitosamente
-
-      // TODO: Implementar la subida real de documentos al servidor
-      // cuando se tenga el ID de la experiencia guardada
-
-      // Limpiar documentos temporales después del éxito
-      setTimeout(() => {
-        this.documentUploader?.clearTempDocuments();
-        this.isLoading = false;
-        console.log('[ExperienceForm] ✅ Experiencia y documentos guardados exitosamente');
-      }, 1000);
+      // ✅ CRITICAL FIX: No limpiar documentos ni mostrar éxito automáticamente
+      // Esto se hará solo cuando el backend confirme el éxito
+      console.log('[ExperienceForm] 📤 Experiencia enviada al backend, esperando respuesta...');
 
     } catch (error) {
       console.error('[ExperienceForm] ❌ Error guardando experiencia con documentos:', error);
       this.notificationService.showError('Error al guardar la experiencia con documentos');
       this.isLoading = false;
     }
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Método para manejar éxito desde el componente padre
+   */
+  public onSaveSuccess(): void {
+    console.log('[ExperienceForm] ✅ Experiencia guardada exitosamente, limpiando documentos temporales...');
+    this.documentUploader?.clearTempDocuments();
+    this.isLoading = false;
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Método para manejar error desde el componente padre
+   */
+  public onSaveError(): void {
+    console.log('[ExperienceForm] ❌ Error al guardar experiencia, manteniendo documentos temporales...');
+    this.isLoading = false;
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Servicio HTTP para Educación del CV
- * 
+ *
  * @description Servicio real para conectar con el backend /api/educacion
  * @author Augment Agent
  * @date 2025-06-22
@@ -263,12 +263,17 @@ export class EducationCvService {
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
-    // Si vienen fechas específicas de la tabla nueva, usarlas
+    // Priorizar campos directos del backend (camelCase o snake_case)
     if (response.start_date) {
       startDate = this.parseApiDate(response.start_date);
+    } else if ((response as any).startDate) {
+      startDate = this.parseApiDate((response as any).startDate);
     }
+
     if (response.end_date) {
       endDate = this.parseApiDate(response.end_date);
+    } else if ((response as any).endDate) {
+      endDate = this.parseApiDate((response as any).endDate);
     }
 
     // Si no vienen fechas específicas, usar issueDate como fallback
@@ -334,22 +339,25 @@ export class EducationCvService {
    */
   private mapEducationDtoToApiRequest(dto: EducationDto): any {
     console.log('[EducationCvService] Mapping DTO to API request:', dto);
+    console.log('[EducationCvService] DTO status value:', dto.status);
+    console.log('[EducationCvService] DTO status type:', typeof dto.status);
 
     // Convertir enums a strings que el backend entiende
     const typeString = this.mapEducationTypeToString(dto.type);
     const statusString = this.mapEducationStatusToString(dto.status);
 
-    // El backend solo maneja issueDate (fecha de emisión/finalización)
-    // Para estudios en curso: usar startDate como issueDate (fecha de inicio)
-    // Para estudios completados: usar endDate como issueDate (fecha de finalización)
-    let issueDate: string | null = null;
+    console.log('[EducationCvService] Mapped status:', dto.status, '->', statusString);
 
-    if (statusString === 'En Curso') {
-      // Para estudios en curso, usar la fecha de inicio
-      issueDate = dto.startDate ? this.formatDateForBackend(dto.startDate) : null;
-    } else {
-      // Para estudios completados, usar la fecha de finalización
-      issueDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
+    // El backend espera startDate, endDate e issueDate
+    const startDate = dto.startDate ? this.formatDateForBackend(dto.startDate) : null;
+    const endDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
+
+    // Para issueDate: usar endDate si está completado, startDate si está en curso
+    let issueDate: string | null = null;
+    if (dto.status === EducationStatus.COMPLETED && endDate) {
+      issueDate = endDate;
+    } else if (dto.status === EducationStatus.IN_PROGRESS && startDate) {
+      issueDate = startDate;
     }
 
     const payload = {
@@ -357,7 +365,9 @@ export class EducationCvService {
       status: statusString,
       title: dto.title,
       institution: dto.institution,
-      issueDate: issueDate, // Backend espera issueDate, no startDate/endDate
+      startDate: startDate,
+      endDate: endDate,
+      issueDate: issueDate,
       durationYears: dto.durationYears,
       average: dto.average,
       thesisTopic: dto.thesisTopic,

@@ -4,7 +4,10 @@ import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Data
 public class User {

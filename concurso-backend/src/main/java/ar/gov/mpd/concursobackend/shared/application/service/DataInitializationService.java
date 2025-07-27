@@ -6,7 +6,6 @@ import ar.gov.mpd.concursobackend.auth.application.service.UserService;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentTypeEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentTypeSpringRepository;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class DataInitializationService {

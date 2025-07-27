@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnDestroy, ViewChild, TemplateRef } from '@angular/core';
-import { finalize, catchError, tap } from 'rxjs/operators'; // Import tap and catchError
+import { finalize, catchError, tap, switchMap, map } from 'rxjs/operators'; // Import tap and catchError
 import { Concurso, Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
 import { Subject, BehaviorSubject, of } from 'rxjs'; // Import of
@@ -34,8 +34,10 @@ import { LoggingService } from '@core/services/logging/logging.service'; // Impo
 })
 export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   @Input() concurso!: Contest;
+  @Input() userPostulation: any = null; // ✅ CRITICAL FIX: Recibir desde componente padre
   @Output() cerrarDetalle = new EventEmitter<void>();
   @Output() inscriptionComplete = new EventEmitter<Concurso>();
+  @Output() continuarInscripcion = new EventEmitter<{ concurso: Concurso; userPostulation: any }>();
 
   @ViewChild('infoGeneralTemplate', { static: true }) infoGeneralTemplate!: TemplateRef<any>;
   @ViewChild('documentacionTemplate', { static: true }) documentacionTemplate!: TemplateRef<any>;
@@ -59,9 +61,12 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loggingService.debug('[ConcursoDetalleComponent] Componente inicializado con concurso:', this.concurso, 'ConcursoDetalle');
+    this.loggingService.debug('[ConcursoDetalleComponent] UserPostulation recibida:', this.userPostulation, 'ConcursoDetalle');
 
     if (this.concurso) {
-      this.verificarInscripcion();
+      // ✅ CRITICAL FIX: Actualizar estado basado en userPostulation recibida
+      this.actualizarEstadoInscripcion();
+
       // Initialize temporary URLs for documents if they don't exist
       if (!this.concurso.basesUrl) {
         this.concurso.basesUrl = '#'; // Temporary URL
@@ -126,39 +131,36 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Verifies the inscription status for the current contest.
-   * Updates `inscripcionState$` and `inscripcionLoading`.
+   * ✅ CRITICAL FIX: Actualiza el estado de inscripción basado en userPostulation recibida
+   * Ya no hace llamadas HTTP - usa la información del componente padre
    */
-  verificarInscripcion(): void {
-    if (!this.concurso) {
-      this.loggingService.warn('[ConcursoDetalleComponent] No hay concurso para verificar inscripción.', undefined, 'ConcursoDetalle');
-      return;
+  private actualizarEstadoInscripcion(): void {
+    if (this.userPostulation) {
+      // Mapear el estado de la inscripción al enum
+      const estado = this.mapStatusToState(this.userPostulation.estado);
+      this.inscripcionState$.next(estado);
+      this.loggingService.debug('[ConcursoDetalleComponent] Estado actualizado desde userPostulation:', estado, 'ConcursoDetalle');
+    } else {
+      this.inscripcionState$.next(InscripcionState.NO_INSCRIPTION);
+      this.loggingService.debug('[ConcursoDetalleComponent] No hay inscripción - estado NO_INSCRIPTION', undefined, 'ConcursoDetalle');
     }
+  }
 
-    this.inscripcionLoading = true;
-    // Ensure contest ID is a number
-    const concursoId = typeof this.concurso.id === 'string' ? parseInt(this.concurso.id, 10) : this.concurso.id;
-
-    this.loggingService.debug(`[ConcursoDetalleComponent] Verificando estado de inscripción para concurso ID: ${concursoId}`, undefined, 'ConcursoDetalle');
-
-    this.inscriptionService.getInscriptionStatus(concursoId)
-      .pipe(
-        takeUntil(this.destroy$),
-        tap((status: InscripcionState) => {
-          this.loggingService.debug(`[ConcursoDetalleComponent] Estado de inscripción recibido: ${status}`, undefined, 'ConcursoDetalle');
-          this.inscripcionState$.next(status);
-        }),
-        finalize(() => {
-          this.inscripcionLoading = false;
-          this.loggingService.debug('[ConcursoDetalleComponent] Verificación de inscripción finalizada.', undefined, 'ConcursoDetalle');
-        }),
-        catchError((error: Error) => {
-          console.error('[ConcursoDetalleComponent] Error al verificar inscripción:', error);
-          this.inscripcionState$.next(InscripcionState.ACTIVE); // Fallback to 'ACTIVE' state on error
-          this.notificationService.showError('No se pudo verificar el estado de su inscripción. Por favor, intente nuevamente.');
-          return of(InscripcionState.ACTIVE); // Return an observable of a default state to continue the stream
-        })
-      ).subscribe(); // Subscribe to trigger the observable
+  /**
+   * ✅ CRITICAL FIX: Mapea el estado de string al enum InscripcionState
+   */
+  private mapStatusToState(status: string): InscripcionState {
+    switch (status) {
+      case 'ACTIVE': return InscripcionState.ACTIVE;
+      case 'PENDING': return InscripcionState.PENDING;
+      case 'COMPLETED_WITH_DOCS': return InscripcionState.COMPLETED_WITH_DOCS;
+      case 'COMPLETED_PENDING_DOCS': return InscripcionState.COMPLETED_PENDING_DOCS;
+      case 'FROZEN': return InscripcionState.FROZEN;
+      case 'APPROVED': return InscripcionState.APPROVED;
+      case 'REJECTED': return InscripcionState.REJECTED;
+      case 'CANCELLED': return InscripcionState.CANCELLED;
+      default: return InscripcionState.NO_INSCRIPTION;
+    }
   }
 
   /**
@@ -184,13 +186,27 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
 
   /**
    * Handles the `inscriptionComplete` event from the inscription button.
-   * Re-verifies inscription status and emits to parent.
+   * ✅ CRITICAL FIX: Ya no hace verificación HTTP - emite al padre para que actualice
    * @param concurso The contest data returned after successful inscription.
    */
   onInscriptionComplete(concurso: Concurso): void {
-    this.loggingService.debug('[ConcursoDetalleComponent] Evento inscriptionComplete recibido. Re-verificando inscripción...', concurso, 'ConcursoDetalle');
-    this.verificarInscripcion(); // Re-check status after inscription
+    this.loggingService.debug('[ConcursoDetalleComponent] Evento inscriptionComplete recibido. Emitiendo al padre...', concurso, 'ConcursoDetalle');
     this.inscriptionComplete.emit(concurso); // Emit to parent component
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Maneja el evento de continuar inscripción desde el modal de detalle
+   * Implementa la misma lógica que ConcursosComponent para navegación correcta
+   */
+  onContinuarInscripcion(concurso: Concurso): void {
+    if (!this.userPostulation || !this.userPostulation.id) {
+      this.loggingService.error('[ConcursoDetalleComponent] No se puede continuar inscripción: falta información de postulación', { concurso, userPostulation: this.userPostulation }, 'ConcursoDetalle');
+      this.notificationService.showError('Error: No se encontró información de la inscripción.');
+      return;
+    }
+
+    // Emitir evento al componente padre para manejar la navegación
+    this.continuarInscripcion.emit({ concurso, userPostulation: this.userPostulation });
   }
 
   /**

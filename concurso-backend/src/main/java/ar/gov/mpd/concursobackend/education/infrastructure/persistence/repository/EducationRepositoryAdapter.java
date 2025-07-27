@@ -28,6 +28,13 @@ public class EducationRepositoryAdapter implements EducationRepository {
     @Override
     public Education save(Education education) {
         EducationRecordEntity entity = toEntity(education);
+
+        // Para nuevas entidades, asegurar que el ID sea null para que JPA genere uno nuevo
+        // Esto evita conflictos de concurrencia optimista con el campo @Version
+        if (entity.getId() != null && !jpaRepository.existsById(entity.getId())) {
+            entity.setId(null);
+        }
+
         EducationRecordEntity savedEntity = jpaRepository.save(entity);
         return toDomainModel(savedEntity);
     }

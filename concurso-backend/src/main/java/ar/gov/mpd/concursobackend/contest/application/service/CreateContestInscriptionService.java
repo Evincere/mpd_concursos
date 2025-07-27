@@ -5,7 +5,6 @@ import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.contest.application.dto.ContestInscriptionRequest;
 import ar.gov.mpd.concursobackend.contest.application.port.in.CreateContestInscriptionUseCase;
-import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;

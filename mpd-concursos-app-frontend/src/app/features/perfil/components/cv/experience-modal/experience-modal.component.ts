@@ -1,6 +1,6 @@
 /**
  * Modal para Gestión de Experiencias Laborales
- * 
+ *
  * @description Modal especializado que integra ExperienceFormComponent
  * @author Augment Agent
  * @date 2025-06-22
@@ -14,6 +14,7 @@ import { takeUntil } from 'rxjs/operators';
 
 // Modelos y servicios
 import { WorkExperience, WorkExperienceDto, FormMode } from '@core/models/cv';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 
 // Componentes
 import { ModalBaseComponent, ModalConfig } from '@shared/components/modal/modal-base/modal-base.component';
@@ -91,20 +92,25 @@ export class ExperienceModalComponent implements OnInit, OnDestroy {
     return '';
   });
 
-  public readonly canSave = computed(() => 
+  public readonly canSave = computed(() =>
     this.formValid() && !this.isLoading && this.mode !== 'view'
   );
 
-  public readonly canDelete = computed(() => 
+  public readonly canDelete = computed(() =>
     this.mode === 'edit' && this.experience && !this.isLoading
   );
 
-  public readonly showDeleteButton = computed(() => 
+  public readonly showDeleteButton = computed(() =>
     this.canDelete() && this.mode === 'edit'
   );
 
   // ===== SUBJECTS =====
   private readonly destroy$ = new Subject<void>();
+
+  // ===== CONSTRUCTOR =====
+  constructor(
+    private confirmationService: ConfirmationService
+  ) {}
 
   // ===== LIFECYCLE =====
   ngOnInit(): void {
@@ -149,11 +155,16 @@ export class ExperienceModalComponent implements OnInit, OnDestroy {
   onDelete(): void {
     if (!this.experience) return;
 
-    const confirmMessage = `¿Estás seguro de eliminar la experiencia en ${this.experience.company}?\n\nEsta acción no se puede deshacer.`;
-    
-    if (confirm(confirmMessage)) {
-      this.delete.emit(this.experience);
-    }
+    // Usar el servicio de confirmación con estilos personalizados
+    this.confirmationService.danger(
+      'Eliminar Experiencia',
+      `¿Estás seguro de eliminar la experiencia en ${this.experience.company}?`,
+      'Esta acción no se puede deshacer y se perderán todos los datos asociados.'
+    ).subscribe((confirmed: boolean) => {
+      if (confirmed && this.experience) {
+        this.delete.emit(this.experience);
+      }
+    });
   }
 
   /**
