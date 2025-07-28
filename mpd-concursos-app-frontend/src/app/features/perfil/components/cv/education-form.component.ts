@@ -143,11 +143,15 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
     label
   }));
 
-  public readonly educationStatusOptions = Object.entries(EDUCATION_STATUS_LABELS).map(([value, label]) => ({
-    value: value as EducationStatus,
-    label
-  }));
-  
+  public readonly educationStatusOptions = Object.entries(EDUCATION_STATUS_LABELS).map(([value, label]) => {
+    const option = {
+      value: value as EducationStatus,
+      label
+    };
+    console.log('[EducationForm] Status option created:', option);
+    return option;
+  });
+
   public readonly scientificActivityTypeOptions = [
     { value: ScientificActivityType.RESEARCH, label: 'investigación' },
     { value: ScientificActivityType.PRESENTATION, label: 'ponencia' },
@@ -181,7 +185,7 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
       options: this.educationStatusOptions
     }
   ];
-  
+
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -372,7 +376,14 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
    */
   getFormControl(fieldName: string): any {
     const form = this.form();
-    return form?.get(fieldName) || null;
+    const control = form?.get(fieldName) || null;
+    console.log(`[EducationForm] getFormControl(${fieldName}):`, {
+      hasForm: !!form,
+      hasControl: !!control,
+      controlValue: control?.value,
+      controlType: typeof control?.value
+    });
+    return control;
   }
 
   /**
@@ -451,7 +462,7 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
     const form = this.form();
     return form ? form.valid : false;
   }
-  
+
   onDocumentsChange(documents: UploaderCvDocument[]): void {
     this.documents = documents;
     const form = this.form();
@@ -570,17 +581,22 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
 
     // Watcher para sincronizar estado con isOngoing
     form.get('status')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(status => {
+      console.log('[EducationForm] ⚡ Status watcher triggered! New value:', status);
+      console.log('[EducationForm] ⚡ Status watcher - FormControl current value:', form.get('status')?.value);
       this.updateDynamicFieldsConfiguration(); // Actualizar configuración cuando cambia estado
 
       const isOngoingControl = form.get('isOngoing');
       const endDateControl = form.get('endDate');
+      console.log('[EducationForm] Current isOngoing before status logic:', isOngoingControl?.value);
 
       if (status === EducationStatus.IN_PROGRESS) {
         // Si el estado es "En Curso", marcar isOngoing y limpiar fecha de fin
+        console.log('[EducationForm] Setting isOngoing=true due to IN_PROGRESS status');
         isOngoingControl?.setValue(true, { emitEvent: false });
         endDateControl?.setValue(null, { emitEvent: false });
       } else if (status === EducationStatus.COMPLETED) {
         // Si el estado es "Completado", desmarcar isOngoing
+        console.log('[EducationForm] Setting isOngoing=false due to COMPLETED status');
         isOngoingControl?.setValue(false, { emitEvent: false });
       }
 
@@ -590,13 +606,16 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
     });
 
     form.get('isOngoing')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(isOngoing => {
+        console.log('[EducationForm] isOngoing changed to:', isOngoing);
         const endDateControl = form.get('endDate');
         const statusControl = form.get('status');
+        console.log('[EducationForm] Current status before isOngoing logic:', statusControl?.value);
 
         if(isOngoing) {
             endDateControl?.setValue(null, { emitEvent: false });
             // Si se marca "En Curso", cambiar el estado automáticamente
             if (statusControl?.value !== EducationStatus.IN_PROGRESS) {
+              console.log('[EducationForm] Changing status from', statusControl?.value, 'to IN_PROGRESS due to isOngoing=true');
               statusControl?.setValue(EducationStatus.IN_PROGRESS, { emitEvent: false });
             }
         }
@@ -646,7 +665,7 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
     this.validationChange.emit({ isValid: form.valid, errors, warnings });
     this.cdr.markForCheck();
   }
-  
+
   /**
    * @deprecated Método obsoleto. Ahora se usa updateFormValidators dentro de updateDynamicFieldsConfiguration
    */

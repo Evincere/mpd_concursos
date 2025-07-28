@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, inject, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -11,14 +11,14 @@ import { environment } from '../../../../environments/environment';
 
 /**
  * Componente unificado para gestión de imágenes de perfil
- * 
+ *
  * Reemplaza todos los componentes anteriores de upload de imagen:
  * - ProfileImageUploadComponent
- * - ProfileImageManagerComponent  
+ * - ProfileImageManagerComponent
  * - PerfilPersonalInfoComponent (funcionalidad de imagen)
- * 
+ *
  * Implementa glassmorphism design system y mejores prácticas UX
- * 
+ *
  * @author MPD Development Team
  * @version 2.0.0
  * @since 2025-06
@@ -34,7 +34,7 @@ import { environment } from '../../../../environments/environment';
     <div class="profile-image-manager glass-card">
       <!-- Preview Container -->
       <div class="image-preview-container" [class.loading]="isUploading()">
-        
+
         <!-- Current Image or Placeholder -->
         <div class="image-wrapper">
           <img
@@ -48,15 +48,19 @@ import { environment } from '../../../../environments/environment';
           <div *ngIf="!currentImageUrl() || imageLoadError()" class="image-placeholder">
             <i class="fas fa-user placeholder-icon"></i>
             <span class="placeholder-text">{{ imageLoadError() ? 'Error al cargar imagen' : 'Sin imagen' }}</span>
+            <!-- DEBUG: Mostrar enlace directo cuando hay error -->
+            <div *ngIf="imageLoadError() && currentImageUrl()" class="debug-info">
+              <small>URL: <a [href]="currentImageUrl()" target="_blank">{{ currentImageUrl() }}</a></small>
+            </div>
           </div>
-          
+
           <!-- Loading Overlay -->
           <div *ngIf="isUploading()" class="loading-overlay">
             <i class="fas fa-spinner fa-spin loading-spinner"></i>
             <span class="loading-text">Subiendo imagen...</span>
           </div>
         </div>
-        
+
         <!-- Action Buttons -->
         <div class="action-buttons">
           <button
@@ -68,7 +72,7 @@ import { environment } from '../../../../environments/environment';
             <i class="fas {{ currentImageUrl() ? 'fa-edit' : 'fa-camera' }}"></i>
             {{ currentImageUrl() ? 'Cambiar' : 'Subir' }}
           </button>
-          
+
           <button
             *ngIf="currentImageUrl() && showRemoveButton"
             mat-raised-button
@@ -81,7 +85,7 @@ import { environment } from '../../../../environments/environment';
           </button>
         </div>
       </div>
-      
+
       <!-- Hidden File Input -->
       <input
         #fileInput
@@ -90,7 +94,7 @@ import { environment } from '../../../../environments/environment';
         (change)="onFileSelected($event)"
         style="display: none"
         aria-hidden="true">
-      
+
       <!-- Upload Info -->
       <div class="upload-info" *ngIf="showUploadInfo">
         <div class="info-item">
@@ -111,7 +115,7 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./profile-image-manager.component.scss']
 })
 export class ProfileImageManagerComponent {
-  
+
   // === INPUTS ===
   @Input() initialImageUrl: string | null = null;
   @Input() showRemoveButton = true;
@@ -120,42 +124,69 @@ export class ProfileImageManagerComponent {
   @Input() size: 'small' | 'medium' | 'large' = 'medium';
   @Input() enablePreview = false; // Temporalmente deshabilitado
   @Input() enableCompression = true;
-  
+
   // === OUTPUTS ===
   @Output() imageUploaded = new EventEmitter<string>();
   @Output() imageRemoved = new EventEmitter<void>();
   @Output() uploadError = new EventEmitter<string>();
-  
+
   // === VIEW CHILD ===
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  
+
   // === SERVICES ===
   private userProfileService = inject(UserProfileService);
   private authService = inject(AuthService);
   private notificationService = inject(UnifiedNotificationService);
   private dialog = inject(MatDialog);
-  
+
+  // === CONSTRUCTOR ===
+  constructor() {
+    // ✅ CRITICAL FIX: Mover el effect al constructor para asegurar contexto de inyección correcto
+    effect(() => {
+      const userInfo = this.authService.userInfo();
+      const profileImage = userInfo.profileImage || null;
+
+      console.log('[ProfileImageManagerComponent] Effect ejecutado:', {
+        currentImageUrl: this._currentImageUrl(),
+        newProfileImage: profileImage,
+        userInfo: userInfo
+      });
+
+      if (profileImage !== this._currentImageUrl()) {
+        console.log('[ProfileImageManagerComponent] Actualizando imagen:', profileImage);
+        this._currentImageUrl.set(profileImage);
+        this.imageLoadError.set(false); // Reset error state when new image is set
+      }
+    });
+  }
+
   // === SIGNALS ===
   private _currentImageUrl = signal<string | null>(null);
   private _isUploading = signal(false);
   imageLoadError = signal(false);
-  
+
   // === COMPUTED SIGNALS ===
   currentImageUrl = computed(() => {
     if (this.imageLoadError()) return null;
     const url = this._currentImageUrl() || this.initialImageUrl;
-    return this.processImageUrl(url);
+    const processedUrl = this.processImageUrl(url);
+    console.log('[ProfileImageManagerComponent] currentImageUrl computed:', {
+      originalUrl: url,
+      processedUrl: processedUrl,
+      imageLoadError: this.imageLoadError()
+    });
+    return processedUrl;
   });
-  
+
   isUploading = computed(() => this._isUploading());
-  
+
   // === LIFECYCLE ===
   ngOnInit() {
     this.initializeImage();
   }
-  
+
   // === PUBLIC METHODS ===
-  
+
   /**
    * Trigger file input click
    */
@@ -164,7 +195,7 @@ export class ProfileImageManagerComponent {
       this.fileInput.nativeElement.click();
     }
   }
-  
+
   /**
    * Handle file selection
    */
@@ -189,7 +220,7 @@ export class ProfileImageManagerComponent {
       this.uploadImage(file);
     }
   }
-  
+
   /**
    * Remove current image
    */
@@ -200,10 +231,17 @@ export class ProfileImageManagerComponent {
 
     this.userProfileService.removeProfileImage().subscribe({
       next: () => {
+        console.log('[ProfileImageManagerComponent] ✅ Imagen eliminada del backend, actualizando estado...');
+
         // Forzar actualización inmediata del estado
         this._currentImageUrl.set(null);
         this.imageLoadError.set(false);
         this.authService.updateProfileImage('');
+
+        console.log('[ProfileImageManagerComponent] Estado después de eliminar:', {
+          currentImageUrl: this._currentImageUrl(),
+          authServiceImage: this.authService.userInfo().profileImage
+        });
 
         // Limpiar caché del navegador forzando re-render
         this.clearImageCache();
@@ -219,11 +257,16 @@ export class ProfileImageManagerComponent {
       }
     });
   }
-  
+
   /**
    * Handle image load error
    */
   onImageError(): void {
+    console.error('[ProfileImageManagerComponent] ❌ Error al cargar imagen:', {
+      currentImageUrl: this.currentImageUrl(),
+      _currentImageUrl: this._currentImageUrl(),
+      initialImageUrl: this.initialImageUrl
+    });
     this.imageLoadError.set(true);
   }
 
@@ -231,28 +274,39 @@ export class ProfileImageManagerComponent {
    * Handle image load success
    */
   onImageLoad(): void {
+    console.log('[ProfileImageManagerComponent] ✅ Imagen cargada exitosamente:', {
+      currentImageUrl: this.currentImageUrl(),
+      _currentImageUrl: this._currentImageUrl(),
+      initialImageUrl: this.initialImageUrl
+    });
     this.imageLoadError.set(false);
   }
-  
+
   // === PRIVATE METHODS ===
 
   /**
    * Procesa la URL de la imagen para manejar desarrollo vs producción
    */
   private processImageUrl(url: string | null): string | null {
+    console.log('[ProfileImageManagerComponent] Procesando URL:', url);
+
     if (!url) return null;
 
     // Si ya es una URL completa, devolverla tal como está
     if (url.startsWith('http://') || url.startsWith('https://')) {
+      console.log('[ProfileImageManagerComponent] URL completa detectada:', url);
       return url;
     }
 
     // En desarrollo, convertir URL relativa a absoluta para evitar problemas de proxy
     if (this.isDevelopment() && url.startsWith('/api/')) {
-      return `http://localhost:8080${url}`;
+      const processedUrl = `http://localhost:8080${url}`;
+      console.log('[ProfileImageManagerComponent] URL procesada para desarrollo:', processedUrl);
+      return processedUrl;
     }
 
     // Si es una URL relativa, devolverla tal como está para que el proxy la maneje
+    console.log('[ProfileImageManagerComponent] URL relativa mantenida:', url);
     return url;
   }
 
@@ -301,39 +355,49 @@ export class ProfileImageManagerComponent {
   private initializeImage(): void {
     // Siempre usar la imagen del AuthService para asegurar que es del usuario correcto
     const userInfo = this.authService.userInfo();
-    if (userInfo.profileImage) {
-      this._currentImageUrl.set(userInfo.profileImage);
+    const profileImage = userInfo.profileImage || null;
+    if (profileImage) {
+      this._currentImageUrl.set(profileImage);
     } else if (this.initialImageUrl) {
       this._currentImageUrl.set(this.initialImageUrl);
     } else {
       this._currentImageUrl.set(null);
     }
   }
-  
+
   private validateFile(file: File): string | null {
     // Check file type
     if (!file.type.startsWith('image/')) {
       return 'Por favor, seleccione un archivo de imagen válido (JPG, PNG, GIF)';
     }
-    
+
     // Check file size (5MB)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return 'El archivo es demasiado grande. El tamaño máximo permitido es 5MB';
     }
-    
+
     return null;
   }
-  
+
   private uploadImage(file: File): void {
     this._isUploading.set(true);
-    
+
     this.userProfileService.uploadProfileImage(file).subscribe({
       next: (response) => {
+        console.log('[ProfileImageManagerComponent] Respuesta del upload:', response);
         if (response && (response as any).imageUrl) {
           const imageUrl = (response as any).imageUrl;
+          console.log('[ProfileImageManagerComponent] Actualizando imagen después del upload:', imageUrl);
+
           this._currentImageUrl.set(imageUrl);
           this.authService.updateProfileImage(imageUrl);
+
+          console.log('[ProfileImageManagerComponent] Estado después de actualizar:', {
+            currentImageUrl: this._currentImageUrl(),
+            authServiceImage: this.authService.userInfo().profileImage
+          });
+
           this.imageUploaded.emit(imageUrl);
           this.notificationService.success('Imagen de perfil actualizada exitosamente', 'Éxito');
         }
@@ -348,7 +412,7 @@ export class ProfileImageManagerComponent {
       }
     });
   }
-  
+
   private extractErrorMessage(error: any): string {
     if (error?.error?.error) {
       return error.error.error;
@@ -361,12 +425,12 @@ export class ProfileImageManagerComponent {
     }
     return 'Error al procesar la imagen. Por favor, intente nuevamente.';
   }
-  
+
   private handleError(message: string): void {
     this.notificationService.error(message, 'Error');
     this.uploadError.emit(message);
   }
-  
+
   private resetFileInput(): void {
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';

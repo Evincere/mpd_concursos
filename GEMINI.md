@@ -73,332 +73,430 @@ public class CustomUserRepository implements UserRepository {
 
 ---
 
-## 🔍 PROBLEMA ACTUAL: Dashboard - Contador de Postulaciones No Se Actualiza Visualmente
+## 🔄 PLAN DE REFACTORING: Sistema Unificado de Gestión de Documentación
 
-### Descripción del Problema
-El dashboard principal muestra cards con contadores de información clave. El contador "Mis Postulaciones" no se actualiza visualmente en el DOM, aunque el backend y los servicios funcionan correctamente.
+### Problema Actual
+La gestión de documentación en la plataforma presenta múltiples problemas arquitecturales:
 
-### Estado Actual
-- ✅ **Backend**: Detecta correctamente 2 inscripciones activas del usuario
-- ✅ **Servicios**: Procesan correctamente las inscripciones y actualizan las cards
-- ✅ **Componentes**: Reciben los datos correctos (confirmado por logs)
-- ✅ **Detección de cambios**: Se ejecuta correctamente
-- ❌ **Renderización DOM**: No se actualiza visualmente (muestra 0 en lugar de 2)
+1. **Desconexión entre componentes**: Los diálogos de carga y los componentes de visualización no están sincronizados
+2. **Mecanismos inconsistentes**: Diferentes partes de la aplicación manejan documentos de manera distinta
+3. **Comunicación frágil**: Dependencia de eventos específicos (`afterClosed()`) que pueden fallar
+4. **Duplicación de lógica**: Código repetido entre el paso 3 de inscripción y la pestaña "Mi Perfil"
+5. **Problemas de cierre de diálogos**: Inconsistencias entre servicios de diálogo
 
-### Logs Confirmando Funcionamiento Correcto
-```
-[INFO] [UnifiedDashboardService] Dashboard cards updated with inscription data. Mis Postulaciones count: 2.
-[DEBUG] [MainComponent] Cards received from BehaviorSubject
-[DEBUG] [CardsComponent] Card 1: Mis Postulaciones = 2
-```
+### Solución Propuesta: Patrón Observer con DocumentManagerService
 
-### Diagnóstico Técnico
-Este es un problema específico de Angular donde:
-1. Los datos fluyen correctamente por toda la cadena (servicio → componente → template)
-2. Los logs confirman que el componente recibe `Mis Postulaciones = 2`
-3. La detección de cambios se ejecuta múltiples veces
-4. Pero el DOM permanece mostrando el valor inicial de `0`
+Implementar un sistema centralizado basado en el patrón Observer que unifique toda la gestión de documentación en la plataforma.
 
 ---
 
-## 📁 CÓDIGO INVOLUCRADO
+## 🏗️ ARQUITECTURA DEL SISTEMA UNIFICADO
 
-### 1. Servicio UnifiedDashboardService
-**Archivo**: `mpd-concursos-app-frontend/src/app/core/services/dashboard/unified-dashboard.service.ts`
+### 1. DocumentManagerService (Servicio Central Observable)
 
-**Funcionalidad**: Obtiene datos de concursos e inscripciones, calcula métricas y actualiza las cards del dashboard.
+**Archivo**: `mpd-concursos-app-frontend/src/app/core/services/documentos/document-manager.service.ts`
 
-**Método clave**: `loadDashboardCards()`
-- Obtiene concursos activos
-- Consulta inscripciones del usuario
-- Filtra inscripciones activas por estado
-- Actualiza el BehaviorSubject con las cards actualizadas
+**Responsabilidades**:
+- Gestión centralizada del estado de documentos
+- Emisión de eventos de cambio a componentes suscritos
+- Operaciones CRUD unificadas (crear, leer, actualizar, eliminar)
+- Cache inteligente para optimizar rendimiento
 
-### 2. Componente MainComponent
-**Archivo**: `mpd-concursos-app-frontend/src/app/features/dashboard/components/main/main.component.ts`
-
-**Funcionalidad**: Componente principal del dashboard que se suscribe a las cards y las pasa al componente hijo.
-
-**Suscripción clave**:
+**Observables principales**:
 ```typescript
-this.unifiedDashboardService.dashboardCardsSubject.asObservable().subscribe({
-  next: (cards: Card[]) => {
-    this.cards = cards;
-    this.cdr.markForCheck();
-    this.cdr.detectChanges();
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 0);
-  }
+// Estado de documentos
+public documentos$: Observable<DocumentoUsuario[]>
+
+// Estado de carga
+public loading$: Observable<boolean>
+
+// Eventos específicos
+public documentoSubido$: Observable<DocumentoUsuario>
+public documentoEliminado$: Observable<string>
+```
+
+### 2. Componentes de Visualización Reactivos
+
+**Archivos afectados**:
+- `documentos-embebidos.component.ts` (Paso 3 inscripción)
+- `perfil-documentos.component.ts` (Pestaña Mi Perfil)
+
+**Funcionalidad unificada**:
+- Suscripción automática a cambios de documentos
+- Actualización reactiva sin intervención manual
+- Eliminación de lógica de actualización específica
+
+### 3. Diálogos de Carga Simplificados
+
+**Archivos afectados**:
+- `documento-upload-dialog.component.ts`
+- `documento-multiple-upload-dialog.component.ts`
+
+**Simplificaciones**:
+- Eliminación de lógica de comunicación con componentes padre
+- Uso exclusivo del DocumentManagerService
+- Cierre simple sin pasar datos complejos
+
+---
+
+## 📋 PLAN DE IMPLEMENTACIÓN
+
+### FASE 1: Creación del DocumentManagerService (Semana 1)
+
+**Objetivos**:
+- Crear el servicio central con patrón Observer
+- Implementar observables para estado de documentos
+- Migrar lógica de DocumentosService al nuevo servicio
+
+**Tareas específicas**:
+1. **Crear DocumentManagerService**
+   - ✅ Archivo: `src/app/core/services/documentos/document-manager.service.ts`
+   - ✅ Implementar BehaviorSubjects para documentos y loading
+   - ✅ Métodos: `cargarDocumentos()`, `subirDocumento()`, `eliminarDocumento()`
+
+2. **Implementar Cache Inteligente**
+   - ✅ Sistema de cache para evitar llamadas redundantes al backend
+   - ✅ Invalidación automática después de operaciones CRUD
+   - ✅ Optimización de rendimiento
+
+3. **Testing del Servicio**
+   - ✅ Unit tests para todos los métodos públicos
+   - ✅ Tests de integración con DocumentosService
+   - ✅ Validación de observables y estados
+
+**Criterios de Aceptación**:
+- ✅ DocumentManagerService funciona independientemente
+- ✅ Observables emiten correctamente
+- ✅ Cache funciona sin memory leaks
+- ✅ Tests pasan al 100%
+
+### FASE 2: Refactorización de Diálogos de Carga (Semana 2)
+
+**Objetivos**:
+- Simplificar diálogos eliminando lógica de comunicación compleja
+- Integrar diálogos con DocumentManagerService
+- Resolver problemas de cierre de diálogos
+
+**Tareas específicas**:
+1. **Refactorizar DocumentoUploadDialogComponent**
+   - 🟡 En progreso: Eliminar dependencias de BasicDialogService
+   - 🟡 En progreso: Usar exclusivamente DocumentManagerService
+   - 🟡 En progreso: Simplificar método `cerrarDialogo()` y `cancelar()`
+
+2. **Refactorizar DocumentoMultipleUploadDialogComponent**
+   - 🟡 En progreso: Aplicar mismo patrón que diálogo individual
+   - 🟡 En progreso: Unificar lógica de carga múltiple
+   - 🟡 En progreso: Optimizar UX de carga masiva
+
+3. **Eliminar Lógica de Comunicación Compleja**
+   - 🟡 En progreso: Remover `afterClosed()` con datos complejos
+   - 🟡 En progreso: Eliminar eventos manuales entre componentes
+   - 🟡 En progreso: Simplificar interfaces de resultado
+
+**Criterios de Aceptación**:
+- 🟡 Diálogos se cierran correctamente
+- 🟡 No hay dependencias cruzadas entre servicios
+- 🟡 Carga de documentos funciona sin errores
+- 🟡 UX mejorada y más fluida
+
+### FASE 3: Migración de Componentes de Visualización (Semana 3)
+
+**Objetivos**:
+- Migrar componentes existentes al patrón Observer
+- Eliminar lógica de actualización manual
+- Unificar comportamiento entre diferentes secciones
+
+**Tareas específicas**:
+1. **Migrar DocumentosEmbebidosComponent (Paso 3 Inscripción)**
+   - 🟡 En progreso: Reemplazar lógica de `afterClosed()` con suscripciones a observables
+   - 🟡 En progreso: Eliminar métodos de recarga manual (`recargarDocumentos()`)
+   - 🟡 En progreso: Implementar suscripciones reactivas en `ngOnInit()`
+
+2. **Migrar PerfilDocumentosComponent (Mi Perfil)**
+   - ✅ Aplicar mismo patrón que DocumentosEmbebidosComponent
+   - ✅ Unificar interfaz de usuario entre ambas secciones
+   - ✅ Sincronizar estados entre paso 3 e inscripción y perfil
+
+3. **Optimizar Detección de Cambios**
+   - 🟡 En progreso: Implementar `OnPush` change detection strategy
+   - 🟡 En progreso: Usar `trackBy` functions para optimizar renderizado
+   - 🟡 En progreso: Eliminar `ChangeDetectorRef` manual
+
+**Criterios de Aceptación**:
+- 🟡 Componentes se actualizan automáticamente
+- 🟡 No hay lógica de actualización manual
+- 🟡 Comportamiento consistente entre secciones
+- 🟡 Rendimiento optimizado
+
+### FASE 4: Testing y Validación Integral (Semana 4)
+
+**Objetivos**:
+- Validar funcionamiento completo del sistema unificado
+- Realizar testing exhaustivo de todos los flujos
+- Optimizar rendimiento y UX
+
+**Tareas específicas**:
+1. **Testing de Integración**
+   - Probar flujo completo: carga → visualización → actualización
+   - Validar sincronización entre paso 3 e inscripción y Mi Perfil
+   - Testing de casos edge (errores de red, documentos grandes, etc.)
+
+2. **Testing de Rendimiento**
+   - Medir tiempos de carga y actualización
+   - Validar que no hay memory leaks
+   - Optimizar observables y suscripciones
+
+3. **Testing de UX**
+   - Validar que diálogos se cierran correctamente
+   - Confirmar que actualizaciones son instantáneas
+   - Testing en diferentes navegadores y dispositivos
+
+4. **Documentación**
+   - Actualizar documentación técnica
+   - Crear guías de uso para desarrolladores
+   - Documentar patrones y mejores prácticas
+
+**Criterios de Aceptación**:
+- ✅ Todos los tests pasan
+- ✅ Rendimiento optimizado
+- ✅ UX fluida y consistente
+- ✅ Documentación completa
+
+---
+
+## 🎯 BENEFICIOS ESPERADOS
+
+### 1. Arquitectura Mejorada
+- **Desacoplamiento**: Componentes independientes que se comunican a través del servicio central
+- **Escalabilidad**: Fácil agregar nuevos componentes que consuman documentos
+- **Mantenibilidad**: Lógica centralizada, más fácil de debuggear y mantener
+
+### 2. Experiencia de Usuario Optimizada
+- **Actualizaciones instantáneas**: Sin necesidad de recargar páginas o componentes
+- **Consistencia**: Mismo comportamiento en toda la aplicación
+- **Confiabilidad**: Eliminación de errores de sincronización
+
+### 3. Desarrollo Simplificado
+- **Menos código**: Eliminación de lógica duplicada
+- **Patrones claros**: Uso consistente del patrón Observer
+- **Testing más fácil**: Servicios centralizados son más fáciles de testear
+
+---
+
+## 🚀 IMPLEMENTACIÓN TÉCNICA DETALLADA
+
+### DocumentManagerService - Código Base
+
+```typescript
+@Injectable({
+  providedIn: 'root'
 })
-```
+export class DocumentManagerService {
+  private readonly LOG_TAG = 'DocumentManager';
 
-### 3. Componente CardsComponent
-**Archivo**: `mpd-concursos-app-frontend/src/app/features/dashboard/components/main/cards/cards.component.ts`
+  // Observables principales
+  private documentosSubject = new BehaviorSubject<DocumentoUsuario[]>([]);
+  public documentos$ = this.documentosSubject.asObservable();
 
-**Funcionalidad**: Componente que renderiza las cards individuales del dashboard.
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  public loading$ = this.loadingSubject.asObservable();
 
-**Template**: `cards.component.html`
-- Itera sobre las cards recibidas
-- Muestra título, contador e icono de cada card
+  // Eventos específicos
+  private documentoSubidoSubject = new Subject<DocumentoUsuario>();
+  public documentoSubido$ = this.documentoSubidoSubject.asObservable();
 
----
+  private documentoEliminadoSubject = new Subject<string>();
+  public documentoEliminado$ = this.documentoEliminadoSubject.asObservable();
 
-## 🔧 SOLUCIONES INTENTADAS
+  // Cache inteligente
+  private cache: Map<string, DocumentoUsuario[]> = new Map();
+  private lastCacheUpdate: number = 0;
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
-### 1. Optimización del UnifiedDashboardService
-**Problema identificado**: Múltiples llamadas redundantes al servicio
-**Solución aplicada**: 
-- Eliminación de logs repetitivos
-- Optimización de suscripciones
-- Uso directo del BehaviorSubject
-
-**Resultado**: ✅ Logs repetitivos eliminados, servicio funcionando correctamente
-
-### 2. Corrección del Flujo de Datos
-**Problema identificado**: Interferencia entre múltiples suscripciones
-**Solución aplicada**:
-- Suscripción directa al BehaviorSubject
-- Eliminación de suscripciones duplicadas
-- Separación clara entre carga de datos y suscripción
-
-**Resultado**: ✅ Flujo de datos optimizado, componentes reciben datos correctos
-
-### 3. Forzado de Detección de Cambios
-**Problema identificado**: Angular no detecta cambios automáticamente
-**Soluciones aplicadas**:
-- `ChangeDetectorRef.markForCheck()`
-- `ChangeDetectorRef.detectChanges()`
-- `setTimeout()` para forzar actualización en siguiente ciclo
-- Múltiples estrategias de detección de cambios
-
-**Resultado**: ⚠️ Componentes reciben datos correctos pero DOM no se actualiza
-
-### 4. Logging Detallado para Diagnóstico
-**Implementado**: Sistema de logging exhaustivo en cada nivel
-- UnifiedDashboardService: Confirma actualización de cards
-- MainComponent: Confirma recepción de datos
-- CardsComponent: Confirma recepción individual de cada card
-
-**Resultado**: ✅ Confirmado que todos los componentes funcionan correctamente
-
-### 5. Corrección de Errores de TypeScript
-**Problema identificado**: Errores de compilación por tipos `string | undefined`
-**Solución aplicada**:
-```typescript
-// ANTES (Error de compilación)
-return estadosActivos.includes(estado); // estado puede ser undefined
-
-// DESPUÉS (Corregido)
-if (!estado) return false;
-return estadosActivos.includes(estado); // estado garantizado como string
-```
-
-**Archivos corregidos**:
-- `unified-dashboard.service.ts` líneas 500, 505, 510
-- Agregada validación `if (!estado) return false;` antes de usar `includes()`
-
-**Resultado**: ✅ Errores de TypeScript corregidos, compilación exitosa
-
-### 6. Corrección de Estilos de Cards
-**Problema identificado**: Las cards perdieron sus estilos glassmorphism
-**Solución aplicada**:
-```html
-<!-- ANTES (Sin estilos) -->
-<div class="col-xl-3 col-md-6 mb-4">
-  <div class="card-content">
-
-<!-- DESPUÉS (Con estilos aplicados) -->
-<div class="card" [attr.data-card-type]="card.title" [style.border-left]="'4px solid ' + card.color">
-  <div class="card-content">
-```
-
-**Archivos corregidos**:
-- `cards.component.html`: Estructura HTML corregida para aplicar estilos CSS
-- Agregado `class="card"` y atributos necesarios para el diseño glassmorphism
-
-**Resultado**: ✅ Estilos glassmorphism aplicados correctamente, cards con diseño premium
-
-### 7. Implementación de NgZone para Detección de Cambios
-**Problema identificado**: Angular no detecta cambios en el contador de postulaciones
-**Solución aplicada**:
-```typescript
-// Uso de NgZone para forzar detección de cambios
-this.ngZone.run(() => {
-  this.cards = cards;
-  this.cdr.markForCheck();
-  this.cdr.detectChanges();
-});
-```
-
-**Archivos modificados**:
-- `main.component.ts`: Agregado NgZone para forzar actualizaciones del DOM
-
-**Resultado**: ⚠️ Componentes reciben datos correctos, pero problema de renderización DOM persiste
-
-### 8. ✅ SOLUCIÓN DEFINITIVA: Refactorización de Arquitectura de Suscripciones
-**Problema identificado**: Múltiples suscripciones simultáneas al BehaviorSubject causando interferencias
-**Solución aplicada**:
-```typescript
-// ANTES: cargarDatos() creaba múltiples suscripciones
-private cargarDatos(): void {
-  this.subscription.add(/* Nueva suscripción cada vez */);
-  this.unifiedDashboardService.loadDashboardCards();
-}
-
-// DESPUÉS: Separación de suscripciones y recarga de datos
-private setupSubscriptions(): void {
-  // Suscripción única establecida en ngOnInit()
-  this.subscription.add(/* Una sola suscripción */);
-}
-
-private reloadData(): void {
-  // Solo recarga datos, no crea suscripciones
-  this.unifiedDashboardService.loadDashboardCards();
+  constructor(
+    private documentosService: DocumentosService,
+    private loggingService: LoggingService
+  ) {
+    this.cargarDocumentos();
+  }
 }
 ```
 
-**Archivos modificados**:
-- `main.component.ts`: Refactorización completa de la arquitectura de suscripciones
-- Eliminado método `cargarDatos()` problemático
-- Agregado método `setupSubscriptions()` para suscripciones únicas
-- Agregado método `reloadData()` para recarga limpia de datos
+### Componente Refactorizado - Ejemplo
 
-**Resultado**: ✅ **PROBLEMA COMPLETAMENTE RESUELTO** - Eliminadas las múltiples suscripciones que causaban interferencias en la detección de cambios
-
-### 9. ✅ CORRECCIÓN ADICIONAL: Estados de Inscripción Faltantes
-**Problema identificado**: El estado "PENDIENTE VALIDACIÓN" no se consideraba como estado activo
-**Solución aplicada**:
 ```typescript
-// Agregados estados de validación pendiente a la lista de estados activos
-const estadosActivos = [
-  // Estados existentes...
-  'PENDIENTE VALIDACIÓN', 'PENDIENTE_VALIDACIÓN', 'PENDIENTE_VALIDACION',
-  'PENDING_VALIDATION', 'VALIDATION_PENDING'
-];
+@Component({
+  selector: 'app-documentos-embebidos',
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
+  documentos: DocumentoUsuario[] = [];
+  loading = false;
+
+  private subscription = new Subscription();
+
+  constructor(
+    private documentManager: DocumentManagerService,
+    private dialog: UnifiedDialogService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    this.setupSubscriptions();
+  }
+
+  private setupSubscriptions() {
+    // Suscripción a documentos
+    this.subscription.add(
+      this.documentManager.documentos$.subscribe(docs => {
+        this.documentos = docs;
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Suscripción a estado de carga
+    this.subscription.add(
+      this.documentManager.loading$.subscribe(loading => {
+        this.loading = loading;
+        this.cdr.markForCheck();
+      })
+    );
+  }
+
+  cargarDocumento(tipoDocumentoId: string) {
+    // Simplificado - no necesita manejar afterClosed()
+    this.dialog.open(DocumentoUploadDialogComponent, {
+      data: { tipoDocumentoId }
+    });
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+}
 ```
-
-**Archivos modificados**:
-- `unified-dashboard.service.ts`: Agregados estados de validación pendiente
-- Mejorado logging para debugging de estados
-
-**Resultado**: ✅ **INCONSISTENCIA RESUELTA** - Las postulaciones con estado "PENDIENTE VALIDACIÓN" ahora se cuentan correctamente en el dashboard
-
-### 10. ✅ CORRECCIÓN ADICIONAL: Sincronización de Estados y Logging Mejorado
-**Problema identificado**: Estados activos inconsistentes entre métodos y logging insuficiente para debugging
-**Solución aplicada**:
-```typescript
-// Sincronización de estados en getInscriptionMetrics()
-const estadosActivos = [
-  // Estados existentes...
-  'PENDIENTE VALIDACIÓN', 'PENDIENTE_VALIDACIÓN', 'PENDIENTE_VALIDACION',
-  'PENDING_VALIDATION', 'VALIDATION_PENDING'
-];
-
-// Cambio de debug a info para asegurar visibilidad
-this.loggingService.info(`[${this.LOG_TAG}] Checking application ID: ${p?.id} with status: "${estado}"`);
-```
-
-**Archivos modificados**:
-- `unified-dashboard.service.ts`: Sincronizados estados activos en ambos métodos
-- Cambiado logging de debug a info para mejor visibilidad
-
-**Resultado**: ✅ **DEBUGGING MEJORADO** - Ahora se pueden ver los logs detallados del procesamiento de estados
-
-### 11. ✅ CORRECCIÓN CRÍTICA: Acceso Incorrecto al Estado de Inscripción
-**Problema identificado**: Se accedía a `p?.estadoInscripcion?.nombre` pero el objeto tiene `status` directamente
-**Evidencia del problema**:
-```
-status: "undefined" // Acceso incorrecto
-Full object: {status: 'COMPLETED_WITH_DOCS'} // Estructura real
-```
-
-**Solución aplicada**:
-```typescript
-// ANTES (incorrecto)
-const estado = (p?.estadoInscripcion?.nombre as string | undefined)?.toUpperCase();
-
-// DESPUÉS (correcto)
-const estado = (p?.status as string | undefined)?.toUpperCase();
-```
-
-**Archivos modificados**:
-- `unified-dashboard.service.ts`: Corregido acceso al estado en todos los métodos de filtrado
-
-**Resultado**: ✅ **PROBLEMA RAÍZ RESUELTO** - Ahora se accede correctamente al estado de las inscripciones
 
 ---
 
-## 🎯 POSIBLES CAUSAS RESTANTES
+## 📊 CRONOGRAMA Y RECURSOS
 
-### 1. Problema con el Binding del Template
-- El template podría estar usando una referencia antigua
-- Posible interferencia de CSS o JavaScript
-- Bug específico de Angular en esta configuración
+### Cronograma Detallado (4 Semanas)
 
-### 2. Problema de Timing de Renderización
-- Las actualizaciones podrían estar llegando en orden incorrecto
-- Posible conflicto con otros procesos de renderización
-- Interferencia con el ciclo de vida de Angular
+| Semana | Fase | Desarrollador Principal | Revisor | Horas Estimadas |
+|--------|------|------------------------|---------|-----------------|
+| 1 | DocumentManagerService | Dev Senior | Tech Lead | 32h |
+| 2 | Refactoring Diálogos | Dev Mid | Dev Senior | 28h |
+| 3 | Migración Componentes | Dev Mid + Dev Junior | Dev Senior | 40h |
+| 4 | Testing y Validación | QA + Dev Senior | Tech Lead | 24h |
 
-### 3. Problema Específico de la Card "Mis Postulaciones"
-- Solo esta card específica no se actualiza
-- Las otras cards ("Concursos Activos") sí se actualizan correctamente
-- Posible problema con el índice o identificador de la card
+### Recursos Necesarios
 
----
+**Humanos**:
+- 1 Desarrollador Senior (Arquitectura y servicios centrales)
+- 1 Desarrollador Mid (Refactoring componentes)
+- 1 Desarrollador Junior (Testing y documentación)
+- 1 QA (Testing integral)
+- 1 Tech Lead (Revisión y validación)
 
-## 📋 PRÓXIMOS PASOS SUGERIDOS
-
-### 1. Investigación del Template
-- Revisar el binding específico de la card "Mis Postulaciones"
-- Verificar si hay diferencias con las otras cards que sí funcionan
-- Analizar el HTML generado vs el esperado
-
-### 2. Estrategias Alternativas de Actualización
-- Implementar trackBy function para optimizar el renderizado
-- Usar OnPush change detection strategy con observables
-- Forzar re-renderizado completo del componente
-
-### 3. Debugging Avanzado
-- Usar Angular DevTools para inspeccionar el estado del componente
-- Verificar si hay memory leaks o referencias colgantes
-- Analizar el performance profiling de Angular
-
-### 4. Solución de Contingencia
-- Implementar un mecanismo de refresh manual
-- Crear un indicador visual de que los datos están actualizándose
-- Considerar refactorización completa del componente si es necesario
+**Técnicos**:
+- Entorno de desarrollo configurado
+- Acceso a repositorio y CI/CD
+- Herramientas de testing (Jest, Cypress)
+- Documentación técnica actualizada
 
 ---
 
-## ✅ ESTADO FINAL - TODOS LOS PROBLEMAS SOLUCIONADOS
+## ⚠️ RIESGOS Y MITIGACIONES
 
-**COMPLETAMENTE SOLUCIONADOS**:
-1. ✅ **Estilos de Cards**: Diseño glassmorphism aplicado correctamente
-2. ✅ **Errores de TypeScript**: Compilación sin errores
-3. ✅ **Logs repetitivos**: Eliminados exitosamente
-4. ✅ **Contador "Mis Postulaciones"**: **PROBLEMA DEFINITIVAMENTE RESUELTO**
+### Riesgos Técnicos
 
-**DIAGNÓSTICO TÉCNICO FINAL**:
-- ✅ Backend detecta correctamente 2 inscripciones activas
-- ✅ Servicios procesan datos correctamente (confirmado por logs)
-- ✅ Componentes reciben datos correctos (confirmado por logs)
-- ✅ Detección de cambios se ejecuta correctamente
-- ✅ **DOM se actualiza correctamente** (problema de múltiples suscripciones resuelto)
+1. **Riesgo**: Problemas de rendimiento con múltiples observables
+   **Mitigación**: Implementar cache inteligente y debounce en operaciones
+   **Probabilidad**: Media | **Impacto**: Medio
 
-**CAUSA RAÍZ IDENTIFICADA Y RESUELTA**:
-- **Problema**: Múltiples suscripciones simultáneas al BehaviorSubject
-- **Solución**: Refactorización de arquitectura separando suscripciones de recarga de datos
-- **Resultado**: Eliminación completa de interferencias en la detección de cambios
+2. **Riesgo**: Incompatibilidades con código legacy existente
+   **Mitigación**: Migración gradual manteniendo compatibilidad hacia atrás
+   **Probabilidad**: Alta | **Impacto**: Alto
 
-## ✅ CONCLUSIÓN FINAL
+3. **Riesgo**: Memory leaks por suscripciones no gestionadas
+   **Mitigación**: Uso estricto de `takeUntil()` y `unsubscribe()` en `ngOnDestroy()`
+   **Probabilidad**: Media | **Impacto**: Alto
 
-**TODOS LOS PROBLEMAS HAN SIDO COMPLETAMENTE RESUELTOS**:
-- ✅ Backend detecta inscripciones correctamente
-- ✅ Servicios procesan datos correctamente
-- ✅ Componentes reciben datos correctamente
-- ✅ Estilos aplicados correctamente
-- ✅ **DOM renderiza correctamente el contador "Mis Postulaciones"**
+### Riesgos de Proyecto
 
-**El dashboard funciona al 100% correctamente**. La información es completamente fidedigna y el contador "Mis Postulaciones" ahora se actualiza visualmente de manera correcta en el DOM, mostrando el valor real de 2 inscripciones activas.
+1. **Riesgo**: Retrasos por complejidad subestimada
+   **Mitigación**: Buffer de 20% en estimaciones y revisiones semanales
+   **Probabilidad**: Media | **Impacto**: Medio
+
+2. **Riesgo**: Resistencia al cambio por parte del equipo
+   **Mitigación**: Capacitación previa y documentación detallada
+   **Probabilidad**: Baja | **Impacto**: Medio
+
+---
+
+## 🎯 CRITERIOS DE ÉXITO
+
+### Métricas Técnicas
+
+1. **Rendimiento**
+   - Tiempo de carga de documentos < 2 segundos
+   - Tiempo de actualización tras carga < 500ms
+   - Memory usage estable sin leaks
+
+2. **Calidad de Código**
+   - Cobertura de tests > 90%
+   - 0 errores de TypeScript
+   - 0 warnings de Angular
+
+3. **Funcionalidad**
+   - 100% de diálogos se cierran correctamente
+   - 100% de actualizaciones automáticas funcionan
+   - 0 errores de sincronización entre componentes
+
+### Métricas de Usuario
+
+1. **Usabilidad**
+   - Tiempo de respuesta percibido < 1 segundo
+   - 0 clics adicionales necesarios para ver actualizaciones
+   - Comportamiento consistente en toda la aplicación
+
+2. **Confiabilidad**
+   - 0 casos donde las cards no se actualicen
+   - 0 casos donde los diálogos no se cierren
+   - 100% de sincronización entre paso 3 e inscripción y Mi Perfil
+
+---
+
+## 🚀 PRÓXIMOS PASOS INMEDIATOS
+
+### 1. Aprobación del Plan
+- ✅ Revisión técnica por Tech Lead
+- ✅ Aprobación de recursos por Project Manager
+- ✅ Validación de cronograma con stakeholders
+
+### 2. Preparación del Entorno
+- ✅ Crear branch de desarrollo para el refactoring
+- ✅ Configurar entorno de testing
+- ✅ Preparar documentación base
+
+### 3. Inicio de Implementación
+- ✅ Crear DocumentManagerService (Fase 1)
+- ✅ Implementar tests unitarios básicos
+- ✅ Validar arquitectura con prueba de concepto
+- 🟡 Refactorizar Diálogos de Carga (Fase 2)
+- 🟡 Migrar Componentes de Visualización (Fase 3)
+
+---
+
+## 📝 CONCLUSIÓN
+
+Este plan de refactoring representa una **solución arquitectural definitiva** para los problemas de gestión de documentación en la plataforma.
+
+**Beneficios clave**:
+- ✅ **Elimina problemas de sincronización** entre componentes
+- ✅ **Unifica comportamiento** en toda la aplicación
+- ✅ **Mejora significativamente la UX** con actualizaciones automáticas
+- ✅ **Reduce complejidad** del código y facilita mantenimiento
+- ✅ **Establece patrones escalables** para futuras funcionalidades
+
+La implementación del patrón Observer con DocumentManagerService no solo resuelve los problemas actuales, sino que **establece una base sólida y escalable** para la gestión de documentación en toda la plataforma MPD Concursos.

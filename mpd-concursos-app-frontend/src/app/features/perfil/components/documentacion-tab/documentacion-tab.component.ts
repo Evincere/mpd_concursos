@@ -14,7 +14,8 @@ import { ConfirmationService } from '@shared/services/confirmation.service';
 
 import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento, DocumentoReplaceResponse, DocumentoSummary } from '../../../../core/models/documento.model';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
-import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
+import { DocumentManagerService } from '@core/services/documentos/document-manager.service';
+import { TiposDocumentoService } from '@core/services/documentos/tipos-documento.service';
 import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-upload-dialog/documento-upload-dialog.component';
 import { debounceTime, throttleTime, finalize } from 'rxjs/operators';
@@ -147,8 +148,6 @@ interface DocumentoCardViewModel {
                       color="success"
                       icon="sync-alt"
                       [tooltip]="'Reemplazar documento'"
-                      [loading]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
-                      [disabled]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
                       (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
@@ -226,8 +225,6 @@ interface DocumentoCardViewModel {
                       color="success"
                       icon="sync-alt"
                       [tooltip]="'Reemplazar documento'"
-                      [loading]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
-                      [disabled]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
                       (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
@@ -261,14 +258,14 @@ interface DocumentoCardViewModel {
           <app-custom-table
             [data]="documentosSummary"
             [columns]="summaryTableColumns"
-            [loading]="isLoading"
+            [loading]="(documentManager.loading$ | async) ?? false"
             [showActions]="true"
             (actionClick)="onSummaryTableAction($event)">
           </app-custom-table>
         </div>
 
         <!-- Estado vacío -->
-        <div class="empty-state" *ngIf="documentosSummary.length === 0 && !isLoading">
+        <div class="empty-state" *ngIf="documentosSummary.length === 0 && !(documentManager.loading$ | async)">
           <i class="fas fa-folder-open" aria-hidden="true"></i>
           <h4>No has cargado ningún documento aún</h4>
           <p>Comienza cargando los documentos requeridos para completar tu perfil</p>
@@ -283,7 +280,7 @@ interface DocumentoCardViewModel {
         </div>
 
         <!-- Loading state -->
-        <div class="loading-state" *ngIf="isLoading">
+        <div class="loading-state" *ngIf="documentManager.loading$ | async">
           <app-custom-spinner [size]="'large'"></app-custom-spinner>
           <p>Cargando documentos...</p>
         </div>
@@ -814,8 +811,7 @@ interface DocumentoCardViewModel {
   `]
 })
 export class DocumentacionTabComponent implements OnInit, OnDestroy {
-  isLoading = true;
-  isReplacing: { [key: string]: boolean } = {};
+  
   documentosUsuario: DocumentoUsuario[] = [];
   documentosSummary: DocumentoSummary[] = []; // Resumen de documentos agrupados por tipo
   tiposDocumento: TipoDocumento[] = []; // This will hold all document types from the backend
@@ -982,12 +978,13 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
   ];
 
-  private subscription: Subscription | undefined;
+  private subscription = new Subscription();
 
   constructor(
     private dialog: UnifiedDialogService,
     private notification: CustomNotificationService,
-    private documentosService: DocumentosService,
+    public documentManager: DocumentManagerService, // Public for template access
+    private tiposDocumentoService: TiposDocumentoService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
   ) {
@@ -996,39 +993,22 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('[DocumentacionTab] 🚀 Componente inicializado');
+    
+    this.subscription.add(this.documentManager.documentos$.subscribe(documentos => {
+      this.documentosUsuario = documentos;
+      this.buildViewModel();
+      this.calcularProgreso();
+      this.cdr.markForCheck();
+    }));
 
-    // CRITICAL FIX: Cargar datos sin forzar recarga para usar cache
-    this.cargarDatos(false);
-
-    // CRITICAL FIX: Suscripción más robusta con debounce y throttle para evitar race conditions
-    this.subscription = this.documentosService.documentoActualizado$
-      .pipe(
-        debounceTime(500), // Reducido a 500ms para respuesta más rápida
-        throttleTime(2000, undefined, { leading: true, trailing: true }) // Reducido para mejor UX
-      )
-      .subscribe((timestamp) => {
-        console.log('[DocumentacionTab] 🔄 Recibida señal de actualización...', timestamp);
-
-        // CRITICAL FIX: Respetar el bloqueo de operación centralizado
-        if (this.documentosService.isOperationInProgress()) {
-          console.log('[DocumentacionTab] 🚫 Recarga automática OMITIDA. Una operación crítica está en progreso.');
-          return;
-        }
-
-        if (!this.isLoading) {
-          console.log('[DocumentacionTab] ✅ Iniciando recarga automática completa de documentos...');
-          this.cargarDocumentosSummary(true); // Esto llamará secuencialmente a cargarDocumentosUsuarioSecuencial
-        } else {
-          console.log('[DocumentacionTab] ⏳ Recarga automática ignorada - ya hay una carga en progreso local');
-          // Programar recarga para después
-          setTimeout(() => {
-            if (!this.isLoading && !this.documentosService.isOperationInProgress()) {
-              console.log('[DocumentacionTab] 🔄 Ejecutando recarga programada completa después de operación');
-              this.cargarDocumentosSummary(true); // Esto llamará secuencialmente a cargarDocumentosUsuarioSecuencial
-            }
-          }, 1000);
-        }
-      });
+    // Cargar los tipos de documento una vez
+    this.tiposDocumentoService.getTiposDocumento().subscribe(tipos => {
+      this.tiposDocumento = tipos;
+      this.actualizarDocumentosRequeridos(tipos);
+      this.buildViewModel();
+      this.calcularProgreso();
+      this.cdr.markForCheck();
+    });
   }
 
   ngOnDestroy(): void {
@@ -1036,27 +1016,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     this.subscription?.unsubscribe();
   }
 
-  /**
-   * Carga los tipos de documento y los documentos del usuario.
-   * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
-   */
-  cargarDatos(forzarRecarga = false): void {
-    this.isLoading = true;
-    this.documentosService.getTiposDocumento(forzarRecarga)
-      .subscribe({
-        next: (tipos) => {
-          this.tiposDocumento = tipos; // Store all available document types
-          // Update required documents from backend data
-          this.actualizarDocumentosRequeridos(tipos);
-          // CRITICAL FIX: Cargar datos secuencialmente para evitar bloqueo concurrente
-          this.cargarDocumentosSummary(forzarRecarga); // Para la tabla (se ejecuta primero)
-        },
-        error: (error: unknown) => {
-          console.error('[DocumentacionTab] Error al cargar tipos de documento:', error);
-          this.isLoading = false;
-          this.notification.error('Error al cargar los tipos de documento');
-        }
-      });
+  cargarTiposDocumento(): void {
+    // This method should be implemented to fetch document types from a service.
+    // For now, it will use the hardcoded list.
+    this.actualizarDocumentosRequeridos(this.tiposDocumento);
   }
 
   /**
@@ -1136,85 +1099,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Carga los documentos del usuario de forma secuencial (sin verificar isLoading)
-   * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
-   */
-  private cargarDocumentosUsuarioSecuencial(forzarRecarga = false): void {
-    console.log('[DocumentacionTab] 📥 EJECUTANDO cargarDocumentosUsuarioSecuencial - forzarRecarga:', forzarRecarga);
-
-    this.documentosService.getDocumentosUsuario(forzarRecarga)
-      .pipe(finalize(() => {
-        console.log('[DocumentacionTab] ✅ Carga secuencial de documentos del usuario finalizada');
-        this.buildViewModel();
-        this.calcularProgreso();
-
-        // Logging adicional para debugging
-        const documentosSubidos = this.documentosViewModel.filter(vm => vm.subido).length;
-        console.log('[DocumentacionTab] 📊 Estado después de carga secuencial:', {
-          totalDocumentos: this.documentosViewModel.length,
-          documentosSubidos,
-          progresoCalculado: this.progresoDocumentacion
-        });
-
-        this.cdr.detectChanges();
-      }))
-      .subscribe({
-        next: (documentos: DocumentoUsuario[]) => {
-          console.log('[DocumentacionTab] 📄 Documentos del usuario recibidos (secuencial):', documentos.length);
-          this.documentosUsuario = documentos;
-        },
-        error: (error: unknown) => {
-          console.error('[DocumentacionTab] Error al cargar documentos del usuario (secuencial):', error);
-          this.notification.error('Error al cargar los documentos del usuario');
-        }
-      });
-  }
-
-  /**
-   * Carga los documentos del usuario.
-   * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
-   */
-  cargarDocumentosUsuario(forzarRecarga = false): void {
-    console.log('[DocumentacionTab] 🔄 LLAMADA A cargarDocumentosUsuario - forzarRecarga:', forzarRecarga, 'isLoading:', this.isLoading);
-
-    // CRITICAL FIX: Evitar llamadas concurrentes
-    if (this.isLoading) {
-      console.log('[DocumentacionTab] ⏳ Carga ya en progreso, ignorando nueva solicitud');
-      return;
-    }
-
-    this.cargarDocumentosUsuarioInternal(forzarRecarga);
-  }
-
-  /**
-   * Método interno para cargar documentos del usuario sin verificar isLoading
-   * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
-   */
-  private cargarDocumentosUsuarioInternal(forzarRecarga = false): void {
-    console.log('[DocumentacionTab] 📥 EJECUTANDO cargarDocumentosUsuarioInternal - forzarRecarga:', forzarRecarga);
-    console.log('[DocumentacionTab] 📥 Iniciando carga de documentos del usuario...', { forzarRecarga });
-
-    this.documentosService.getDocumentosUsuario(forzarRecarga)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        console.log('[DocumentacionTab] ✅ Carga de documentos finalizada');
-        // CRITICAL FIX: Forzar detección de cambios DESPUÉS de establecer isLoading = false
-        this.cdr.detectChanges();
-      }))
-      .subscribe({
-        next: (documentos: DocumentoUsuario[]) => {
-          console.log('[DocumentacionTab] 📄 Documentos recibidos:', documentos.length);
-          this.documentosUsuario = documentos;
-          this.buildViewModel();
-          this.calcularProgreso();
-        },
-        error: (error: unknown) => {
-          console.error('[DocumentacionTab] Error al cargar documentos del usuario:', error);
-          this.notification.error('Error al cargar tus documentos');
-        }
-      });
-  }
+  
 
   buildViewModel(): void {
     console.log('[DocumentacionTab] 🏗️ Construyendo ViewModel...');
@@ -1401,7 +1286,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
         // Recargar datos secuencialmente para evitar bloqueos
         setTimeout(() => {
           console.log('[DocumentacionTab] 🔄 Ejecutando recarga manual completa como respaldo');
-          this.cargarDocumentosSummary(true); // Esto llamará secuencialmente a cargarDocumentosUsuarioSecuencial
+          this.documentManager.cargarDocumentos(true);
         }, 500); // Pequeño delay para que el backend procese
 
       } else if (result && result.cancelled) {
@@ -1469,29 +1354,13 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isReplacing[documento.id] = true;
-
-    // CRITICAL FIX: Prevenir operaciones concurrentes
-    if (this.documentosService.isOperationInProgress()) {
-      this.notification.warning('Ya hay una operación de documento en progreso. Por favor, espere.');
-      return;
-    }
-
-    this.documentosService.setOperationInProgress(true);
-
     try {
-      const tipoDocumento = this.tiposDocumento.find(tipo => tipo.id === documento.tipoDocumentoId);
-      if (!tipoDocumento) {
-        this.notification.error('Tipo de documento no encontrado');
-        return;
-      }
-
       const file = await this.selectFile();
 
-      const checkResp = await firstValueFrom(this.documentosService.checkReplaceDocumento(documento.id!, file, 'Reemplazo de documento'));
+      const checkResp: any = await firstValueFrom(this.documentManager.checkReplaceDocumento(documento.id!, file, 'Reemplazo de documento'));
 
       if (checkResp.warning && checkResp.impactedEntities && checkResp.impactedEntities.length > 0) {
-        const detalle = checkResp.impactedEntities.map(e => `<li>${e}</li>`).join('');
+        const detalle = checkResp.impactedEntities.map((e: string) => `<li>${e}</li>`).join('');
         const confirmado = await firstValueFrom(this.dialog.openConfirm({
           title: 'Advertencia de reemplazo',
           icon: 'warning',
@@ -1502,24 +1371,19 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
         }).afterClosed());
 
         if (confirmado) {
-          const resp2 = await firstValueFrom(this.documentosService.replaceDocumento(documento.id!, file, 'Reemplazo de documento', true));
+          const resp2: any = await firstValueFrom(this.documentManager.replaceDocumento(documento.id!, file, 'Reemplazo de documento', true));
           this.notification.success(resp2.message || 'Documento reemplazado exitosamente.');
         }
       } else {
-        const resp = await firstValueFrom(this.documentosService.replaceDocumento(documento.id!, file, 'Reemplazo de documento'));
+        const resp: any = await firstValueFrom(this.documentManager.replaceDocumento(documento.id!, file, 'Reemplazo de documento'));
         this.notification.success(resp.message || 'Documento reemplazado exitosamente.');
       }
     } catch (error: any) {
-      // No mostrar notificación de error aquí, ya que el interceptor global y ApiErrorService se encargan de ello.
-      // Solo registrar en consola para debugging.
-      console.error('[DocumentacionTab] Error durante el proceso de reemplazo:', error.message);
       if(error.message.includes('cancelada')){
         this.notification.info('La operación de reemplazo fue cancelada.');
+      } else {
+        this.notification.error(error.message || 'Error al reemplazar el documento');
       }
-    } finally {
-      // CRITICAL FIX: Asegurarse de que el bloqueo siempre se libere
-      this.documentosService.setOperationInProgress(false);
-      this.isReplacing[documento.id] = false;
     }
   }
 
@@ -1539,18 +1403,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       )
       .subscribe((confirmed) => {
         if (confirmed) {
-          this.documentosService.deleteDocumento(documento.id!).subscribe({
-            next: () => {
-              this.notification.success('Documento eliminado correctamente');
-              // CRITICAL FIX: Eliminar recarga manual redundante
-              // deleteDocumento() ya emite documentoActualizado$ que dispara la recarga automática
-              console.log('[DocumentacionTab] 🗑️ Documento eliminado exitosamente - recarga automática en progreso');
-            },
-            error: (error: unknown) => {
-              console.error('Error al eliminar documento:', error);
-              this.notification.error('Error al eliminar el documento');
-            },
-          });
+          this.documentManager.eliminarDocumento(documento.id!)
         }
       });
   }
@@ -1672,38 +1525,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     return this.documentosViewModel.filter(vm => !vm.tipo.requerido);
   }
 
-  /**
-   * Carga el resumen de documentos agrupados por tipo
-   */
-  cargarDocumentosSummary(forzarRecarga = false): void {
-    console.log('[DocumentacionTab] 📥 Iniciando carga de resumen de documentos...', { forzarRecarga });
-
-    // Solo mostrar loading si no es una recarga automática
-    if (forzarRecarga) {
-      this.isLoading = true;
-    }
-
-    this.documentosService.getDocumentosSummary(forzarRecarga)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        console.log('[DocumentacionTab] ✅ Carga de resumen finalizada - actualizando UI');
-        this.cdr.detectChanges();
-      }))
-      .subscribe({
-        next: (summaries: DocumentoSummary[]) => {
-          console.log('[DocumentacionTab] 📄 Resumen de documentos recibido:', summaries.length);
-          this.documentosSummary = summaries;
-
-          // CRITICAL FIX: Cargar documentos del usuario DESPUÉS de que termine el summary
-          console.log('[DocumentacionTab] 🔄 Iniciando carga secuencial de documentos del usuario...');
-          this.cargarDocumentosUsuarioSecuencial(forzarRecarga);
-        },
-        error: (error: unknown) => {
-          console.error('[DocumentacionTab] Error al cargar resumen de documentos:', error);
-          this.notification.error('Error al cargar el resumen de documentos');
-        }
-      });
-  }
+  
 }
 
 

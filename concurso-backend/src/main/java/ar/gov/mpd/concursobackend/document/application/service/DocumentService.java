@@ -1,11 +1,6 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentSummaryDto;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentReplaceRequest;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentReplaceResponse;
+import ar.gov.mpd.concursobackend.document.application.dto.*;
 
 import java.io.IOException;
 import java.io.InputStream;

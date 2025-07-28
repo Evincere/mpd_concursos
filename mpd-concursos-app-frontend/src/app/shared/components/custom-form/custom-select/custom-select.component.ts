@@ -1,6 +1,6 @@
-import { Component, Input, OnInit, Optional, Self, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, Input, OnInit, ElementRef, ViewChild, HostListener, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, FormControl, NgControl, ReactiveFormsModule } from '@angular/forms';
+import { ControlValueAccessor, FormControl, ReactiveFormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export interface SelectOption {
   value: string | number | boolean | null;
@@ -12,6 +12,13 @@ export interface SelectOption {
   selector: 'app-custom-select',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => CustomSelectComponent),
+      multi: true
+    }
+  ],
   template: `
     <div class="custom-select" [class.has-error]="showError" [class.focused]="isFocused" [class.disabled]="isDisabled">
       <label *ngIf="label" class="select-label" [class.required]="required" [attr.for]="getSelectId()">
@@ -440,12 +447,9 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
   };
 
   constructor(
-    private elementRef: ElementRef,
-    @Optional() @Self() public ngControl: NgControl
+    private elementRef: ElementRef
   ) {
-    if (this.ngControl) {
-      this.ngControl.valueAccessor = this;
-    }
+    // Constructor simplificado sin inyección de NgControl para evitar dependencias circulares
   }
 
   ngOnInit(): void {
@@ -453,19 +457,20 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
       this.control.statusChanges.subscribe(() => {
         this.showError = this.control?.invalid && (this.control?.touched || this.control?.dirty) || false;
       });
-    } else if (this.ngControl?.control) {
-      this.ngControl.control.statusChanges.subscribe(() => {
-        this.showError = this.ngControl?.invalid && (this.ngControl?.touched || this.ngControl?.dirty) || false;
-      });
     }
   }
 
   writeValue(value: unknown): void {
+    console.log('[CustomSelect] writeValue called with:', value);
+    console.log('[CustomSelect] writeValue - previous value:', this.value);
     this.value = value;
+    console.log('[CustomSelect] writeValue - new value set:', this.value);
   }
 
   registerOnChange(fn: (value: unknown) => void): void {
+    console.log('[CustomSelect] registerOnChange called with function:', typeof fn);
     this.onChange = fn;
+    console.log('[CustomSelect] registerOnChange - onChange callback registered:', typeof this.onChange);
   }
 
   registerOnTouched(fn: () => void): void {
@@ -515,9 +520,23 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
   selectOption(option: SelectOption): void {
     if (option.disabled) return;
 
+    console.log('[CustomSelect] selectOption called:', {
+      previousValue: this.value,
+      newValue: option.value,
+      option: option
+    });
+
     this.value = option.value;
+    console.log('[CustomSelect] selectOption - about to call onChange with:', this.value);
+    console.log('[CustomSelect] selectOption - onChange callback type:', typeof this.onChange);
     this.onChange(this.value);
+    console.log('[CustomSelect] selectOption - onChange called successfully');
     this.isOpen = false;
+
+    console.log('[CustomSelect] selectOption completed:', {
+      currentValue: this.value,
+      onChangeTriggered: true
+    });
   }
 
   @HostListener('document:click', ['$event'])

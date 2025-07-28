@@ -19,5 +19,5 @@ public interface JpaEducationRepository extends JpaRepository<EducationRecordEnt
      * @param userId the user ID
      * @return a list of education records
      */
-    List<EducationRecordEntity> findAllByUserId(UUID userId);
+    List<EducationRecordEntity> findAllByUser_Id(UUID userId);
 }

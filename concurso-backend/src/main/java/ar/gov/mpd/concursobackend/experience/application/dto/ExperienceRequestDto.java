@@ -32,4 +32,10 @@ public class ExperienceRequestDto {
     private String description;
 
     private String comments;
+
+    private String location;
+
+    private String technologies;
+
+    private String achievements;
 }

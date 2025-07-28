@@ -126,6 +126,14 @@
                       </div>
                     </div>
                     <div class="item-actions">
+                      <!-- Botón para ver documento probatorio -->
+                      <button
+                        *ngIf="experience.documentUrl"
+                        class="btn btn-icon btn-info"
+                        (click)="viewExperienceDocument(experience)"
+                        title="Ver documento probatorio">
+                        <i class="fas fa-file-pdf"></i>
+                      </button>
                       <button class="btn btn-icon btn-secondary" (click)="editExperience(experience)">
                         <i class="fas fa-edit"></i>
                       </button>

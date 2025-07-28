@@ -1,6 +1,6 @@
 /**
  * Modelos del Sistema CV - Arquitectura Limpia
- * 
+ *
  * @description Modelos TypeScript con tipos seguros para el sistema de Curriculum Vitae
  * @author Augment Agent
  * @date 2025-06-20
@@ -113,6 +113,7 @@ export interface WorkExperience extends CvEntry {
   achievements?: string[];
   technologies?: string[];
   document?: CvDocument;
+  documentUrl?: string; // URL directa del documento para facilitar acceso
 }
 
 /**
@@ -216,8 +217,9 @@ export interface EducationDto {
   institution: string;
   startDate: string;
   endDate?: string;
+  issueDate?: string; // ✅ AGREGADO: Fecha de emisión del título
   isOngoing: boolean;
-  
+
   // Campos específicos por tipo
   durationYears?: number;
   average?: number;
@@ -229,7 +231,7 @@ export interface EducationDto {
   topic?: string;
   venue?: string;
   presentationDate?: string;
-  
+
   comments?: string;
 }
 

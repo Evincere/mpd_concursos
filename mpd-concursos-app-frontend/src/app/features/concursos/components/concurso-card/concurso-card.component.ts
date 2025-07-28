@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { LoggingService } from '@core/services/logging/logging.service';
 import { CommonModule } from '@angular/common';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { takeUntil, switchMap, map, catchError } from 'rxjs/operators';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { AnimateDirective } from '@shared/directives/animate.directive';
 import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
@@ -83,11 +83,12 @@ import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enu
 export class ConcursoCardComponent implements OnInit, OnDestroy {
   @Input() concurso!: Concurso;
   @Input() index = 0;
+  @Input() userPostulation: any = null; // ✅ CRITICAL FIX: Recibir desde componente padre
 
   @Output() verDetalle = new EventEmitter<Concurso>();
   @Output() inscriptionComplete = new EventEmitter<Concurso>();
+  @Output() continuarInscripcion = new EventEmitter<{ concurso: Concurso; userPostulation: any }>();
 
-  userPostulation: any = null;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -96,25 +97,9 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Suscribirse a cambios en las inscripciones para reaccionar automáticamente
-    this.inscriptionService.inscriptions
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.loggingService.debug('[ConcursoCard] Inscripciones actualizadas, verificando estado para concurso:', this.concurso?.id, 'ConcursoCard');
-        this.checkUserInscription();
-      });
-
-    // Forzar limpieza y actualización inicial del cache de inscripciones al cargar
-    this.inscriptionService.clearCacheAndRefresh().subscribe({
-      next: () => {
-        this.loggingService.debug('[ConcursoCard] Cache limpiado y actualizado inicialmente', undefined, 'ConcursoCard');
-      },
-      error: (error) => {
-        console.error('[ConcursoCard] Error al limpiar y actualizar cache inicial:', error);
-        // Si falla la actualización, verificar de todas formas
-        this.checkUserInscription();
-      }
-    });
+    // ✅ CRITICAL FIX: Ya no necesitamos suscripciones ni llamadas HTTP
+    // La información de userPostulation viene del componente padre
+    this.loggingService.debug('[ConcursoCard] Inicializado con userPostulation:', this.userPostulation, 'ConcursoCard');
   }
 
   ngOnDestroy(): void {
@@ -213,32 +198,8 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
     return newInscriptionStates.includes(this.concurso.status);
   }
 
-  private checkUserInscription(): void {
-    if (!this.concurso?.id) return;
-
-    this.inscriptionService.getInscriptionStatus(this.concurso.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (status: InscripcionState) => {
-          this.loggingService.debug('[ConcursoCard] Estado recibido:', status, 'ConcursoCard');
-
-          // CRITICAL FIX: Distinguir entre NO_INSCRIPTION (sin inscripción) y otros estados (con inscripción)
-          if (status !== InscripcionState.NO_INSCRIPTION) {
-            this.userPostulation = {
-              estado: status.toString(),
-              contestId: this.concurso.id
-            };
-            this.loggingService.debug('[ConcursoCard] UserPostulation asignada:', this.userPostulation, 'ConcursoCard');
-          } else {
-            this.userPostulation = null;
-            this.loggingService.debug('[ConcursoCard] No hay inscripción para este concurso', undefined, 'ConcursoCard');
-          }
-        },
-        error: () => {
-          this.userPostulation = null;
-        }
-      });
-  }
+  // ✅ CRITICAL FIX: Método eliminado - ya no necesitamos hacer llamadas HTTP individuales
+  // La información viene del componente padre a través de @Input() userPostulation
 
   onVerDetalle(event: Event): void {
     event.stopPropagation();
@@ -252,6 +213,7 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
 
   onContinuarClick(concurso: Concurso): void {
     this.loggingService.debug('[ConcursoCard] Continuando inscripción para concurso:', concurso.id, 'ConcursoCard');
-    this.inscriptionComplete.emit(concurso);
+    // ✅ CRITICAL FIX: Emitir evento específico para continuar inscripción con datos del estado
+    this.continuarInscripcion.emit({ concurso, userPostulation: this.userPostulation });
   }
 }

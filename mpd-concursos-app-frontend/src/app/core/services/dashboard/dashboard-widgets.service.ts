@@ -453,6 +453,15 @@ export class DashboardWidgetsService {
         completada: !!(userProfile?.educacion && userProfile.educacion.length > 0)
       },
       {
+        // ✅ CRITICAL FIX: Agregar sección de imagen de perfil
+        nombre: 'Imagen de Perfil',
+        descripcion: 'Foto de perfil',
+        prioridad: 'BAJA',
+        ruta: '/dashboard/perfil',
+        icono: 'fa-camera',
+        completada: !!(userProfile?.profileImageUrl || userProfile?.fotoPerfil)
+      },
+      {
         nombre: 'Documentación',
         descripcion: 'Documentos requeridos',
         prioridad: 'ALTA',
@@ -506,16 +515,19 @@ export class DashboardWidgetsService {
     }
 
     let puntos = 0;
-    const maxPuntos = 5; // DNI, email, telefono, experiencias, educacion
+    const maxPuntos = 6; // ✅ CRITICAL FIX: Incluir imagen de perfil en el cálculo
+    // DNI, email, telefono, experiencias, educacion, imagen de perfil
 
     if (userProfile.dni) puntos++;
     if (userProfile.email) puntos++;
     if (userProfile.telefono) puntos++;
     if (userProfile.experiencias && userProfile.experiencias.length > 0) puntos++;
     if (userProfile.educacion && userProfile.educacion.length > 0) puntos++;
+    // ✅ CRITICAL FIX: Incluir imagen de perfil en el cálculo de completitud
+    if (userProfile.profileImageUrl || userProfile.fotoPerfil) puntos++;
 
     const basicCompleteness = Math.round((puntos / maxPuntos) * 100);
-    this.loggingService.debug(`[${this.LOG_TAG}] Basic profile completeness calculated: ${basicCompleteness}%. (Points: ${puntos}/${maxPuntos}).`, undefined, this.LOG_TAG);
+    this.loggingService.debug(`[${this.LOG_TAG}] Basic profile completeness calculated: ${basicCompleteness}%. (Points: ${puntos}/${maxPuntos}). Profile image: ${!!(userProfile.profileImageUrl || userProfile.fotoPerfil)}.`, undefined, this.LOG_TAG);
     return basicCompleteness;
   }
 

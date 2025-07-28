@@ -218,12 +218,12 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
             userResult = (Object[]) query.getSingleResult();
         } catch (Exception e) {
             log.error("Error obteniendo datos del usuario {}: {}", userId, e.getMessage());
-            // Retornar estadísticas por defecto si no se encuentra el usuario
+            // ✅ CRITICAL FIX: Actualizar estadísticas por defecto para incluir imagen de perfil
             return UserDashboardStats.ProfileStats.builder()
                     .completionPercentage(0)
-                    .totalFields(7)
+                    .totalFields(8) // ✅ CRITICAL FIX: Actualizar a 8 campos incluyendo imagen de perfil
                     .completedFields(0)
-                    .pendingFields(7)
+                    .pendingFields(8) // ✅ CRITICAL FIX: Actualizar a 8 campos
                     .hasProfileImage(false)
                     .hasBasicInfo(false)
                     .hasContactInfo(false)
@@ -259,8 +259,8 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         String profileImageUrl = (String) userResult[7]; // profileImageUrl es el índice 7
         boolean hasProfileImage = profileImageUrl != null && !profileImageUrl.trim().isEmpty();
 
-        // Calcular completitud del perfil
-        int totalFields = 7; // firstName, lastName, email, dni, telefono, direccion, + (educacion o experiencia)
+        // ✅ CRITICAL FIX: Incluir imagen de perfil en el cálculo de completitud
+        int totalFields = 8; // firstName, lastName, email, dni, telefono, direccion, (educacion o experiencia), imagen de perfil
         int completedFields = 0;
 
         if (userResult[0] != null) completedFields++; // firstName
@@ -270,6 +270,7 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         if (userResult[4] != null) completedFields++; // telefono
         if (userResult[5] != null) completedFields++; // direccion
         if (educationCount > 0 || experienceCount > 0) completedFields++; // educacion o experiencia
+        if (hasProfileImage) completedFields++; // ✅ CRITICAL FIX: imagen de perfil
 
         int completionPercentage = Math.round((completedFields * 100.0f) / totalFields);
 

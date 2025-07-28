@@ -31,5 +31,11 @@ public class ExperienceResponseDto {
 
     private String comments;
 
+    private String location;
+
+    private String technologies;
+
+    private String achievements;
+
     private String documentUrl;
 }

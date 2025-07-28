@@ -109,6 +109,11 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   // ✅ CORRECCIÓN: Agregar propiedad para documentos del usuario
   documentosUsuario: DocumentoUsuario[] = [];
 
+  // ✅ CRITICAL FIX: Propiedades computadas para evitar loops infinitos
+  private _canProceedWithDocumentation = false;
+  private _canFinishInscription = false;
+  private _canProceedToNextStep = false;
+
   // Contenido de términos y condiciones
   termsAndConditionsContent: string = '';
 
@@ -134,6 +139,19 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   get confirmedPersonalDataControl(): FormControl {
     return this.inscriptionForm.get('confirmedPersonalData') as FormControl;
+  }
+
+  // ✅ CRITICAL FIX: Getters públicos para propiedades computadas (evitan loops infinitos)
+  get canProceedWithDocumentationComputed(): boolean {
+    return this._canProceedWithDocumentation;
+  }
+
+  get canFinishInscriptionComputed(): boolean {
+    return this._canFinishInscription;
+  }
+
+  get canProceedToNextStepComputed(): boolean {
+    return this._canProceedToNextStep;
   }
 
   private destroy$ = new Subject<void>();
@@ -230,8 +248,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(state => {
       this.documentationState = state;
-      // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
-      // Angular manejará automáticamente la detección de cambios
+      // ✅ CRITICAL FIX: Actualizar propiedades computadas cuando cambia el estado
+      this.updateComputedProperties();
     });
 
     // Suscribirse a cambios en el checkbox de inscripción provisional
@@ -256,6 +274,15 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }, 100);
     });
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Actualiza las propiedades computadas para evitar loops infinitos
+   */
+  private updateComputedProperties(): void {
+    this._canProceedWithDocumentation = this.canProceedWithDocumentation();
+    this._canFinishInscription = this.canFinish();
+    this._canProceedToNextStep = this.canProceed();
   }
 
   /**
@@ -816,35 +843,14 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   /**
    * MÉTODO UNIFICADO: Verifica si se puede proceder con la documentación actual
    * Usa el servicio centralizado para validación consistente
+   * ✅ CRITICAL FIX: Eliminado logging para evitar loops infinitos
    */
   canProceedWithDocumentation(): boolean {
-    console.log('[InscripcionProcess] 📋 EJECUTANDO canProceedWithDocumentation()');
-
     if (!this.inscriptionDocumentationService) {
-      console.log('[InscripcionProcess] ❌ Servicio de documentación no disponible');
       return false;
     }
 
     const canProceed = this.inscriptionDocumentationService.canProceedWithCurrentState();
-    const currentState = this.inscriptionDocumentationService.getCurrentState();
-
-    // CRITICAL FIX: Log detallado para debugging con más información
-    console.log(`[InscripcionProcess] 📋 VALIDACIÓN DE DOCUMENTACIÓN: ${canProceed}`, {
-      canProceed,
-      documentationState: this.documentationState,
-      currentState,
-      provisionalAccepted: this.documentosCompletosControl.value,
-      allDocsComplete: currentState.completenessResult.allDocumentsComplete,
-      canProceedWithProvisional: currentState.completenessResult.canProceedWithProvisional,
-      completedCount: currentState.completenessResult.completedCount,
-      totalCount: currentState.completenessResult.totalCount,
-      missingDocuments: currentState.completenessResult.missingDocuments.map(doc => doc.title),
-      requiredDocuments: currentState.requiredDocuments.map(doc => ({
-        title: doc.title,
-        required: doc.required,
-        completed: doc.completed
-      }))
-    });
 
     return canProceed;
   }
@@ -1646,6 +1652,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       // Actualizar el servicio centralizado
       this.inscriptionDocumentationService.updateProvisionalAcceptance(accepted);
 
+      // ✅ CRITICAL FIX: Actualizar propiedades computadas después del cambio
+      this.updateComputedProperties();
+
       // Log adicional para debugging
       this.loggingService.debug(`[InscripcionProcess] Servicio centralizado actualizado con aceptación provisional: ${accepted}`, {
         canProceed: this.inscriptionDocumentationService.canProceedWithCurrentState(),
@@ -1654,9 +1663,6 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     } else {
       this.loggingService.warn('[InscripcionProcess] Servicio de documentación no disponible para actualizar aceptación provisional', undefined, 'InscripcionProcessPage');
     }
-
-    // Forzar detección de cambios para actualizar la UI
-    this.cdr.detectChanges();
   }
 
   // ✅ MÉTODO AUXILIAR: Verificar si todos los documentos obligatorios están completos
@@ -1880,6 +1886,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
         this.loggingService.debug('[InscripcionProcess] Documentación requerida final (con estado):', consolidatedDocs, 'InscripcionProcessPage');
         this.loggingService.debug(`[InscripcionProcess] Todos los documentos OBLIGATORIOS completos: ${allObligatoryDocsCompleted} (${obligatoryDocs.length} obligatorios de ${consolidatedDocs.length} totales)`, undefined, 'InscripcionProcessPage');
+
+        // ✅ CRITICAL FIX: Actualizar propiedades computadas después de actualizar documentos
+        this.updateComputedProperties();
       }),
       catchError(error => {
         console.error('[InscripcionProcess] Error al actualizar estado de documentos:', error);

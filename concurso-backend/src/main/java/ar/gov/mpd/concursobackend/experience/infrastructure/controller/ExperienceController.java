@@ -66,9 +66,18 @@ public class ExperienceController {
     public ResponseEntity<ExperienceResponseDto> createExperience(
             @PathVariable UUID userId,
             @Valid @RequestBody ExperienceRequestDto experienceDto) {
-        log.info("Request to create experience for user: {}", userId);
-        ExperienceResponseDto createdExperience = experienceService.createExperience(userId, experienceDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdExperience);
+        try {
+            log.info("Request to create experience for user: {}", userId);
+            log.debug("Experience data: {}", experienceDto);
+
+            ExperienceResponseDto createdExperience = experienceService.createExperience(userId, experienceDto);
+            log.info("Successfully created experience with ID: {} for user: {}", createdExperience.getId(), userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdExperience);
+
+        } catch (Exception ex) {
+            log.error("Error creating experience for user {}: {}", userId, ex.getMessage(), ex);
+            throw ex; // Re-throw to let GlobalExceptionHandler handle it
+        }
     }
 
     /**

@@ -33,5 +33,11 @@ public class Experience {
 
     private String comments;
 
+    private String location;
+
+    private String technologies;
+
+    private String achievements;
+
     private String documentUrl;
 }

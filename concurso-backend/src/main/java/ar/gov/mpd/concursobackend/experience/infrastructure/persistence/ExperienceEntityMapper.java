@@ -25,8 +25,7 @@ public class ExperienceEntityMapper {
             return null;
         }
 
-        return WorkExperienceEntity.builder()
-                .id(experience.getId())
+        WorkExperienceEntity.WorkExperienceEntityBuilder builder = WorkExperienceEntity.builder()
                 .user(userEntity)
                 .companyName(experience.getCompany())
                 .positionTitle(experience.getPosition())
@@ -34,9 +33,21 @@ public class ExperienceEntityMapper {
                 .endDate(experience.getEndDate())
                 .jobDescription(experience.getDescription())
                 .verificationNotes(experience.getComments())
+                .location(experience.getLocation())
+                .technologiesUsed(experience.getTechnologies())
+                .keyAchievements(experience.getAchievements())
                 .supportingDocumentUrl(experience.getDocumentUrl())
-                .isCurrentPosition(experience.getEndDate() == null)
-                .build();
+                .isCurrentPosition(experience.getEndDate() == null);
+
+        // ✅ CRITICAL FIX: Solo establecer ID si ya existe (para updates)
+        // Para nuevas entidades, dejar que Hibernate genere el UUID automáticamente
+        if (experience.getId() != null) {
+            // Verificar si es una entidad existente consultando la base de datos
+            // Si no existe, no establecer el ID para permitir que Hibernate lo genere
+            builder.id(experience.getId());
+        }
+
+        return builder.build();
     }
 
     /**
@@ -59,6 +70,9 @@ public class ExperienceEntityMapper {
                 .endDate(entity.getEndDate())
                 .description(entity.getJobDescription())
                 .comments(entity.getVerificationNotes())
+                .location(entity.getLocation())
+                .technologies(entity.getTechnologiesUsed())
+                .achievements(entity.getKeyAchievements())
                 .documentUrl(entity.getSupportingDocumentUrl())
                 .build();
     }

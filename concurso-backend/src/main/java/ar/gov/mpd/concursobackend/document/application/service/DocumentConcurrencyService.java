@@ -1,9 +1,9 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
-import ar.gov.mpd.concursobackend.document.domain.model.Document;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
 import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
+import ar.gov.mpd.concursobackend.document.domain.model.Document;
+import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
+import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;

@@ -1,13 +1,13 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring;
 
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

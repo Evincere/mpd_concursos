@@ -1,6 +1,6 @@
 /**
  * Servicio de Validación de Educación
- * 
+ *
  * @description Servicio especializado para validación de formularios de educación
  * @author Augment Agent
  * @date 2025-06-29
@@ -60,19 +60,19 @@ export class EducationValidationService {
 
     try {
       const config = getEducationConfig(dto.type, dto.status);
-      
+
       // Validar campos requeridos
       this.validateRequiredFields(dto, config.fields, result);
-      
+
       // Validar fechas según las reglas del tipo
       this.validateDates(dto, config.dateValidation, result);
-      
+
       // Validar campos específicos
       this.validateSpecificFields(dto, result);
-      
+
       // Determinar si es válido
       result.isValid = result.errors.length === 0;
-      
+
     } catch (error) {
       result.isValid = false;
       result.errors.push('Error interno de validación');
@@ -87,7 +87,7 @@ export class EducationValidationService {
    */
   getDynamicFieldConfiguration(type: EducationType, status: EducationStatus): DynamicFieldConfiguration {
     const config = getEducationConfig(type, status);
-    
+
     return {
       fields: config.fields,
       requiredFields: config.fields.filter(f => f.required).map(f => f.name),
@@ -100,7 +100,11 @@ export class EducationValidationService {
    */
   validateFormGroup(form: FormGroup): EducationValidationResult {
     const formValue = form.value;
-    
+
+    console.log('[EducationValidation] Raw form value:', formValue);
+    console.log('[EducationValidation] Form status value:', formValue.status);
+    console.log('[EducationValidation] Form status type:', typeof formValue.status);
+
     if (!formValue.type || !formValue.status) {
       return {
         isValid: false,
@@ -118,6 +122,7 @@ export class EducationValidationService {
       institution: formValue.institution || '',
       startDate: formValue.startDate || '',
       endDate: formValue.endDate,
+      issueDate: formValue.issueDate, // ✅ AGREGADO: Campo issueDate faltante
       isOngoing: formValue.isOngoing || false,
       durationYears: formValue.durationYears,
       average: formValue.average,
@@ -128,6 +133,9 @@ export class EducationValidationService {
       topic: formValue.topic,
       comments: formValue.comments
     };
+
+    console.log('[EducationValidation] Created DTO:', dto);
+    console.log('[EducationValidation] DTO status:', dto.status);
 
     return this.validateEducationDto(dto);
   }
@@ -164,8 +172,8 @@ export class EducationValidationService {
    * Valida campos requeridos
    */
   private validateRequiredFields(
-    dto: EducationDto, 
-    fields: EducationFieldConfig[], 
+    dto: EducationDto,
+    fields: EducationFieldConfig[],
     result: EducationValidationResult
   ): void {
     fields.forEach(field => {
@@ -190,18 +198,18 @@ export class EducationValidationService {
     }
 
     // Validar fecha de emisión si es requerida
-    if (dateValidation.requiresIssueDate && !dto.endDate) {
+    if (dateValidation.requiresIssueDate && !dto.issueDate) {
       result.errors.push('Fecha de emisión del título es requerida');
       result.fieldErrors['issueDate'] = 'Fecha de emisión del título es requerida';
     }
 
     // Validación personalizada si existe
-    if (dateValidation.customValidation && dto.startDate && dto.endDate) {
+    if (dateValidation.customValidation && dto.startDate && dto.issueDate) {
       const customResult = dateValidation.customValidation({
         startDate: dto.startDate,
-        issueDate: dto.endDate // En el DTO, endDate se usa como issueDate
+        issueDate: dto.issueDate // ✅ CORREGIDO: Usar dto.issueDate directamente
       });
-      
+
       if (!customResult.isValid && customResult.error) {
         result.errors.push(customResult.error);
         result.fieldErrors['issueDate'] = customResult.error;

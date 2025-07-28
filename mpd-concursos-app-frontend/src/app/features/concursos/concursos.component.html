@@ -37,8 +37,10 @@
           *ngFor="let concurso of concursos; let i = index"
           [concurso]="concurso"
           [index]="i"
+          [userPostulation]="getUserPostulationForContest(concurso.id)"
           (verDetalle)="verDetalle($event)"
-          (inscriptionComplete)="onInscriptionComplete($event)">
+          (inscriptionComplete)="onInscriptionComplete($event)"
+          (continuarInscripcion)="onContinuarInscripcion($event)">
         </app-concurso-card>
       </div>
 
@@ -102,7 +104,9 @@
   <app-concurso-detalle
     *ngIf="concursoSeleccionado"
     [concurso]="concursoSeleccionado"
+    [userPostulation]="getUserPostulationForContest(concursoSeleccionado.id)"
     (cerrarDetalle)="cerrarDetalle()"
-    (inscriptionComplete)="onInscriptionComplete(concursoSeleccionado)">
+    (inscriptionComplete)="onInscriptionComplete(concursoSeleccionado)"
+    (continuarInscripcion)="onContinuarInscripcion($event)">
   </app-concurso-detalle>
 </div>

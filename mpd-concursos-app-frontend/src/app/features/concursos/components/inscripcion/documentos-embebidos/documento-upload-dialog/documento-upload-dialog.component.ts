@@ -12,8 +12,8 @@ import { UnifiedNotificationService } from '@shared/components/unified-notificat
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { DocumentoValidationService, DocumentoValidationError } from '@core/services/documentos/documento-validation.service';
 import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
-import { BasicDialogService } from '@shared/services/dialog/basic-dialog.service';
-import { UnifiedDocumentService } from '@core/services/documentos/unified-document.service';
+import { DocumentManagerService } from '@core/services/documentos/document-manager.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
 
 // RxJS
 import { finalize, switchMap, catchError } from 'rxjs/operators';
@@ -22,12 +22,7 @@ import { of, throwError } from 'rxjs'; // Import throwError
 // Utils
 import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/safe-access.utils';
 
-// Definir el tipo de respuesta del diálogo
-export interface DocumentoUploadDialogResult {
-  success?: boolean;
-  cancelled?: boolean;
-  document?: any;
-}
+
 
 @Component({
   selector: 'app-documento-upload-dialog',
@@ -127,52 +122,25 @@ export interface DocumentoUploadDialogResult {
           </div>
         </form>
 
-        <div class="upload-progress" *ngIf="uploading">
-          <div class="progress-content">
-            <app-custom-spinner [size]="'medium'"></app-custom-spinner>
-            <p>Subiendo documento...</p>
-          </div>
-        </div>
 
-        <!-- Mensaje de éxito -->
-        <div class="upload-success" *ngIf="uploadCompleted">
-          <div class="success-content">
-            <i class="fas fa-check-circle success-icon"></i>
-            <h4>¡Documento cargado exitosamente!</h4>
-            <p>El documento <strong>{{data.tipoDocumentoNombre}}</strong> ha sido subido correctamente.</p>
-          </div>
-        </div>
       </div>
 
       <!-- Actions -->
       <div class="dialog-actions">
-        <!-- Botones durante la carga o antes de completar -->
-        <ng-container *ngIf="!uploadCompleted">
           <app-custom-button
             variant="stroked"
             label="Cancelar"
-            [disabled]="uploading || operationInProgress"
+            [disabled]="operationInProgress"
             (buttonClick)="cancelar()">
           </app-custom-button>
           <app-custom-button
             variant="primary"
             icon="cloud-upload-alt"
             label="Subir documento"
-            [disabled]="!selectedFile || uploading || operationInProgress || uploadForm.invalid || validationErrors.length > 0"
-            [loading]="uploading || operationInProgress"
+            [disabled]="!selectedFile || operationInProgress || uploadForm.invalid || validationErrors.length > 0"
+            [loading]="operationInProgress"
             (buttonClick)="uploadDocument()">
           </app-custom-button>
-        </ng-container>
-
-        <!-- Botón después de completar la carga -->
-        <ng-container *ngIf="uploadCompleted">
-          <app-custom-button
-            variant="primary"
-            icon="check"
-            label="Cerrar"
-            (buttonClick)="cerrarDialogo()">
-          </app-custom-button>
-        </ng-container>
       </div>
     </div>
   `,
@@ -568,9 +536,6 @@ export interface DocumentoUploadDialogResult {
 export class DocumentoUploadDialogComponent implements OnInit {
   uploadForm: FormGroup;
   selectedFile: File | null = null;
-  uploading = false;
-  uploadCompleted = false;
-  uploadResponse: any = null;
   isDragging = false;
   validationErrors: DocumentoValidationError[] = [];
   validationWarnings: DocumentoValidationError[] = [];
@@ -584,10 +549,10 @@ export class DocumentoUploadDialogComponent implements OnInit {
     private documentosService: DocumentosService,
     private documentoValidationService: DocumentoValidationService,
     private notificationService: UnifiedNotificationService,
-    public dialogRef: UnifiedDialogRef<DocumentoUploadDialogResult>,
+    public dialogRef: UnifiedDialogRef<any>,
     private loggingService: LoggingService,
-    private basicDialogService: BasicDialogService,
-    private unifiedDocumentService: UnifiedDocumentService,
+    private documentManager: DocumentManagerService,
+    private unifiedDialogService: UnifiedDialogService,
     @Inject(DIALOG_DATA) public data: {
       tipoDocumentoId: string;
       tipoDocumentoNombre: string;
@@ -768,106 +733,57 @@ export class DocumentoUploadDialogComponent implements OnInit {
 
   /**
    * Uploads the selected document to the server.
-   * CRITICAL FIX: Prevención de doble clic y operaciones concurrentes
+   * ✅ CRITICAL FIX: Esperar a que termine la carga antes de cerrar el modal
    */
   uploadDocument(): void {
-    // CRITICAL FIX: Prevenir múltiples operaciones simultáneas
     if (this.operationInProgress) {
       this.loggingService.warn('[DocumentoUploadDialog] 🚫 Operación ya en progreso - ignorando clic adicional', undefined, 'DocumentoUploadDialog');
-      this.notificationService.warning(
-        'Operación en progreso',
-        'Ya hay una operación de subida en curso. Por favor, espere a que termine.'
-      );
       return;
     }
 
     if (!this.selectedFile) {
       this.notificationService.error('No hay archivo seleccionado para subir.', 'Error de Subida');
-      this.loggingService.warn('[DocumentoUploadDialog] Attempted upload without selected file.', undefined, 'DocumentoUploadDialog');
       return;
     }
 
-    if (this.validationErrors.length > 0) {
-      this.notificationService.error('No se puede subir el documento debido a errores de validación.', 'Error de Validación');
-      this.loggingService.warn('[DocumentoUploadDialog] Upload blocked due to validation errors.', { errors: this.validationErrors }, 'DocumentoUploadDialog');
-      return;
-    }
-
-    // CRITICAL FIX: Marcar operación como iniciada y bloquear UI
-    this.documentosService.setOperationInProgress(true);
     this.operationInProgress = true;
-    this.operationStartTime = Date.now();
-    this.uploading = true;
 
-    this.loggingService.info(`[DocumentoUploadDialog] 🚀 Starting upload with duplicate check for file: ${this.selectedFile.name}`, undefined, 'DocumentoUploadDialog');
-
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+    formData.append('tipoDocumentoId', this.data.tipoDocumentoId);
     const comentarios = this.uploadForm.get('comentarios')?.value || '';
+    formData.append('comentarios', comentarios);
 
-    this.unifiedDocumentService.uploadDocument(
-      this.selectedFile,
-      this.data.tipoDocumentoId,
-      comentarios
-    )
-    .subscribe({
+    // ✅ CRITICAL FIX: Usar el servicio directamente y suscribirse al resultado
+    this.documentosService.uploadDocumento(formData).subscribe({
       next: (response) => {
-        this.loggingService.info('[DocumentoUploadDialog] Document uploaded successfully.', { response }, 'DocumentoUploadDialog');
-        this.uploadCompleted = true;
-        this.uploadResponse = response;
-
-        // CRITICAL FIX: Liberar lock de operación en caso de éxito
-        this.documentosService.setOperationInProgress(false);
+        this.loggingService.debug('[DocumentoUploadDialog] ✅ Documento subido exitosamente', response, 'DocumentoUploadDialog');
+        this.notificationService.success('Documento subido exitosamente', 'Éxito');
         this.operationInProgress = false;
-        this.uploading = false;
-        const operationDuration = this.operationStartTime ? Date.now() - this.operationStartTime : 0;
-        this.loggingService.debug(`[DocumentoUploadDialog] 🔓 Upload process finalized after ${operationDuration}ms`, undefined, 'DocumentoUploadDialog');
-        this.operationStartTime = null;
+        this.dialogRef.close(response); // ✅ Cerrar con el resultado exitoso
       },
-      error: (err) => {
-        this.loggingService.error('[DocumentoUploadDialog] Upload failed after error handling.', err, 'DocumentoUploadDialog');
-        this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
-
-        // CRITICAL FIX: Liberar lock de operación en caso de error
-        this.documentosService.setOperationInProgress(false);
+      error: (error) => {
+        this.loggingService.error('[DocumentoUploadDialog] ❌ Error al subir documento', error, 'DocumentoUploadDialog');
+        this.notificationService.error('Error al subir el documento. Intente nuevamente.', 'Error de Subida');
         this.operationInProgress = false;
-        this.uploading = false;
-        const operationDuration = this.operationStartTime ? Date.now() - this.operationStartTime : 0;
-        this.loggingService.debug(`[DocumentoUploadDialog] 🔓 Upload process finalized after error after ${operationDuration}ms`, undefined, 'DocumentoUploadDialog');
-        this.operationStartTime = null;
+        // ✅ NO cerrar el modal en caso de error para que el usuario pueda reintentar
       }
     });
   }
 
   /**
    * Closes the dialog, indicating cancellation.
-   * Cleans up any selected file and uses the same robust closing mechanism as the X button.
+   * CRITICAL FIX: Usar dialogRef.close() con resultado de cancelación para consistencia
    */
   cancelar(): void {
-    this.loggingService.debug('[DocumentoUploadDialog] Dialog cancelled by user.', undefined, 'DocumentoUploadDialog');
-
-    // Limpiar archivo seleccionado si existe
-    if (this.selectedFile) {
-      this.loggingService.debug('[DocumentoUploadDialog] Cleaning up selected file before cancellation.', { fileName: this.selectedFile.name }, 'DocumentoUploadDialog');
-      this.removeFile();
-    }
-
-    // Limpiar errores y warnings
-    this.validationErrors = [];
-    this.validationWarnings = [];
-
-    // Usar el BasicDialogService para cerrar con el mismo mecanismo que el botón X
-    this.basicDialogService.closeAll();
+    this.dialogRef.close();
   }
 
   /**
    * Closes the dialog after successful upload.
-   * Uses the same mechanism as the X button to ensure proper cleanup.
    */
   cerrarDialogo(): void {
-    this.loggingService.debug('[DocumentoUploadDialog] Dialog closed after successful upload.', undefined, 'DocumentoUploadDialog');
-
-    // Usar el BasicDialogService para cerrar todos los diálogos activos
-    // Esto asegura que se use el mismo mecanismo de limpieza que el botón X
-    this.basicDialogService.closeAll();
+    this.dialogRef.close();
   }
 
   /**

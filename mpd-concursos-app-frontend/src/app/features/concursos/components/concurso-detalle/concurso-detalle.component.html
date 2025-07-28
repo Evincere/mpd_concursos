@@ -122,8 +122,9 @@
     <app-inscripcion-button
       *ngIf="concurso.status === 'ACTIVE' && (inscripcionState$ | async) !== InscripcionState.PENDING"
       [contest]="concurso"
+      [userPostulation]="userPostulation"
       (inscripcionClick)="onInscriptionComplete(concurso)"
-      (continuarClick)="onInscriptionComplete(concurso)">
+      (continuarClick)="onContinuarInscripcion(concurso)">
     </app-inscripcion-button>
   </div>
 </div>
