@@ -6,6 +6,8 @@ import ar.gov.mpd.concursobackend.education.application.dto.EducationResponseDto
 import ar.gov.mpd.concursobackend.education.application.mapper.EducationMapper;
 import ar.gov.mpd.concursobackend.education.domain.model.Education;
 import ar.gov.mpd.concursobackend.education.domain.repository.EducationRepository;
+import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationRecordEntity;
+import ar.gov.mpd.concursobackend.education.infrastructure.persistence.repository.JpaEducationRepository;
 import ar.gov.mpd.concursobackend.shared.exception.ResourceNotFoundException;
 import ar.gov.mpd.concursobackend.shared.infrastructure.service.CvDocumentService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 public class EducationServiceImpl implements EducationService {
 
     private final EducationRepository educationRepository;
+    private final JpaEducationRepository jpaEducationRepository;
     private final EducationMapper educationMapper;
     private final DocumentService documentService;
     private final CvDocumentService cvDocumentService;
@@ -91,8 +94,16 @@ public class EducationServiceImpl implements EducationService {
     public EducationResponseDto uploadDocument(UUID id, InputStream inputStream, String filename) {
         log.info("Subiendo documento para el registro de educación: {}", id);
 
-        Education education = educationRepository.findById(id)
+        // Buscar la entidad JPA directamente para obtener el userId de manera más robusta
+        EducationRecordEntity educationEntity = educationRepository.findById(id)
+                .map(education -> {
+                    // Convertir de dominio a entidad para obtener acceso directo al UserEntity
+                    return jpaEducationRepository.findById(education.getId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Entidad de educación no encontrada con id: " + id));
+                })
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de educación no encontrado con id: " + id));
+
+        log.info("Entidad de educación encontrada: {}, usuario: {}", educationEntity.getId(), educationEntity.getUserId());
 
         // Usar documentId como segundo UUID
         UUID documentId = UUID.randomUUID();
@@ -103,8 +114,8 @@ public class EducationServiceImpl implements EducationService {
             log.info("Usando CvDocumentService para almacenar documento de educación");
 
             String documentUrl = cvDocumentService.storeEducationDocumentFromStream(
-                    education.getUserId(),
-                    education.getId(),
+                    educationEntity.getUserId(),
+                    educationEntity.getId(),
                     inputStream,
                     filename);
 
@@ -115,12 +126,17 @@ public class EducationServiceImpl implements EducationService {
 
             log.info("URL del documento generada: {}", documentUrl);
 
-            // Actualizar el registro de educación con la URL del documento
-            education.setDocumentUrl(documentUrl);
-            Education savedEducation = educationRepository.save(education);
+            // Actualizar la entidad JPA directamente con la URL del documento
+            educationEntity.setSupportingDocumentUrl(documentUrl);
+            EducationRecordEntity savedEntity = jpaEducationRepository.save(educationEntity);
 
-            log.info("Documento subido para el registro de educación: {}", savedEducation.getId());
-            return educationMapper.toResponseDto(savedEducation);
+            log.info("Documento subido para el registro de educación: {}", savedEntity.getId());
+
+            // Convertir la entidad actualizada de vuelta al dominio y luego al DTO
+            Education updatedEducation = educationRepository.findById(savedEntity.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("No se pudo recuperar la educación actualizada"));
+
+            return educationMapper.toResponseDto(updatedEducation);
         } catch (Exception e) {
             log.error("Error al procesar el documento: {}", e.getMessage(), e);
             throw new RuntimeException("Error processing document: " + e.getMessage(), e);

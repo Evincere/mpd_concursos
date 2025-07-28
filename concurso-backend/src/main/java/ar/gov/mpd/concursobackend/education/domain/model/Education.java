@@ -37,7 +37,10 @@ public class Education {
     private ScientificActivityRole activityRole;
     private String expositionPlaceDate;
     private String comments;
-    
+
+    // Version field for optimistic locking
+    private Integer version;
+
     // Constructor por defecto
     public Education() {
     }
@@ -47,7 +50,8 @@ public class Education {
                     String institution, LocalDate startDate, LocalDate endDate, LocalDate issueDate,
                     String documentUrl, Integer durationYears, Double average, String thesisTopic,
                     Integer hourlyLoad, Boolean hadFinalEvaluation, ScientificActivityType activityType,
-                    String topic, ScientificActivityRole activityRole, String expositionPlaceDate, String comments) {
+                    String topic, ScientificActivityRole activityRole, String expositionPlaceDate, String comments,
+                    Integer version) {
         this.id = id;
         this.userId = userId;
         this.type = type;
@@ -68,6 +72,7 @@ public class Education {
         this.activityRole = activityRole;
         this.expositionPlaceDate = expositionPlaceDate;
         this.comments = comments;
+        this.version = version;
     }
     
     // Builder estático
@@ -236,7 +241,15 @@ public class Education {
     public void setComments(String comments) {
         this.comments = comments;
     }
-    
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
     // Inner Builder class
     public static class EducationBuilder {
         private UUID id;
@@ -259,7 +272,8 @@ public class Education {
         private ScientificActivityRole activityRole;
         private String expositionPlaceDate;
         private String comments;
-        
+        private Integer version;
+
         EducationBuilder() {
         }
         
@@ -362,11 +376,16 @@ public class Education {
             this.comments = comments;
             return this;
         }
-        
+
+        public EducationBuilder version(Integer version) {
+            this.version = version;
+            return this;
+        }
+
         public Education build() {
             return new Education(id, userId, type, status, title, institution, startDate, endDate, issueDate,
                                 documentUrl, durationYears, average, thesisTopic, hourlyLoad, hadFinalEvaluation,
-                                activityType, topic, activityRole, expositionPlaceDate, comments);
+                                activityType, topic, activityRole, expositionPlaceDate, comments, version);
         }
     }
     

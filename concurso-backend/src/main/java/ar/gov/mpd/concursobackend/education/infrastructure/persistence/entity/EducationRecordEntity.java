@@ -165,6 +165,7 @@ public class EducationRecordEntity {
     @Column(name = "comments", columnDefinition = "TEXT")
     private String comments;
 
+    @Builder.Default
     @Column(name = "is_ongoing", nullable = false)
     private Boolean isOngoing = false;
 
@@ -204,5 +205,10 @@ public class EducationRecordEntity {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // Helper method for getting user ID safely
+    public UUID getUserId() {
+        return this.user != null ? this.user.getId() : null;
     }
 }

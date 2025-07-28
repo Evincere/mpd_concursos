@@ -47,7 +47,7 @@ public class EducationRepositoryAdapter implements EducationRepository {
 
     @Override
     public List<Education> findAllByUserId(UUID userId) {
-        return jpaRepository.findAllByUserId(userId)
+        return jpaRepository.findAllByUser_Id(userId)
                 .stream()
                 .map(this::toDomainModel)
                 .collect(Collectors.toList());
@@ -92,7 +92,8 @@ public class EducationRepositoryAdapter implements EducationRepository {
                 .thesisTopic(education.getThesisTopic())
                 .durationHours(education.getHourlyLoad())
                 .presentationLocation(education.getExpositionPlaceDate())
-                .comments(education.getComments());
+                .comments(education.getComments())
+                .version(education.getVersion() != null ? education.getVersion() : 0);
 
         // Map education type
         if (education.getType() != null) {
@@ -142,7 +143,8 @@ public class EducationRepositoryAdapter implements EducationRepository {
                 .thesisTopic(entity.getThesisTopic())
                 .hourlyLoad(entity.getDurationHours())
                 .expositionPlaceDate(entity.getPresentationLocation())
-                .comments(entity.getComments());
+                .comments(entity.getComments())
+                .version(entity.getVersion());
         
         // Convert the string values to enums for the activity
         if (entity.getActivityType() != null) {
