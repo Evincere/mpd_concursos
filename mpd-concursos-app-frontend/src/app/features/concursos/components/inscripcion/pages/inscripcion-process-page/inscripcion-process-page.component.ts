@@ -1,4 +1,17 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef, HostListener } from '@angular/core';
+
+/**
+ * ✅ SOLUCIÓN PROBLEMA 10: Enum para tipos de navegación
+ * Permite distinguir claramente la intención de navegación
+ */
+enum NavigationType {
+  INTERNAL_STEP = 'internal_step',           // Navegación entre pasos del proceso
+  EXTERNAL_INTENTIONAL = 'external_intentional', // Navegación externa confirmada por usuario
+  EXTERNAL_ACCIDENTAL = 'external_accidental',   // Navegación externa no confirmada
+  BROWSER_NAVIGATION = 'browser_navigation',      // Botones atrás/adelante del navegador
+  WINDOW_CLOSE = 'window_close',                  // Cierre de ventana/pestaña
+  GUARD_CONFIRMATION = 'guard_confirmation'       // Navegación confirmada por guard
+}
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -95,9 +108,23 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   // CONCURRENCY FIX: Flag para prevenir múltiples creaciones de inscripción simultáneas
   private isCreatingInscription = false;
 
-  // CRITICAL FIX: Bandera para evitar reinicialización en navegaciones internas
-  // ✅ PÚBLICO para acceso desde guard
-  public isInternalNavigation: boolean = false;
+  // ✅ SOLUCIÓN PROBLEMA 10: Sistema de contexto de navegación mejorado
+
+  /**
+   * Contexto de navegación con información detallada
+   */
+  private navigationContext: {
+    type: NavigationType;
+    timestamp: number;
+    source?: string;
+    metadata?: Record<string, any>;
+  } | null = null;
+
+  // ✅ PÚBLICO para acceso desde guard - simplificado
+  public get isInternalNavigation(): boolean {
+    return this.navigationContext?.type === NavigationType.INTERNAL_STEP &&
+           (Date.now() - this.navigationContext.timestamp) < 2000; // 2 segundos de ventana
+  }
 
   // CRITICAL FIX: Guardar el paso solicitado desde la URL para navegación directa
   private requestedStepFromUrl: number | null = null;
@@ -205,10 +232,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     this.route.queryParams.pipe(
       takeUntil(this.destroy$)
     ).subscribe(params => {
-      // CRITICAL FIX: Evitar reinicialización en navegaciones internas
-      if (this.isInternalNavigation) {
-        this.loggingService.debug('[InscripcionProcess] Navegación interna detectada - omitiendo reinicialización', undefined, 'InscripcionProcessPage');
-        this.isInternalNavigation = false; // Reset flag
+      // ✅ SOLUCIÓN PROBLEMA 10: Verificar contexto de navegación mejorado
+      if (this.isRecentNavigationType(NavigationType.INTERNAL_STEP)) {
+        this.loggingService.debug('[InscripcionProcess] Navegación interna reciente detectada - omitiendo reinicialización', {
+          navigationContext: this.navigationContext
+        }, 'InscripcionProcessPage');
+
+        this.clearNavigationContext(); // Limpiar contexto después de usar
         return;
       }
 
@@ -414,6 +444,60 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 10: Métodos para manejo de contexto de navegación
+   */
+
+  /**
+   * Marca el tipo de navegación con contexto detallado
+   * @param type Tipo de navegación
+   * @param source Fuente de la navegación (opcional)
+   * @param metadata Metadatos adicionales (opcional)
+   */
+  private markNavigationType(type: NavigationType, source?: string, metadata?: Record<string, any>): void {
+    this.navigationContext = {
+      type,
+      timestamp: Date.now(),
+      source,
+      metadata
+    };
+
+    this.loggingService.debug('[InscripcionProcess] Contexto de navegación establecido', {
+      type,
+      source,
+      metadata,
+      timestamp: this.navigationContext.timestamp
+    }, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Verifica si la navegación es reciente y del tipo especificado
+   * @param type Tipo de navegación a verificar
+   * @param maxAgeMs Edad máxima en milisegundos (default: 2000ms)
+   * @returns true si la navegación es del tipo especificado y reciente
+   */
+  private isRecentNavigationType(type: NavigationType, maxAgeMs: number = 2000): boolean {
+    if (!this.navigationContext) return false;
+
+    const isCorrectType = this.navigationContext.type === type;
+    const isRecent = (Date.now() - this.navigationContext.timestamp) < maxAgeMs;
+
+    return isCorrectType && isRecent;
+  }
+
+  /**
+   * Limpia el contexto de navegación
+   */
+  private clearNavigationContext(): void {
+    if (this.navigationContext) {
+      this.loggingService.debug('[InscripcionProcess] Contexto de navegación limpiado', {
+        previousContext: this.navigationContext
+      }, 'InscripcionProcessPage');
+
+      this.navigationContext = null;
+    }
+  }
+
   // Métodos para navegación entre pasos
   goToStep(step: number): void {
     // Allow going back to previous steps, but only if they are valid
@@ -532,8 +616,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       queryParams.inscriptionId = this.inscriptionId;
     }
 
-    // CRITICAL FIX: Marcar como navegación interna para evitar reinicialización
-    this.isInternalNavigation = true;
+    // ✅ SOLUCIÓN PROBLEMA 10: Marcar como navegación interna con contexto detallado
+    this.markNavigationType(NavigationType.INTERNAL_STEP, 'step_navigation', {
+      fromStep: this.currentStep - 1,
+      toStep: this.currentStep,
+      contestId: this.contestId,
+      inscriptionId: this.inscriptionId
+    });
 
     this.router.navigate([], {
       relativeTo: this.route,
