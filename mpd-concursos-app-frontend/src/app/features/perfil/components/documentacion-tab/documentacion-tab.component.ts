@@ -5,7 +5,8 @@ import { CommonModule } from '@angular/common';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
-import { CustomTableComponent, TableColumn } from '@shared/components/custom-table/custom-table.component';
+import { CustomTableComponent, TableColumn } from '@shared/components/custom-form/custom-table/custom-table.component';
+import { CustomTableColumnComponent } from '@shared/components/custom-form/custom-table/custom-table-column.component';
 
 // Services
 import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
@@ -41,6 +42,7 @@ interface DocumentoCardViewModel {
     CustomCardComponent,
     CustomSpinnerComponent,
     CustomTableComponent,
+    CustomTableColumnComponent,
     DocumentoMultipleUploadDialogComponent,
     DocumentoUploadDialogComponent,
     DocumentoViewerComponent
@@ -238,9 +240,9 @@ interface DocumentoCardViewModel {
                   <ng-template #botonCargarOpcional>
                     <app-custom-button
                       variant="stroked"
-                      color="accent"
-                      icon="plus"
-                      label="Agregar"
+                      color="primary"
+                      icon="upload"
+                      label="Cargar"
                       (buttonClick)="cargarDocumentoTipo(vm.tipo.id)">
                     </app-custom-button>
                   </ng-template>
@@ -257,26 +259,16 @@ interface DocumentoCardViewModel {
           <p class="table-description">Mostrando solo la versión más reciente de cada tipo de documento</p>
           <app-custom-table
             [data]="documentosSummary"
-            [columns]="summaryTableColumns"
             [loading]="(documentManager.loading$ | async) ?? false"
-            [showActions]="true"
-            (actionClick)="onSummaryTableAction($event)">
+            (rowClick)="onSummaryRowClick($event)">
           </app-custom-table>
         </div>
 
-        <!-- Estado vacío -->
-        <div class="empty-state" *ngIf="documentosSummary.length === 0 && !(documentManager.loading$ | async)">
+        <!-- Estado vacío - Solo se muestra cuando no hay tipos de documento configurados -->
+        <div class="empty-state" *ngIf="documentosObligatorios.length === 0 && documentosOpcionales.length === 0 && !(documentManager.loading$ | async)">
           <i class="fas fa-folder-open" aria-hidden="true"></i>
-          <h4>No has cargado ningún documento aún</h4>
-          <p>Comienza cargando los documentos requeridos para completar tu perfil</p>
-          <div class="empty-state-actions">
-            <app-custom-button
-              color="success"
-              icon="upload"
-              label="Carga múltiple"
-              (buttonClick)="abrirDialogoCargaMultiple()">
-            </app-custom-button>
-          </div>
+          <h4>No hay tipos de documento configurados</h4>
+          <p>Contacta al administrador para configurar los tipos de documento requeridos</p>
         </div>
 
         <!-- Loading state -->
@@ -420,7 +412,7 @@ interface DocumentoCardViewModel {
       }
 
       .progress-info {
-        color: #d1d5db;
+        color: #ffffff;
         font-size: 0.9rem;
 
         i {
@@ -449,7 +441,7 @@ interface DocumentoCardViewModel {
         background: rgba(59, 130, 246, 0.1);
         border: 1px solid rgba(59, 130, 246, 0.2);
         border-radius: 8px;
-        color: #93c5fd;
+        color: #ffffff;
         font-size: 0.9rem;
 
         i {
@@ -517,8 +509,8 @@ interface DocumentoCardViewModel {
       }
     }
 
-    // Badge de posicionamiento para esquina superior derecha
-    // Usando las clases globales existentes con solo ajustes de posición
+    /* Badge de posicionamiento para esquina superior derecha */
+    /* Forzar estilos específicos para máximo contraste */
     .badge-posicion {
       position: absolute !important;
       top: 12px !important;
@@ -528,6 +520,27 @@ interface DocumentoCardViewModel {
       padding: 0.25rem 0.5rem !important;
       border-radius: 12px !important;
       margin: 0 !important;
+
+      /* Estilos específicos para cada tipo */
+      &.estado-bloqueado {
+        background: #f44336 !important; /* Rojo sólido */
+        color: white !important;
+        border: 1px solid rgba(244, 67, 54, 0.3) !important;
+
+        span, i {
+          color: white !important;
+        }
+      }
+
+      &.estado-activo {
+        background: #4caf50 !important; /* Verde sólido */
+        color: white !important;
+        border: 1px solid rgba(76, 175, 80, 0.3) !important;
+
+        span, i {
+          color: white !important;
+        }
+      }
     }
 
     .documento-icon {
@@ -614,32 +627,32 @@ interface DocumentoCardViewModel {
         }
 
         &.aprobado {
-          background-color: rgba(76, 175, 80, 0.2);
-          color: #4caf50;
+          background-color: rgba(76, 175, 80, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         &.pendiente {
-          background-color: rgba(255, 152, 0, 0.2);
-          color: #ff9800;
+          background-color: rgba(255, 152, 0, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(255, 152, 0, 0.3);
         }
 
         &.rechazado {
-          background-color: rgba(244, 67, 54, 0.2);
-          color: #f44336;
+          background-color: rgba(244, 67, 54, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(244, 67, 54, 0.3);
         }
 
         &.faltante {
-          background-color: rgba(158, 158, 158, 0.2);
-          color: #9e9e9e;
+          background-color: rgba(158, 158, 158, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(158, 158, 158, 0.3);
         }
 
         &.opcional-pendiente {
-          background-color: rgba(59, 130, 246, 0.2);
-          color: #3b82f6;
+          background-color: rgba(59, 130, 246, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(59, 130, 246, 0.3);
         }
       }
@@ -676,18 +689,18 @@ interface DocumentoCardViewModel {
       }
 
       &.aprobado {
-        background-color: rgba(76, 175, 80, 0.15);
-        color: #4caf50;
+        background-color: rgba(76, 175, 80, 0.8);
+        color: #ffffff;
       }
 
       &.pendiente {
-        background-color: rgba(255, 152, 0, 0.15);
-        color: #ff9800;
+        background-color: rgba(255, 152, 0, 0.8);
+        color: #ffffff;
       }
 
       &.rechazado {
-        background-color: rgba(244, 67, 54, 0.15);
-        color: #f44336;
+        background-color: rgba(244, 67, 54, 0.8);
+        color: #ffffff;
       }
     }
 
@@ -709,12 +722,12 @@ interface DocumentoCardViewModel {
         font-size: 1.2rem;
         font-weight: 500;
         margin: 0 0 0.5rem 0;
-        color: #f9fafb;
+        color: #ffffff;
       }
 
       p {
         margin: 0 0 1.5rem 0;
-        color: #d1d5db;
+        color: #ffffff;
       }
 
       .empty-state-actions {
@@ -747,7 +760,7 @@ interface DocumentoCardViewModel {
 
       p {
         margin-top: 1rem;
-        color: #f9fafb;
+        color: #ffffff;
       }
     }
 
@@ -785,33 +798,33 @@ interface DocumentoCardViewModel {
       }
 
       &.aprobado {
-        background-color: rgba(76, 175, 80, 0.2);
-        color: #4caf50;
+        background-color: rgba(76, 175, 80, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(76, 175, 80, 0.3);
       }
 
       &.pendiente {
-        background-color: rgba(255, 152, 0, 0.2);
-        color: #ff9800;
+        background-color: rgba(255, 152, 0, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(255, 152, 0, 0.3);
       }
 
       &.rechazado {
-        background-color: rgba(244, 67, 54, 0.2);
-        color: #f44336;
+        background-color: rgba(244, 67, 54, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(244, 67, 54, 0.3);
       }
 
       &.archivado {
-        background-color: rgba(158, 158, 158, 0.2);
-        color: #9e9e9e;
+        background-color: rgba(158, 158, 158, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(158, 158, 158, 0.3);
       }
     }
   `]
 })
 export class DocumentacionTabComponent implements OnInit, OnDestroy {
-  
+
   documentosUsuario: DocumentoUsuario[] = [];
   documentosSummary: DocumentoSummary[] = []; // Resumen de documentos agrupados por tipo
   tiposDocumento: TipoDocumento[] = []; // This will hold all document types from the backend
@@ -903,79 +916,21 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   // Table configuration for custom table component
   tableColumns: TableColumn[] = [
-    { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
-    {
-      key: 'nombreArchivo',
-      label: 'Nombre del archivo',
-      sortable: true,
-      type: 'custom',
-      render: (doc: DocumentoUsuario) => {
-        // Mostrar nombre basado en el tipo de documento en lugar del nombre original
-        const nombreTipoDocumento = doc.tipoDocumento?.nombre || 'Documento';
-        return `${nombreTipoDocumento}.pdf`;
-      }
-    },
-    { key: 'fechaCarga', label: 'Fecha de carga', sortable: true, type: 'date' },
-    {
-      key: 'estado',
-      label: 'Estado',
-      sortable: false,
-      type: 'custom',
-      render: (doc: DocumentoUsuario) => {
-        const vm = this.documentosViewModel.find(vm => vm.documento?.id === doc.id);
-        if (!vm) return '';
-        return `<span class="estado-badge-tabla ${vm.estado}">
-                  <i class="fas ${vm.estadoIcon}"></i> ${vm.estadoTexto}
-                </span>`;
-      }
-    },
-    { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
+    { property: 'tipoDocumento.nombre', header: 'Tipo de documento', sortable: true },
+    { property: 'nombreArchivo', header: 'Nombre del archivo', sortable: true },
+    { property: 'fechaCarga', header: 'Fecha de carga', sortable: true },
+    { property: 'estado', header: 'Estado', sortable: false },
+    { property: 'acciones', header: 'Acciones', sortable: false }
   ];
 
   // Nueva configuración de columnas para la tabla de resumen
   summaryTableColumns: TableColumn[] = [
-    { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
-    {
-      key: 'nombreArchivo',
-      label: 'Archivo actual',
-      sortable: true,
-      type: 'custom',
-      render: (summary: DocumentoSummary) => {
-        const nombreTipoDocumento = summary.tipoDocumento?.nombre || 'Documento';
-        return `${nombreTipoDocumento}.pdf`;
-      }
-    },
-    { key: 'fechaCarga', label: 'Fecha de carga', sortable: true, type: 'date' },
-    {
-      key: 'estadoDetallado',
-      label: 'Estado',
-      sortable: false,
-      type: 'custom',
-      render: (summary: DocumentoSummary) => {
-        const estadoClass = this.getEstadoClass(summary.estadoDetallado);
-        const estadoIcon = this.getEstadoIcon(summary.estadoDetallado);
-        return `<span class="estado-badge-tabla ${estadoClass}">
-                  <i class="fas ${estadoIcon}"></i> ${summary.estadoDetallado}
-                </span>`;
-      }
-    },
-    {
-      key: 'versiones',
-      label: 'Versiones',
-      sortable: false,
-      type: 'custom',
-      render: (summary: DocumentoSummary) => {
-        if (summary.tieneVersionesAnteriores) {
-          return `<span class="versiones-info">
-                    <i class="fas fa-history"></i> v${summary.versionActual} (${summary.totalVersiones - 1} anteriores)
-                  </span>`;
-        }
-        return `<span class="versiones-info">
-                  <i class="fas fa-file"></i> v${summary.versionActual}
-                </span>`;
-      }
-    },
-    { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
+    { property: 'tipoDocumento.nombre', header: 'Tipo de documento', sortable: true },
+    { property: 'nombreArchivo', header: 'Archivo actual', sortable: true },
+    { property: 'fechaCarga', header: 'Fecha de carga', sortable: true },
+    { property: 'estadoDetallado', header: 'Estado', sortable: false },
+    { property: 'versiones', header: 'Versiones', sortable: false },
+    { property: 'acciones', header: 'Acciones', sortable: false }
   ];
 
   private subscription = new Subscription();
@@ -993,7 +948,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('[DocumentacionTab] 🚀 Componente inicializado');
-    
+
     this.subscription.add(this.documentManager.documentos$.subscribe(documentos => {
       this.documentosUsuario = documentos;
       this.buildViewModel();
@@ -1099,7 +1054,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
   }
 
-  
+
 
   buildViewModel(): void {
     console.log('[DocumentacionTab] 🏗️ Construyendo ViewModel...');
@@ -1427,6 +1382,27 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Maneja el clic en una fila de la tabla de resumen
+   */
+  onSummaryRowClick(summary: DocumentoSummary): void {
+    // Crear un DocumentoUsuario temporal para compatibilidad
+    const documento: DocumentoUsuario = {
+      id: summary.id,
+      tipoDocumentoId: summary.tipoDocumentoId,
+      tipoDocumento: summary.tipoDocumento,
+      nombreArchivo: summary.nombreArchivo,
+      estado: summary.estado as any,
+      comentarios: summary.comentarios,
+      fechaCarga: summary.fechaCarga,
+      validadoPor: summary.validadoPor,
+      fechaValidacion: summary.fechaValidacion,
+      motivoRechazo: summary.motivoRechazo
+    };
+
+    this.verDocumento(documento);
+  }
+
+  /**
    * Maneja las acciones de la tabla de resumen de documentos
    */
   onSummaryTableAction(event: { action: string; data?: DocumentoSummary; row?: any }): void {
@@ -1525,7 +1501,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     return this.documentosViewModel.filter(vm => !vm.tipo.requerido);
   }
 
-  
+
 }
 
 

@@ -1,0 +1,304 @@
+<div class="user-documents-detail-container">
+  <!-- Header con información del usuario -->
+  <div class="modal-header">
+    <div class="user-info">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="user-details" *ngIf="usuarioDocumentacion">
+        <h2 class="user-name">{{usuarioDocumentacion.usuario.nombre}}</h2>
+        <div class="user-meta">
+          <span class="user-dni">
+            <i class="fas fa-id-card"></i>
+            DNI: {{usuarioDocumentacion.usuario.dni}}
+          </span>
+          <span class="user-email">
+            <i class="fas fa-envelope"></i>
+            {{usuarioDocumentacion.usuario.email}}
+          </span>
+          <span class="user-phone" *ngIf="usuarioDocumentacion.usuario.telefono">
+            <i class="fas fa-phone"></i>
+            {{usuarioDocumentacion.usuario.telefono}}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="close-button" (click)="close()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Indicadores de progreso general -->
+  <div class="progress-overview" *ngIf="usuarioDocumentacion">
+    <div class="progress-card">
+      <div class="progress-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Documentación Obligatoria</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"
+             [style.width.%]="usuarioDocumentacion.progreso.obligatorios.porcentaje"
+             [style.background-color]="getProgressColor(usuarioDocumentacion.progreso.obligatorios.porcentaje)">
+        </div>
+      </div>
+      <div class="progress-text">
+        {{usuarioDocumentacion.progreso.obligatorios.completados}} de {{usuarioDocumentacion.progreso.obligatorios.total}}
+        ({{usuarioDocumentacion.progreso.obligatorios.porcentaje}}%)
+      </div>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-header">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Probanza de CV</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"
+             [style.width.%]="usuarioDocumentacion.progreso.cv.porcentaje"
+             [style.background-color]="getProgressColor(usuarioDocumentacion.progreso.cv.porcentaje)">
+        </div>
+      </div>
+      <div class="progress-text">
+        {{usuarioDocumentacion.progreso.cv.completados}} de {{usuarioDocumentacion.progreso.cv.total}}
+        ({{usuarioDocumentacion.progreso.cv.porcentaje}}%)
+      </div>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-header">
+        <i class="fas fa-plus-circle"></i>
+        <span>Documentación Opcional</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"
+             [style.width.%]="usuarioDocumentacion.progreso.opcionales.porcentaje"
+             [style.background-color]="getProgressColor(usuarioDocumentacion.progreso.opcionales.porcentaje)">
+        </div>
+      </div>
+      <div class="progress-text">
+        {{usuarioDocumentacion.progreso.opcionales.completados}} de {{usuarioDocumentacion.progreso.opcionales.total}}
+        ({{usuarioDocumentacion.progreso.opcionales.porcentaje}}%)
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado general -->
+  <div class="general-status" *ngIf="usuarioDocumentacion">
+    <div class="status-badge" [class]="'status-' + usuarioDocumentacion.estadoGeneral.toLowerCase()">
+      <i class="fas" [class]="usuarioDocumentacion.estadoGeneral === 'COMPLETA' ? 'fa-check-circle' :
+                              usuarioDocumentacion.estadoGeneral === 'INCOMPLETA' ? 'fa-exclamation-circle' : 'fa-clock'"></i>
+      <span>
+        {{usuarioDocumentacion.estadoGeneral === 'COMPLETA' ? 'Documentación Completa' :
+          usuarioDocumentacion.estadoGeneral === 'INCOMPLETA' ? 'Documentación Incompleta' : 'Pendiente de Revisión'}}
+      </span>
+    </div>
+  </div>
+
+  <!-- Tabs de navegación -->
+  <div class="tabs-container">
+    <div class="tabs-header">
+      <button class="tab" [class.active]="activeTab === 0" (click)="setActiveTab(0)">
+        <i class="fas fa-exclamation-triangle"></i>
+        Obligatorios
+        <span class="tab-badge" *ngIf="usuarioDocumentacion">
+          {{usuarioDocumentacion.documentacionObligatoria.pendientes}}
+        </span>
+      </button>
+      <button class="tab" [class.active]="activeTab === 1" (click)="setActiveTab(1)">
+        <i class="fas fa-graduation-cap"></i>
+        Probanza CV
+        <span class="tab-badge" *ngIf="usuarioDocumentacion">
+          {{usuarioDocumentacion.documentacionCV.documentos.length}}
+        </span>
+      </button>
+      <button class="tab" [class.active]="activeTab === 2" (click)="setActiveTab(2)">
+        <i class="fas fa-plus-circle"></i>
+        Opcionales
+        <span class="tab-badge" *ngIf="usuarioDocumentacion">
+          {{usuarioDocumentacion.documentacionOpcional.documentos.length}}
+        </span>
+      </button>
+      <button class="tab" [class.active]="activeTab === 3" (click)="setActiveTab(3)">
+        <i class="fas fa-history"></i>
+        Historial
+        <span class="tab-badge">{{historialDocumentos.length}}</span>
+      </button>
+    </div>
+
+    <!-- Contenido de los tabs -->
+    <div class="tabs-content">
+      <!-- Tab 0: Documentación Obligatoria -->
+      <div class="tab-content" *ngIf="activeTab === 0 && usuarioDocumentacion">
+        <div class="documents-grid">
+          <div class="document-card" *ngFor="let documento of usuarioDocumentacion.documentacionObligatoria.documentos">
+            <div class="document-header">
+              <div class="document-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="document-info">
+                <h4 class="document-name">{{documento.nombreArchivo}}</h4>
+                <p class="document-type">{{documento.tipoDocumento?.nombre}}</p>
+                <p class="document-date">Subido: {{formatDate(documento.fechaCarga)}}</p>
+              </div>
+              <div class="document-status">
+                <app-contest-status-badge
+                  [status]="documento.estado?.toString() || 'PENDING'"
+                  [statusType]="'document'"
+                  [showIcon]="true">
+                </app-contest-status-badge>
+              </div>
+            </div>
+            <div class="document-actions">
+              <button class="action-button view" title="Ver documento">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="action-button approve"
+                      *ngIf="documento.estado === 'PENDING'"
+                      (click)="approveDocument(documento)"
+                      title="Aprobar">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="action-button reject"
+                      *ngIf="documento.estado === 'PENDING'"
+                      (click)="rejectDocument(documento, 'Documento rechazado')"
+                      title="Rechazar">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 1: Probanza de CV -->
+      <div class="tab-content" *ngIf="activeTab === 1 && usuarioDocumentacion">
+        <div class="cv-section">
+          <h3>Experiencias Laborales</h3>
+          <div class="cv-items">
+            <div class="cv-item" *ngFor="let experiencia of usuarioDocumentacion.documentacionCV.experiencias">
+              <div class="cv-item-info">
+                <h4>{{experiencia.cargo}} - {{experiencia.empresa}}</h4>
+                <p class="cv-item-period">
+                  {{formatDate(experiencia.fechaInicio)}} -
+                  {{experiencia.fechaFin ? formatDate(experiencia.fechaFin) : 'Actual'}}
+                </p>
+              </div>
+              <div class="cv-item-document" *ngIf="experiencia.documento">
+                <app-contest-status-badge
+                  [status]="experiencia.documento.estado?.toString() || 'PENDING'"
+                  [statusType]="'document'"
+                  [showIcon]="true">
+                </app-contest-status-badge>
+              </div>
+              <div class="cv-item-missing" *ngIf="experiencia.requiereDocumento && !experiencia.documento">
+                <span class="missing-badge">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  Documento Faltante
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <h3>Educación</h3>
+          <div class="cv-items">
+            <div class="cv-item" *ngFor="let educacion of usuarioDocumentacion.documentacionCV.educacion">
+              <div class="cv-item-info">
+                <h4>{{educacion.titulo}}</h4>
+                <p class="cv-item-institution">{{educacion.institucion}}</p>
+                <p class="cv-item-type">{{educacion.tipo}}</p>
+              </div>
+              <div class="cv-item-document" *ngIf="educacion.documento">
+                <app-contest-status-badge
+                  [status]="educacion.documento.estado?.toString() || 'PENDING'"
+                  [statusType]="'document'"
+                  [showIcon]="true">
+                </app-contest-status-badge>
+              </div>
+              <div class="cv-item-missing" *ngIf="educacion.requiereDocumento && !educacion.documento">
+                <span class="missing-badge">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  Documento Faltante
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Documentación Opcional -->
+      <div class="tab-content" *ngIf="activeTab === 2 && usuarioDocumentacion">
+        <div class="documents-grid">
+          <div class="document-card" *ngFor="let documento of usuarioDocumentacion.documentacionOpcional.documentos">
+            <div class="document-header">
+              <div class="document-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="document-info">
+                <h4 class="document-name">{{documento.nombreArchivo}}</h4>
+                <p class="document-type">{{documento.tipoDocumento?.nombre}}</p>
+                <p class="document-date">Subido: {{formatDate(documento.fechaCarga)}}</p>
+              </div>
+              <div class="document-status">
+                <app-contest-status-badge
+                  [status]="documento.estado?.toString() || 'PENDING'"
+                  [statusType]="'document'"
+                  [showIcon]="true">
+                </app-contest-status-badge>
+              </div>
+            </div>
+            <div class="document-actions">
+              <button class="action-button view" title="Ver documento">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="action-button approve"
+                      *ngIf="documento.estado === 'PENDING'"
+                      (click)="approveDocument(documento)"
+                      title="Aprobar">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="action-button reject"
+                      *ngIf="documento.estado === 'PENDING'"
+                      (click)="rejectDocument(documento, 'Documento rechazado')"
+                      title="Rechazar">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Historial -->
+      <div class="tab-content" *ngIf="activeTab === 3">
+        <div class="history-timeline">
+          <div class="history-item" *ngFor="let item of historialDocumentos">
+            <div class="history-icon" [class]="getHistoryActionClass(item.accion)">
+              <i [class]="getHistoryActionIcon(item.accion)"></i>
+            </div>
+            <div class="history-content">
+              <div class="history-header">
+                <h4 class="history-action">{{item.accion}}</h4>
+                <span class="history-date">{{formatDate(item.fecha)}}</span>
+              </div>
+              <p class="history-user">Por: {{item.usuario}}</p>
+              <p class="history-comments" *ngIf="item.comentarios">{{item.comentarios}}</p>
+              <div class="history-states" *ngIf="item.estadoAnterior && item.estadoNuevo">
+                <span class="state-change">
+                  {{item.estadoAnterior}} → {{item.estadoNuevo}}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p>Cargando documentación del usuario...</p>
+  </div>
+</div>

@@ -445,6 +445,35 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Visualiza el documento probatorio de una educación
+   */
+  viewEducationDocument(education: EducationEntry): void {
+    if (!education.documentUrl) {
+      this.notificationService.showError('No hay documento disponible para esta educación');
+      return;
+    }
+
+    // Usar la ruta del documento como ID - el DocumentosService ya maneja documentos de CV
+    // Los documentos de CV se identifican por su ruta relativa
+    const documentId = education.documentUrl;
+
+    console.log(`[CvContainer] 📄 Abriendo visor de documento de educación: ${documentId}`);
+
+    // Abrir el visor de documentos usando el mismo componente que el formulario
+    this.dialog.open(DocumentoViewerComponent, {
+      title: 'Documento de Educación',
+      icon: 'file-pdf',
+      size: 'large',
+      data: { documentoId: documentId },
+      showFooter: true,
+      showCancelButton: false,
+      showConfirmButton: true,
+      confirmButtonText: 'Cerrar',
+      panelClass: 'documento-viewer-dialog'
+    });
+  }
+
+  /**
    * Edita una educación
    */
   editEducation(education: EducationEntry): void {
@@ -713,36 +742,120 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     this.isEducationLoading.set(true);
 
     const isEditing = this.educationModalMode() === 'edit';
-    const serviceCall = isEditing
-      ? this.educationService.update(this.selectedEducation()!.id!, educationData)
-      : this.educationService.create(this.userProfile.id, educationData);
 
-    serviceCall.subscribe({
-      next: (savedEducation) => {
-        const message = isEditing
-          ? 'Educación actualizada exitosamente'
-          : 'Educación agregada exitosamente';
-
-        this.notificationService.showSuccess(message);
-
-        // Resetear el formulario solo si es modo crear
-        if (!isEditing && this.educationModalComponent) {
-          this.educationModalComponent.resetForm();
+    if (isEditing) {
+      // Para edición, usar el flujo original
+      this.educationService.update(this.selectedEducation()!.id!, educationData).subscribe({
+        next: (savedEducation) => {
+          this.notificationService.showSuccess('Educación actualizada exitosamente');
+          this.handleEducationSaveSuccess();
+        },
+        error: (error) => {
+          this.notificationService.showError('Error al actualizar la educación');
+          this.handleEducationSaveError(error);
         }
+      });
+    } else {
+      // Para creación, manejar documentos temporales
+      this.createEducationWithDocuments(educationData);
+    }
+  }
 
-        this.onEducationModalClose();
-        this.refreshData(); // Recargar datos
+  /**
+   * Crea una educación y sube documentos temporales si existen
+   */
+  private createEducationWithDocuments(educationData: EducationDto): void {
+    if (!this.userProfile?.id) {
+      this.notificationService.showError('No se puede crear la educación sin datos de usuario');
+      this.isEducationLoading.set(false);
+      return;
+    }
+
+    // Obtener documentos temporales del formulario
+    const tempDocuments = this.educationModalComponent?.educationFormComponent?.documentUploader?.getTempDocuments() || [];
+
+    console.log(`[CvContainer] 📁 Creando educación con ${tempDocuments.length} documentos temporales`);
+
+    // Crear la educación primero
+    this.educationService.create(this.userProfile.id, educationData).subscribe({
+      next: (savedEducation) => {
+        console.log(`[CvContainer] ✅ Educación creada con ID: ${savedEducation.id}`);
+
+        if (tempDocuments.length > 0 && savedEducation.id) {
+          // Subir documentos después de crear la educación
+          this.uploadDocumentsForEducation(savedEducation.id, tempDocuments);
+        } else {
+          // Sin documentos, completar el proceso
+          this.notificationService.showSuccess('Educación agregada exitosamente');
+          this.handleEducationSaveSuccess();
+        }
       },
       error: (error) => {
-        const message = isEditing
-          ? 'Error al actualizar la educación'
-          : 'Error al agregar la educación';
-
-        this.notificationService.showError(message);
-        console.error('[CvContainerComponent] Error saving education:', error);
-        this.isEducationLoading.set(false);
+        this.notificationService.showError('Error al agregar la educación');
+        this.handleEducationSaveError(error);
       }
     });
+  }
+
+  /**
+   * Sube documentos temporales para una educación específica
+   */
+  private uploadDocumentsForEducation(educationId: string, tempDocuments: any[]): void {
+    console.log(`[CvContainer] 📤 Subiendo ${tempDocuments.length} documentos para educación ${educationId}`);
+
+    // Por ahora, solo subir el primer documento (el sistema actual solo maneja uno)
+    const firstDocument = tempDocuments[0];
+    if (firstDocument && firstDocument.file) {
+      this.educationService.uploadDocument(educationId, firstDocument.file).subscribe({
+        next: (updatedEducation) => {
+          console.log(`[CvContainer] ✅ Documento subido exitosamente para educación ${educationId}`);
+          this.notificationService.showSuccess('Educación y documento agregados exitosamente');
+          this.handleEducationSaveSuccess();
+        },
+        error: (error) => {
+          console.error(`[CvContainer] ❌ Error subiendo documento para educación ${educationId}:`, error);
+          // La educación ya se creó, solo falló el documento
+          this.notificationService.showWarning('Educación creada, pero hubo un error al subir el documento. Puedes intentar subirlo nuevamente.');
+          this.handleEducationSaveSuccess();
+        }
+      });
+    } else {
+      console.warn('[CvContainer] ⚠️ Documento temporal sin archivo válido');
+      this.notificationService.showSuccess('Educación agregada exitosamente');
+      this.handleEducationSaveSuccess();
+    }
+  }
+
+  /**
+   * Maneja el éxito al guardar educación
+   */
+  private handleEducationSaveSuccess(): void {
+    // ✅ CRITICAL FIX: Notificar éxito al formulario para limpiar documentos temporales
+    if (this.educationModalComponent?.educationFormComponent) {
+      this.educationModalComponent.educationFormComponent.onSaveSuccess();
+    }
+
+    // Resetear el formulario si es modo crear
+    if (this.educationModalMode() === 'create' && this.educationModalComponent) {
+      this.educationModalComponent.resetForm();
+    }
+
+    this.onEducationModalClose();
+    this.refreshData(); // Recargar datos
+  }
+
+  /**
+   * Maneja errores al guardar educación
+   */
+  private handleEducationSaveError(error: any): void {
+    console.error('[CvContainerComponent] Error saving education:', error);
+
+    // ✅ CRITICAL FIX: Notificar error al formulario para mantener documentos temporales
+    if (this.educationModalComponent?.educationFormComponent) {
+      this.educationModalComponent.educationFormComponent.onSaveError();
+    }
+
+    this.isEducationLoading.set(false);
   }
 
   /**

@@ -32,9 +32,22 @@
               <input class="input" type="text" formControlName="search" placeholder="Buscar por nombre, tipo...">
             </div>
             <div class="input-group">
+              <i class="fas fa-user input-icon"></i>
+              <input class="input" type="text" formControlName="userSearch" placeholder="Buscar por usuario (DNI, nombre, email)">
+            </div>
+            <div class="input-group">
               <i class="fas fa-filter input-icon"></i>
               <select class="input" formControlName="status">
                 <option *ngFor="let option of statusOptions" [value]="option.value">{{option.label}}</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <i class="fas fa-tags input-icon"></i>
+              <select class="input" formControlName="documentCategory">
+                <option value="">Todas las categorías</option>
+                <option value="OBLIGATORY">Documentación Obligatoria</option>
+                <option value="CV_PROOF">Probanza de CV</option>
+                <option value="OPTIONAL">Documentación Opcional</option>
               </select>
             </div>
             <div class="input-group">
@@ -74,6 +87,8 @@
               <th><input type="checkbox" [checked]="allSelected" [indeterminate]="getSelectedCount() > 0 && !allSelected" (change)="toggleAllSelection()"></th>
               <th>Nombre</th>
               <th>Tipo</th>
+              <th>Usuario</th>
+              <th>Categoría</th>
               <th>Fecha de Carga</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -89,6 +104,23 @@
                 </div>
               </td>
               <td><span class="document-type">{{document.documentType}}</span></td>
+              <td>
+                <div class="user-info-cell">
+                  <span class="user-name">{{getUserName(document)}}</span>
+                  <span class="user-dni">DNI: {{getUserDni(document)}}</span>
+                  <button class="user-detail-button"
+                          (click)="openUserDocumentsDetail(document); $event.stopPropagation()"
+                          title="Ver toda la documentación del usuario">
+                    <i class="fas fa-user-circle"></i>
+                    Ver Documentación
+                  </button>
+                </div>
+              </td>
+              <td>
+                <span class="document-category" [class]="getDocumentCategoryClass(document)">
+                  {{getDocumentCategoryLabel(document)}}
+                </span>
+              </td>
               <td>
                 <div class="date-cell">
                   <span class="upload-date">{{formatDate(document.uploadDate)}}</span>

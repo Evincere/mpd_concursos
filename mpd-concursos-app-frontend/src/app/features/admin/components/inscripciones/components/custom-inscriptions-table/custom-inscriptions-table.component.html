@@ -74,111 +74,112 @@
 
     <div class="table-container">
       <app-custom-table
+        #customTable
         [data]="inscriptions"
-        [columns]="columns"
         [loading]="isLoading"
-        [totalItems]="totalItems"
+        [paginated]="true"
         [pageSize]="pageSize"
         [pageIndex]="pageIndex"
-        (pageChange)="onPageChange($event)"
+        [totalItems]="totalItems"
         (sortChange)="onSortChange($event)"
+        (pageChange)="onPageChange($event)"
         (rowClick)="onRowClick($event)">
 
-        <!-- Columna de ID -->
-        <ng-template #columnTemplate let-item let-column="column" columnKey="id">
-          <span class="id-cell">{{ item.id.substring(0, 8) }}</span>
-        </ng-template>
+        <!-- Columna ID -->
+        <app-custom-table-column property="id" header="ID" [sortable]="true">
+          <ng-template let-inscription>
+            <span class="id-cell">{{ inscription.id }}</span>
+          </ng-template>
+        </app-custom-table-column>
 
-        <!-- Columna de Postulante -->
-        <ng-template #columnTemplate let-item let-column="column" columnKey="userFullName">
-          <div class="user-info">
-            <span class="user-name">{{ item.userFullName }}</span>
-            <span class="user-email">{{ item.userEmail }}</span>
-            <span class="user-dni">DNI: {{ item.userDni }}</span>
-          </div>
-        </ng-template>
-
-        <!-- Columna de Concurso -->
-        <ng-template #columnTemplate let-item let-column="column" columnKey="contestTitle">
-          <div class="contest-info">
-            <span class="contest-title">{{ item.contestTitle }}</span>
-            <span class="contest-category">{{ item.contestCategory }}</span>
-            <span class="contest-department">{{ item.contestDepartment }}</span>
-          </div>
-        </ng-template>
-
-        <!-- Columna de Documentos -->
-        <ng-template #columnTemplate let-item let-column="column" columnKey="documentsCount">
-          <div class="documents-info">
-            <div class="documents-count">{{ item.documentsCount }}</div>
-            <div class="documents-status">
-              <span class="status-approved">{{ item.approvedDocuments }}</span> /
-              <span class="status-pending">{{ item.pendingDocuments }}</span> /
-              <span class="status-rejected">{{ item.rejectedDocuments }}</span>
+        <!-- Columna Postulante -->
+        <app-custom-table-column property="userFullName" header="Postulante" [sortable]="true">
+          <ng-template let-inscription>
+            <div class="user-info">
+              <span class="user-name">{{ inscription.userFullName }}</span>
+              <span class="user-email">{{ inscription.userEmail }}</span>
+              <span class="user-dni">DNI: {{ inscription.userDni }}</span>
             </div>
-          </div>
-        </ng-template>
+          </ng-template>
+        </app-custom-table-column>
 
-        <!-- Columna de Estado -->
-        <ng-template #columnTemplate let-item let-column="column" columnKey="state">
-          <div class="status-badge" [ngClass]="getStatusClass(item.state)">
-            {{ getStatusLabel(item.state) }}
-          </div>
-        </ng-template>
-
-        <!-- Columna de Actualización -->
-        <ng-template #columnTemplate let-item let-column="column" columnKey="updatedAt">
-          <span class="date-cell">{{ formatDate(item.updatedAt) }}</span>
-        </ng-template>
-
-        <!-- Columna de Acciones -->
-        <ng-template #columnTemplate let-item let-column="column" columnKey="actions">
-          <div class="actions-cell">
-            <app-custom-button
-              [variant]="'icon'"
-              [icon]="'visibility'"
-              [tooltip]="'Ver detalle'"
-              (click)="onRowClick(item)">
-            </app-custom-button>
-
-            <app-custom-button
-              *ngIf="item.state === 'PENDING'"
-              [variant]="'icon'"
-              [icon]="'check_circle'"
-              [color]="'success'"
-              [tooltip]="'Aprobar inscripción'"
-              (click)="onApproveClick(item, $event)">
-            </app-custom-button>
-
-            <app-custom-button
-              *ngIf="item.state === 'PENDING'"
-              [variant]="'icon'"
-              [icon]="'cancel'"
-              [color]="'danger'"
-              [tooltip]="'Rechazar inscripción'"
-              (click)="onRejectClick(item, $event)">
-            </app-custom-button>
-          </div>
-        </ng-template>
-
-        <!-- Plantilla para estado de carga -->
-        <ng-template #loadingTemplate>
-          <div class="loading-container">
-            <div class="loading-spinner"></div>
-            <p>Cargando inscripciones...</p>
-          </div>
-        </ng-template>
-
-        <!-- Plantilla para estado vacío -->
-        <ng-template #emptyTemplate>
-          <div class="empty-container">
-            <div class="empty-icon">
-              <i class="fas fa-clipboard-list"></i>
+        <!-- Columna Concurso -->
+        <app-custom-table-column property="contestTitle" header="Concurso" [sortable]="true">
+          <ng-template let-inscription>
+            <div class="contest-info">
+              <span class="contest-title">{{ inscription.contestTitle }}</span>
+              <span class="contest-category">{{ inscription.contestCategory }}</span>
+              <span class="contest-department">{{ inscription.contestDepartment }}</span>
             </div>
-            <h4>No se encontraron inscripciones</h4>
-            <p>Intenta cambiar los filtros de búsqueda</p>
-          </div>
-        </ng-template>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Documentos -->
+        <app-custom-table-column property="documentsCount" header="Documentos" [sortable]="true">
+          <ng-template let-inscription>
+            <div class="documents-info">
+              <span class="documents-total">{{ inscription.documentsCount || 0 }} docs</span>
+              <div class="documents-breakdown" *ngIf="inscription.documentsCount > 0">
+                <span class="approved" *ngIf="inscription.approvedDocuments > 0">✓ {{ inscription.approvedDocuments }}</span>
+                <span class="pending" *ngIf="inscription.pendingDocuments > 0">⏳ {{ inscription.pendingDocuments }}</span>
+                <span class="rejected" *ngIf="inscription.rejectedDocuments > 0">✗ {{ inscription.rejectedDocuments }}</span>
+              </div>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Estado -->
+        <app-custom-table-column property="state" header="Estado" [sortable]="true">
+          <ng-template let-inscription>
+            <span class="inscription-status-badge badge-{{ getStateClass(inscription.state) }}"
+                  [title]="getStateTooltip(inscription.state)">
+              <i class="{{ getStateIcon(inscription.state) }}"></i>
+              {{ getStateText(inscription.state) }}
+            </span>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Actualización -->
+        <app-custom-table-column property="updatedAt" header="Actualización" [sortable]="true">
+          <ng-template let-inscription>
+            <div class="date-cell">
+              <span class="time-ago">{{ getTimeAgo(inscription.updatedAt) }}</span>
+              <span class="full-date" [title]="getFullDate(inscription.updatedAt)">
+                {{ getShortDate(inscription.updatedAt) }}
+              </span>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Acciones -->
+        <app-custom-table-column property="actions" header="Acciones">
+          <ng-template let-inscription>
+            <div class="table-actions">
+              <app-custom-button
+                variant="icon"
+                color="primary"
+                icon="eye"
+                tooltip="Ver documento"
+                (buttonClick)="onViewInscription(inscription)">
+              </app-custom-button>
+              <app-custom-button
+                variant="icon"
+                color="success"
+                icon="sync-alt"
+                tooltip="Reemplazar documento"
+                (buttonClick)="onReplaceDocument(inscription)">
+              </app-custom-button>
+              <app-custom-button
+                variant="icon"
+                color="danger"
+                icon="trash"
+                tooltip="Eliminar documento"
+                (buttonClick)="onDeleteDocument(inscription)">
+              </app-custom-button>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
       </app-custom-table>
     </div>
   </app-custom-card>

@@ -1,29 +1,33 @@
 package ar.gov.mpd.concursobackend.file.application.service;
 
+import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 /**
  * Servicio para gestionar el almacenamiento de archivos
+ *
+ * Actualizado para usar el sistema de almacenamiento unificado
+ * a través de StorageConfig.
+ *
+ * @author MPD Development Team
+ * @version 2.0
+ * @since 2025-07
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FileStorageService {
 
-    @Value("${app.file.upload-dir:uploads}")
-    private String uploadDir;
-
-    @Value("${app.file.contest-bases-dir:contest-bases}")
-    private String contestBasesDir;
+    private final StorageConfig storageConfig;
 
     /**
      * Almacena un archivo de bases de concurso
@@ -39,20 +43,17 @@ public class FileStorageService {
             throw new IllegalArgumentException("Solo se permiten archivos PDF para las bases del concurso");
         }
 
-        // Crear directorio si no existe
-        Path uploadPath = Paths.get(uploadDir, contestBasesDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
+        // Usar la configuración centralizada para obtener la ruta
+        Path uploadPath = storageConfig.getContestBasesPath();
 
         // Generar nombre único para el archivo
         String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename != null && originalFilename.contains(".") 
+        String fileExtension = originalFilename != null && originalFilename.contains(".")
             ? originalFilename.substring(originalFilename.lastIndexOf("."))
             : ".pdf";
-        
+
         String filename = "contest_" + contestId + "_bases_" + UUID.randomUUID() + fileExtension;
-        Path filePath = uploadPath.resolve(filename);
+        Path filePath = storageConfig.getContestBasesFilePath(filename);
 
         // Copiar archivo
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -77,20 +78,14 @@ public class FileStorageService {
             throw new IllegalArgumentException("Solo se permiten archivos PDF para la descripción del concurso");
         }
 
-        // Crear directorio si no existe
-        Path uploadPath = Paths.get(uploadDir, contestBasesDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
         // Generar nombre único para el archivo
         String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename != null && originalFilename.contains(".") 
+        String fileExtension = originalFilename != null && originalFilename.contains(".")
             ? originalFilename.substring(originalFilename.lastIndexOf("."))
             : ".pdf";
-        
+
         String filename = "contest_" + contestId + "_description_" + UUID.randomUUID() + fileExtension;
-        Path filePath = uploadPath.resolve(filename);
+        Path filePath = storageConfig.getContestBasesFilePath(filename);
 
         // Copiar archivo
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -108,7 +103,7 @@ public class FileStorageService {
      * @return Ruta física del archivo
      */
     public Path getContestBasesFilePath(String filename) {
-        return Paths.get(uploadDir, contestBasesDir, filename);
+        return storageConfig.getContestBasesFilePath(filename);
     }
 
     /**
@@ -118,8 +113,7 @@ public class FileStorageService {
      * @return true si el archivo existe, false en caso contrario
      */
     public boolean fileExists(String filename) {
-        Path filePath = getContestBasesFilePath(filename);
-        return Files.exists(filePath);
+        return storageConfig.contestBasesFileExists(filename);
     }
 
     /**
@@ -130,7 +124,7 @@ public class FileStorageService {
      */
     public boolean deleteFile(String filename) {
         try {
-            Path filePath = getContestBasesFilePath(filename);
+            Path filePath = storageConfig.getContestBasesFilePath(filename);
             return Files.deleteIfExists(filePath);
         } catch (IOException e) {
             log.error("Error al eliminar archivo: {}", filename, e);

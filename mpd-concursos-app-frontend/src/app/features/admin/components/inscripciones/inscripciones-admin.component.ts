@@ -5,7 +5,7 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 // Servicios personalizados (reemplazan Material UI)
-import { CustomDialogService } from '@shared/components/custom-dialog/custom-dialog.service';
+import { MatDialog } from '@angular/material/dialog';
 import { CustomNotificationService } from '@shared/services/custom-notification.service';
 
 // Componentes personalizados
@@ -91,7 +91,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private inscripcionesService: AdminInscriptionsService,
     private concursosService: AdminConcursosService,
-    private customDialogService: CustomDialogService,
+    private dialog: MatDialog,
     private customNotificationService: CustomNotificationService,
     private notificationService: NotificationService,
     private route: ActivatedRoute
@@ -238,7 +238,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
   }
 
   viewInscripcion(inscripcion: AdminInscription): void {
-    const dialogRef = this.customDialogService.open(InscripcionDetalleAdminComponent, {
+    const dialogRef = this.dialog.open(InscripcionDetalleAdminComponent, {
       width: '90%',
       height: '90%',
       data: { inscriptionId: inscripcion.id }
@@ -251,6 +251,79 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  handleActionExecuted(event: { actionId: string, inscription: AdminInscription }): void {
+    console.log('Acción ejecutada:', event.actionId, 'para inscripción:', event.inscription.id);
+
+    switch (event.actionId) {
+      case 'replace':
+        this.replaceDocument(event.inscription);
+        break;
+      case 'delete':
+        this.deleteDocument(event.inscription);
+        break;
+      case 'documents':
+        this.viewDocuments(event.inscription);
+        break;
+      case 'history':
+        this.viewHistory(event.inscription);
+        break;
+      default:
+        console.warn('Acción no implementada:', event.actionId);
+        this.customNotificationService.showWarning(`Acción "${event.actionId}" no implementada aún`);
+        break;
+    }
+  }
+
+  private replaceDocument(inscription: AdminInscription): void {
+    const dialogRef = this.dialog.open(CustomConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Reemplazar Documento',
+        message: `¿Está seguro que desea reemplazar el documento de la inscripción ${inscription.id}?`,
+        confirmButtonText: 'Reemplazar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        // TODO: Implementar lógica de reemplazo de documento
+        this.customNotificationService.showInfo('Funcionalidad de reemplazo de documento en desarrollo');
+      }
+    });
+  }
+
+  private deleteDocument(inscription: AdminInscription): void {
+    const dialogRef = this.dialog.open(CustomConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Eliminar Documento',
+        message: `¿Está seguro que desea eliminar el documento de la inscripción ${inscription.id}? Esta acción no se puede deshacer.`,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        // TODO: Implementar lógica de eliminación de documento
+        this.customNotificationService.showInfo('Funcionalidad de eliminación de documento en desarrollo');
+      }
+    });
+  }
+
+  private viewDocuments(inscription: AdminInscription): void {
+    // TODO: Implementar vista de documentos
+    this.customNotificationService.showInfo('Vista de documentos en desarrollo');
+  }
+
+  private viewHistory(inscription: AdminInscription): void {
+    // TODO: Implementar vista de historial
+    this.customNotificationService.showInfo('Vista de historial en desarrollo');
+  }
+
   updateStatus(inscripcion: AdminInscription, newStatus: InscripcionState | string): void {
     // Convertir el valor a InscripcionState si es una cadena
     const status = typeof newStatus === 'string' ?
@@ -259,7 +332,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
         InscripcionState.ACTIVE) :
       newStatus;
 
-    const dialogRef = this.customDialogService.open(CustomConfirmDialogComponent, {
+    const dialogRef = this.dialog.open(CustomConfirmDialogComponent, {
       width: '400px',
       data: {
         title: `Cambiar Estado de Inscripción`,

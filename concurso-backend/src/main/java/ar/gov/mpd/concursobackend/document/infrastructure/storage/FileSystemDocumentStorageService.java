@@ -2,8 +2,10 @@ package ar.gov.mpd.concursobackend.document.infrastructure.storage;
 
 import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentStorageService;
+import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,10 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FileSystemDocumentStorageService implements IDocumentStorageService {
 
-    @Value("${app.document.storage.location:./document-storage}")
-    private String storageLocation;
+    private final StorageConfig storageConfig;
 
     @Value("${app.document.temp.cleanup.interval:3600}")
     private long cleanupIntervalSeconds;
@@ -32,19 +34,13 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
     @PostConstruct
     public void init() {
         try {
-            // Eliminar espacios en blanco al inicio y al final
-            storageLocation = storageLocation.trim();
-            log.info("Using document storage location: '{}'", storageLocation);
+            Path storagePath = storageConfig.getDocumentsPath();
+            log.info("Using document storage location: '{}'", storagePath);
 
-            Path storagePath = Paths.get(storageLocation);
-            if (!Files.exists(storagePath)) {
-                Files.createDirectories(storagePath);
-                log.info("Created document storage directory: {}", storageLocation);
-            }
-
-            // Iniciar tarea de limpieza programada
+            // El StorageConfig ya se encarga de crear los directorios
+            // Solo iniciamos la tarea de limpieza
             startCleanupTask();
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Could not initialize document storage", e);
             throw new DocumentException("Could not initialize document storage", e);
         }
@@ -74,7 +70,7 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
     }
 
     private void cleanupTempFiles() {
-        Path tempDir = Paths.get(storageLocation, "temp");
+        Path tempDir = storageConfig.getTempPath();
         if (!Files.exists(tempDir)) {
             return;
         }
@@ -150,14 +146,14 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
                 timestamp);
 
         String relativePath = String.format("%s/%s", userDir, newFileName);
-        Path targetLocation = Paths.get(storageLocation).resolve(relativePath);
+        Path targetLocation = storageConfig.getDocumentsPath().resolve(relativePath);
 
-        log.info("Directorio de almacenamiento configurado: {}", storageLocation);
+        log.info("Directorio de almacenamiento configurado: {}", storageConfig.getDocumentsPath());
         log.info("Nueva estructura - DNI: {}, Tipo: {}, Archivo: {}", userDni, documentTypeName, newFileName);
         log.info("Ruta de destino del archivo: {}", targetLocation.toAbsolutePath());
 
         // Crear directorio del usuario si no existe
-        Path userDirectory = Paths.get(storageLocation).resolve(userDir);
+        Path userDirectory = storageConfig.getDocumentsPath().resolve(userDir);
         try {
             if (!Files.exists(userDirectory)) {
                 Files.createDirectories(userDirectory);
@@ -192,7 +188,7 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
 
         try {
             // Verificar si existe el directorio base
-            Path baseDir = Paths.get(storageLocation);
+            Path baseDir = storageConfig.getDocumentsPath();
             if (!Files.exists(baseDir)) {
                 log.info("Creando directorio base de almacenamiento: {}", baseDir);
                 Files.createDirectories(baseDir);
@@ -286,13 +282,13 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
     @Override
     public InputStream getFile(String filePath) {
         try {
-            Path file = Paths.get(storageLocation).resolve(filePath);
+            Path file = storageConfig.getDocumentsPath().resolve(filePath);
             if (!Files.exists(file)) {
                 throw new DocumentException("File not found: " + filePath);
             }
 
             // Verificar que el archivo está dentro del directorio de almacenamiento
-            if (!file.normalize().startsWith(Paths.get(storageLocation).normalize())) {
+            if (!file.normalize().startsWith(storageConfig.getDocumentsPath().normalize())) {
                 throw new DocumentException("Invalid file path");
             }
 
@@ -306,10 +302,10 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
     @Override
     public void deleteFile(String filePath) {
         try {
-            Path file = Paths.get(storageLocation).resolve(filePath);
+            Path file = storageConfig.getDocumentsPath().resolve(filePath);
 
             // Verificar que el archivo está dentro del directorio de almacenamiento
-            if (!file.normalize().startsWith(Paths.get(storageLocation).normalize())) {
+            if (!file.normalize().startsWith(storageConfig.getDocumentsPath().normalize())) {
                 throw new DocumentException("Invalid file path");
             }
 

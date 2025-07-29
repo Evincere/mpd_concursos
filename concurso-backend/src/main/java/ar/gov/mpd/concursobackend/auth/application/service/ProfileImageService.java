@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.auth.application.service;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.ProfileImageUrl;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
+import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,14 +37,10 @@ import java.util.UUID;
 public class ProfileImageService {
 
     private final UserService userService;
-    
-    @Value("${app.file.upload-dir:uploads}")
-    private String uploadDir;
+    private final StorageConfig storageConfig;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
-    
-    private static final String PROFILE_IMAGES_DIR = "profile-images";
     private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
         "image/jpeg", "image/jpg", "image/png", "image/gif"
     );
@@ -193,7 +190,7 @@ public class ProfileImageService {
      * Crea el directorio para las imágenes del usuario
      */
     private Path createUserImageDirectory(UUID userId) throws IOException {
-        Path userDir = Paths.get(uploadDir, PROFILE_IMAGES_DIR, userId.toString());
+        Path userDir = storageConfig.getProfileImagesPath().resolve(userId.toString());
         if (!Files.exists(userDir)) {
             Files.createDirectories(userDir);
         }
@@ -211,7 +208,7 @@ public class ProfileImageService {
             String relativePath = extractRelativePathFromUrl(url);
 
             if (relativePath != null) {
-                Path filePath = Paths.get(uploadDir, relativePath);
+                Path filePath = storageConfig.getBasePath().resolve(relativePath);
                 log.debug("Ruta del archivo a eliminar: {}", filePath);
 
                 if (Files.exists(filePath)) {

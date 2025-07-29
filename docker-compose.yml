@@ -49,7 +49,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - document_storage:/app/document-storage
+      - storage_data:/app/storage
     deploy:
       resources:
         limits:
@@ -80,7 +80,7 @@ services:
 
 volumes:
   mysql_data:
-  document_storage:
+  storage_data:
 
 networks:
   mpd-concursos-network:

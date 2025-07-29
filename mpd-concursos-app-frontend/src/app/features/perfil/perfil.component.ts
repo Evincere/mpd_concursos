@@ -59,7 +59,10 @@ const TAB_KEYS = {
 @Component({
   selector: 'app-perfil',
   templateUrl: './perfil.component.html',
-  styleUrls: ['./perfil.component.scss'],
+  styleUrls: [
+    './perfil.component.scss',
+    './perfil-tabs-override.scss'
+  ],
   standalone: true,
   imports: [
     CommonModule,
@@ -120,8 +123,11 @@ export class PerfilComponent implements OnInit, OnDestroy {
     if (this.tabDefinitions.some(tab => tab.key === tabKey)) {
       this.selectedTab = tabKey;
       this.selectedTabIndex = this.tabDefinitions.findIndex(tab => tab.key === tabKey);
-      // Diferir la detección de cambios al siguiente ciclo
-      setTimeout(() => this.cdr.markForCheck(), 0);
+      // Diferir la detección de cambios y forzar actualización
+      setTimeout(() => {
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      }, 100); // Aumentar el delay para asegurar que el componente de pestañas esté listo
     }
   }
 
@@ -176,7 +182,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadUserProfile(); // Cargar perfil al iniciar el componente
-    this.initializeActiveTab(); // Inicializar la pestaña activa desde la URL
+    // Diferir la inicialización de pestañas para después de que la vista esté lista
+    setTimeout(() => {
+      this.initializeActiveTab(); // Inicializar la pestaña activa desde la URL
+    }, 200);
   }
 
   private initializeActiveTab(): void {
@@ -193,9 +202,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
           const tabKey = tabKeyMap[activeTabParam];
           if (tabKey) {
-            this.changeTab(tabKey);
-          } else {
-            console.warn(`[PerfilComponent] No se encontró la pestaña '${activeTabParam}'`);
+            // Usar setTimeout para asegurar que el componente de pestañas esté completamente inicializado
+            setTimeout(() => {
+              this.changeTab(tabKey);
+            }, 150);
           }
         }
       })

@@ -2,9 +2,10 @@
     <div class="sidebar" [class.collapsed]="isCollapsed" id="navigation">
         <nav class="nav-menu" role="navigation" aria-label="Navegación principal">
             <div class="nav-item">
-                <a routerLink="/dashboard"
-                   routerLinkActive="active"
-                   [routerLinkActiveOptions]="{exact: true}"
+                <!-- ✅ SOLUCIÓN PROBLEMA 23: Navegación protegida -->
+                <a href="#"
+                   (click)="onNavigationClick($event, '/dashboard')"
+                   [class.active]="router.url === '/dashboard'"
                    [title]="isCollapsed ? 'Principal' : ''"
                    [attr.aria-label]="'Ir a página principal' + (isCollapsed ? '' : ' - Principal')">
                     <i class="fas fa-home" aria-hidden="true"></i>
@@ -12,16 +13,20 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/concursos"
-                   routerLinkActive="active"
+                <!-- ✅ SOLUCIÓN PROBLEMA 23: Navegación protegida -->
+                <a href="#"
+                   (click)="onNavigationClick($event, '/dashboard/concursos')"
+                   [class.active]="router.url.startsWith('/dashboard/concursos')"
                    [title]="isCollapsed ? 'Concursos' : ''">
                     <i class="fas fa-gavel" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Concursos</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/postulaciones"
-                   routerLinkActive="active"
+                <!-- ✅ SOLUCIÓN PROBLEMA 23: Navegación protegida -->
+                <a href="#"
+                   (click)="onNavigationClick($event, '/dashboard/postulaciones')"
+                   [class.active]="router.url.startsWith('/dashboard/postulaciones')"
                    [title]="isCollapsed ? 'Mis Postulaciones' : ''">
                     <i class="fas fa-file-alt" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Mis Postulaciones</span>

@@ -1022,3 +1022,84 @@ $transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
 }
+
+/* Estilos para información del usuario */
+.user-info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .user-name {
+    font-weight: 500;
+    color: $text-primary;
+    font-size: 0.9rem;
+  }
+
+  .user-dni {
+    font-size: 0.8rem;
+    color: $text-muted;
+  }
+
+  .user-detail-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: $border-radius-sm;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: $transition-fast;
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15));
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    i {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+/* Estilos para categorías de documentos */
+.document-category {
+  padding: 4px 8px;
+  border-radius: $border-radius-sm;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  transition: $transition-fast;
+
+  &.category-obligatory {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  &.category-cv_proof {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  &.category-optional {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.1));
+    color: #c4b5fd;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
