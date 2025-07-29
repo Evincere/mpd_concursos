@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject, of, EMPTY } from 'rxjs';
-import { catchError, tap, map, take, finalize, share } from 'rxjs/operators';
+import { Observable, throwError, BehaviorSubject, of, EMPTY, timer } from 'rxjs';
+import { catchError, tap, map, take, finalize, share, retry, retryWhen, delayWhen, switchMap } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { AuthService } from '@core/services/auth/auth.service';
 import { TokenService } from '../auth/token.service';
@@ -158,14 +158,24 @@ export class InscriptionService {
   }
 
   /**
-   * Helper to handle common HTTP errors.
+   * ✅ SOLUCIÓN PROBLEMA 28: Helper mejorado para manejo de errores HTTP con reintentos inteligentes
    */
   private handleSimpleError(error: HttpErrorResponse): Observable<never> {
-    // Log silently for expected errors (404, 500) to avoid console spam
-    if (error.status === 404 || error.status === 500) {
-      this.loggingService.debug('[InscriptionService] Expected error occurred:', error.status, 'Inscription');
+    // ✅ Detectar errores de red
+    if (this.isNetworkError(error)) {
+      this.trackNetworkError();
+      this.loggingService.warn('[InscriptionService] Network error detected', {
+        status: error.status,
+        message: error.message,
+        networkErrorCount: this.networkErrorCount
+      }, 'Inscription');
     } else {
-      this.loggingService.error('[InscriptionService] Unexpected error occurred:', error, 'Inscription');
+      // Log silently for expected errors (404, 500) to avoid console spam
+      if (error.status === 404 || error.status === 500) {
+        this.loggingService.debug('[InscriptionService] Expected error occurred:', error.status, 'Inscription');
+      } else {
+        this.loggingService.error('[InscriptionService] Unexpected error occurred:', error, 'Inscription');
+      }
     }
 
     let errorMessage = 'Ocurrió un error inesperado.';
@@ -175,6 +185,66 @@ export class InscriptionService {
       errorMessage = `Error del servidor: ${error.status} ${error.statusText || ''} - ${error.error?.message || error.message}`;
     }
     return throwError(() => new Error(errorMessage));
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 28: Detecta si un error es de red
+   */
+  private isNetworkError(error: HttpErrorResponse): boolean {
+    return error.status === 0 || // Sin conexión
+           error.status === 408 || // Request timeout
+           error.status === 502 || // Bad gateway
+           error.status === 503 || // Service unavailable
+           error.status === 504 || // Gateway timeout
+           (error as any).name === 'TimeoutError' ||
+           error.message?.includes('timeout') ||
+           error.message?.includes('network') ||
+           error.message?.includes('connection');
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 28: Rastrea errores de red para métricas
+   */
+  private trackNetworkError(): void {
+    this.networkErrorCount++;
+    this.lastNetworkError = new Date();
+
+    this.loggingService.info('[InscriptionService] Network error tracked', {
+      totalNetworkErrors: this.networkErrorCount,
+      lastError: this.lastNetworkError.toISOString()
+    }, 'Inscription');
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 28: Crea observable con reintentos inteligentes para errores de red
+   * @param source Observable fuente
+   * @param context Contexto para logging
+   * @returns Observable con reintentos configurados
+   */
+  private withNetworkRetry<T>(source: Observable<T>, context: string): Observable<T> {
+    return source.pipe(
+      retryWhen(errors =>
+        errors.pipe(
+          switchMap((error: HttpErrorResponse, index: number) => {
+            // Solo reintentar errores de red
+            if (this.isNetworkError(error) && index < this.NETWORK_RETRY_ATTEMPTS) {
+              const delay = this.RETRY_DELAY_MS * Math.pow(2, index); // Backoff exponencial
+
+              this.loggingService.info(`[InscriptionService] Network retry ${index + 1}/${this.NETWORK_RETRY_ATTEMPTS} for ${context}`, {
+                error: error.status,
+                delay,
+                attempt: index + 1
+              }, 'Inscription');
+
+              return timer(delay);
+            } else {
+              // No reintentar o se agotaron los intentos
+              return throwError(() => error);
+            }
+          })
+        )
+      )
+    );
   }
 
   /**
@@ -276,9 +346,13 @@ export class InscriptionService {
     // and let the backend return appropriate errors if needed
     this.loggingService.info('[InscriptionService] Creating new inscription for contest:', request.contestId, 'Inscription');
 
-    return this.http.post<any>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}`,
-      request
+    // ✅ SOLUCIÓN PROBLEMA 28: Aplicar reintentos inteligentes para errores de red
+    return this.withNetworkRetry(
+      this.http.post<any>(
+        `${this.baseUrl}${this.inscriptionsEndpoint}`,
+        request
+      ),
+      'createInscription'
     ).pipe(
       map(response => {
         this.loggingService.debug('[InscriptionService] Full response from createInscription:', response, 'Inscription');
@@ -404,9 +478,13 @@ export class InscriptionService {
 
     this.loggingService.info(`[InscriptionService] Fetching user inscriptions for userId: ${userId} with params: ${params.toString()}`, undefined, 'Inscription');
 
-    return this.http.get<Page<IInscriptionResponse>>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}`,
-      { params }
+    // ✅ SOLUCIÓN PROBLEMA 28: Aplicar reintentos inteligentes para errores de red
+    return this.withNetworkRetry(
+      this.http.get<Page<IInscriptionResponse>>(
+        `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}`,
+        { params }
+      ),
+      'getUserInscriptions'
     ).pipe(
       tap(response => {
         this.loggingService.debug('[InscriptionService] User inscriptions fetched successfully (new endpoint):', response, 'Inscription');
@@ -670,9 +748,16 @@ export class InscriptionService {
     }
   }
 
-  // Variable to control retry attempts for status update
+  // ✅ SOLUCIÓN PROBLEMA 28: Configuración mejorada de reintentos y manejo de errores de red
   private updateStatusRetryCount: Record<string, number> = {};
   private readonly MAX_RETRY_ATTEMPTS = 3;
+  private readonly NETWORK_RETRY_ATTEMPTS = 2;
+  private readonly RETRY_DELAY_MS = 1000;
+  private readonly NETWORK_TIMEOUT_MS = 10000;
+
+  // ✅ Tracking de errores de red para métricas
+  private networkErrorCount = 0;
+  private lastNetworkError: Date | null = null;
 
   /**
    * Maps frontend states to backend states.

@@ -40,6 +40,8 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
         private final ContestRepository contestRepository;
         private final SendNotificationUseCase notificationService;
         private final SecurityUtils securityUtils;
+        // ✅ SOLUCIÓN PROBLEMA 1: Cache para prevenir condiciones de carrera
+        private final InscriptionCreationCacheService creationCacheService;
         private static final Logger log = LoggerFactory.getLogger(CreateInscriptionService.class);
 
         @Override
@@ -47,10 +49,18 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                 log.debug("Iniciando creación de inscripción para concurso {} y usuario {}",
                                 request.getContestId(), request.getUserId());
 
-                // Verificar si ya existe una inscripción (incluyendo canceladas)
-                Optional<Inscription> existingInscription = loadInscriptionPort.findByContestIdAndUserIdIncludingCancelled(
-                                request.getContestId(),
-                                request.getUserId());
+                // ✅ SOLUCIÓN PROBLEMA 1: Verificar cache de creación antes de proceder
+                if (!creationCacheService.tryMarkAsCreating(request.getContestId(), request.getUserId())) {
+                        log.info("Creación de inscripción ya en progreso para concurso {} y usuario {} - Rechazando solicitud duplicada",
+                                request.getContestId(), request.getUserId());
+                        throw new DuplicateInscriptionException("Ya hay una creación de inscripción en progreso para este usuario y concurso");
+                }
+
+                try {
+                        // Verificar si ya existe una inscripción (incluyendo canceladas)
+                        Optional<Inscription> existingInscription = loadInscriptionPort.findByContestIdAndUserIdIncludingCancelled(
+                                        request.getContestId(),
+                                        request.getUserId());
 
                 if (existingInscription.isPresent()) {
                         Inscription inscription = existingInscription.get();
@@ -64,6 +74,9 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                                 // Si ya existe una inscripción activa o pendiente, devolver la existente
                                 log.info("Devolviendo inscripción existente {} para concurso {} y usuario {} - Estado: {}",
                                         inscription.getId().getValue(), request.getContestId(), request.getUserId(), inscription.getState());
+
+                                // ✅ MARCAR como completado exitosamente en cache
+                                creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), true);
 
                                 // Obtener el username del usuario autenticado
                                 String username = securityUtils.getCurrentUsername();
@@ -84,6 +97,9 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                                 default -> "Ya existe una inscripción para este concurso";
                         };
 
+                        // ✅ MARCAR como completado con error en cache
+                        creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), false);
+
                         log.error("Intento de inscripción rechazado para concurso {} y usuario {} - Estado existente: {}",
                                 request.getContestId(), request.getUserId(), inscription.getState());
                         throw new DuplicateInscriptionException(errorMessage);
@@ -95,6 +111,9 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
 
                 // SECURITY FIX: Validar que el concurso está abierto para inscripciones
                 if (!contest.isInscriptionOpen()) {
+                        // ✅ MARCAR como completado con error en cache
+                        creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), false);
+
                         log.warn("Intento de inscripción rechazado - Concurso {} ('{}') no está abierto para inscripciones. Usuario: {}",
                                 contest.getId(), contest.getTitle(), request.getUserId());
                         throw new InscriptionPeriodClosedException(contest.getId(), contest.getTitle());
@@ -122,6 +141,9 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                         Inscription savedInscription = saveInscriptionPort.save(inscription);
                         log.debug("Inscripción guardada con ID: {}", savedInscription.getId().getValue());
 
+                        // ✅ MARCAR como completado exitosamente en cache
+                        creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), true);
+
                         // Obtener el username del usuario autenticado
                         String username = securityUtils.getCurrentUsername();
                         if (username == null) {
@@ -135,6 +157,9 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                         return inscriptionMapper.toDetailResponse(savedInscription, null);
 
                 } catch (DataIntegrityViolationException e) {
+                        // ✅ MARCAR como completado con error en cache
+                        creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), false);
+
                         // Manejo específico para violación de constraint único (contest_id, user_id)
                         log.warn("Intento de crear inscripción duplicada para usuario {} en concurso {} - Constraint violation: {}",
                                 request.getUserId(), request.getContestId(), e.getMessage());
@@ -150,12 +175,30 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                                 request.getContestId(), request.getUserId());
 
                         if (existingAfterError.isPresent()) {
+                                // ✅ MARCAR como completado exitosamente en cache (inscripción existente)
+                                creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), true);
+
                                 log.info("Inscripción ya existe después del error de concurrencia - Retornando inscripción existente");
                                 return inscriptionMapper.toDetailResponse(existingAfterError.get(), null);
                         } else {
+                                // ✅ MARCAR como completado con error en cache
+                                creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), false);
+
                                 // Si no existe, relanzar la excepción original
                                 throw new IllegalStateException("Error de concurrencia al crear inscripción", e);
                         }
+                } catch (Exception e) {
+                        // ✅ MANEJO de excepciones no previstas - limpiar cache
+                        creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), false);
+                        throw e; // Re-lanzar la excepción original
+                }
+
+                } catch (Exception e) {
+                        // ✅ MANEJO de excepciones a nivel superior - limpiar cache si no se hizo antes
+                        if (creationCacheService.isCreationInProgress(request.getContestId(), request.getUserId())) {
+                                creationCacheService.markAsCompleted(request.getContestId(), request.getUserId(), false);
+                        }
+                        throw e; // Re-lanzar la excepción original
                 }
         }
 }

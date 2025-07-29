@@ -27,6 +27,7 @@ export interface IInscriptionFormState {
   providedIn: 'root'
 })
 export class InscriptionStateService {
+  // ✅ SOLUCIÓN PROBLEMA 7: Consolidación gradual de almacenamiento
   private readonly STORAGE_KEY = 'mpd_inscription_in_progress';
   private readonly REDIRECT_FROM_DOCS_KEY = 'mpd_redirect_from_inscription';
   private readonly FORM_STATE_KEY = 'mpd_inscription_form_state';
@@ -35,8 +36,6 @@ export class InscriptionStateService {
 
   constructor(private loggingService: LoggingService) {}
 
-
-
   /**
    * ✅ SOLUCIÓN PROBLEMA 6: Guarda inscripción respetando estado real del backend
    * Guarda el estado de una inscripción en progreso sin forzar estados incorrectos
@@ -44,7 +43,7 @@ export class InscriptionStateService {
    */
   saveInProgressInscription(inscription: IInscription): void {
     try {
-      // ✅ RESPETAR estado real del backend, no forzar PENDING
+      // ✅ SOLUCIÓN PROBLEMA 6: Respetar estado real del backend, no forzar PENDING
       const inscriptionData = {
         ...inscription,
         // ✅ MANTENER estado original del backend
@@ -159,9 +158,9 @@ export class InscriptionStateService {
   clearInProgressInscription(): void {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
-      // Logging implementado con LoggingService;
+      this.loggingService.debug('[InscriptionStateService] Cleared inscription in progress', undefined, 'InscriptionStateService');
     } catch (error) {
-      console.error('[InscriptionStateService] Error al limpiar inscripción en progreso:', error);
+      this.loggingService.error('[InscriptionStateService] Error clearing inscription in progress', error, 'InscriptionStateService');
     }
   }
 

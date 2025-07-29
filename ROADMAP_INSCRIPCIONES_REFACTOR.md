@@ -138,17 +138,29 @@ Eliminar la cancelación automática no deseada de inscripciones causada por nav
 **Fechas:** Días 14-16
 
 #### 🟡 Problema 1: Flag backend concurrencia
-- [ ] **Archivo:** `CreateInscriptionService.java`
-- [ ] Implementar cache de creación
-- [ ] Agregar timeout y limpieza automática
-- [ ] Manejar condiciones de carrera
-- [ ] **Tiempo estimado:** 1 día
+- [x] **Archivo:** `CreateInscriptionService.java`
+- [x] Implementar cache de creación
+- [x] Agregar timeout y limpieza automática
+- [x] Manejar condiciones de carrera
+- [x] **Tiempo estimado:** 1 día ✅ **COMPLETADO**
+
+#### 🟡 Problema 7: Múltiples fuentes de verdad
+- [x] **Archivo:** `inscription-state.service.ts`
+- [x] Consolidar almacenamiento en localStorage (parcial)
+- [x] Mejorar validación temporal
+- [x] **Tiempo estimado:** 0.5 días ✅ **COMPLETADO**
+
+#### 🟡 Problema 28: Pérdida sincronización errores red
+- [x] **Archivo:** `inscription.service.ts`
+- [x] Mejorar manejo de errores de red
+- [x] Implementar reintentos inteligentes
+- [x] **Tiempo estimado:** 0.5 días ✅ **COMPLETADO**
 
 #### Optimizaciones restantes:
-- [ ] Limpieza de código legacy
-- [ ] Optimización recovery service
-- [ ] Documentación final
-- [ ] **Tiempo estimado:** 1-2 días
+- [x] Limpieza de código legacy ✅ **COMPLETADO**
+- [x] Optimización recovery service ✅ **COMPLETADO**
+- [x] Documentación final ✅ **COMPLETADO**
+- [x] **Tiempo estimado:** 1-2 días ✅ **COMPLETADO**
 
 ---
 
