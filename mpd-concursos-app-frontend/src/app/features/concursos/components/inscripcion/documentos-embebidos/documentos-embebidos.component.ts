@@ -13,7 +13,7 @@ import { DocumentoViewerComponent } from '@shared/components/documento-viewer/do
 import { DocumentManagerService } from '@core/services/documentos/document-manager.service';
 import { LoggingService } from '@core/services/logging/logging.service';
 
-import { finalize, catchError, map, debounceTime, distinctUntilChanged } from 'rxjs/operators'; // Import map
+import { finalize, catchError, map, debounceTime, distinctUntilChanged, filter, take } from 'rxjs/operators'; // Import map
 import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
@@ -1518,7 +1518,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
   /**
    * Deletes an uploaded document after confirmation.
-   * CRITICAL FIX: Reemplaza modal nativo con componente personalizado y corrige manejo de respuesta
+   * ✅ FIXED: Implementa suscripción al evento de eliminación para feedback y actualización automática
    * @param documento The DocumentoUsuario object to delete.
    */
   eliminarDocumento(documento: DocumentoUsuario | undefined): void {
@@ -1537,6 +1537,29 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       )
       .subscribe((confirmed) => {
         if (confirmed) {
+          this.loggingService.debug('[DocumentosEmbebidos] 🗑️ Iniciando eliminación de documento:', documento.nombreArchivo, 'DocumentosEmbebidos');
+
+          // ✅ FIXED: Suscribirse al evento de documento eliminado para mostrar mensaje de éxito
+          const eliminacionSubscription = this.documentManager.documentoEliminado$.pipe(
+            filter(documentoId => documentoId === documento.id),
+            take(1)
+          ).subscribe(() => {
+            this.loggingService.debug('[DocumentosEmbebidos] ✅ Documento eliminado exitosamente, mostrando mensaje de éxito', undefined, 'DocumentosEmbebidos');
+            this.notificationService.success(`Documento "${documento.nombreArchivo}" eliminado exitosamente`);
+
+            // ✅ FIXED: Forzar recarga inmediata para actualizar la interfaz
+            setTimeout(() => {
+              this.loggingService.debug('[DocumentosEmbebidos] 🔄 Forzando recarga después de eliminación', undefined, 'DocumentosEmbebidos');
+              this.actualizarEstadoDocumentacion();
+            }, 500);
+          });
+
+          // Agregar la suscripción para limpiarla después
+          if (this.subscription) {
+            this.subscription.add(eliminacionSubscription);
+          }
+
+          // Ejecutar la eliminación
           this.documentManager.eliminarDocumento(documento.id!);
         }
       });

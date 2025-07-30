@@ -338,17 +338,18 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional(readOnly = true)
     public List<DocumentDto> getUserDocuments(UUID userId) {
-        log.debug("🔍 [DocumentService] Getting documents for user: {}", userId);
+        log.debug("🔍 [DocumentService] Getting active documents for user: {}", userId);
 
-        List<Document> documents = documentRepository.findByUserId(userId);
-        log.debug("📊 [DocumentService] Documents found in repository: {}", documents.size());
+        // ✅ FIXED: Usar findActiveByUserId para filtrar documentos archivados
+        List<Document> documents = documentRepository.findActiveByUserId(userId);
+        log.debug("📊 [DocumentService] Active documents found in repository: {}", documents.size());
 
         if (!documents.isEmpty()) {
-            log.debug("📄 [DocumentService] First document: {}", documents.get(0));
+            log.debug("📄 [DocumentService] First active document: {}", documents.get(0));
         }
 
         List<DocumentDto> documentDtos = documentMapper.toDtoList(documents);
-        log.debug("✅ [DocumentService] Documents mapped to DTOs: {}", documentDtos.size());
+        log.debug("✅ [DocumentService] Active documents mapped to DTOs: {}", documentDtos.size());
 
         return documentDtos;
     }
@@ -356,10 +357,11 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional(readOnly = true)
     public List<DocumentSummaryDto> getUserDocumentsSummary(UUID userId) {
-        log.debug("🔍 [DocumentService] Getting documents summary for user: {}", userId);
+        log.debug("🔍 [DocumentService] Getting active documents summary for user: {}", userId);
 
-        List<Document> allDocuments = documentRepository.findByUserId(userId);
-        log.debug("📊 [DocumentService] Total documents found: {}", allDocuments.size());
+        // ✅ FIXED: Usar findActiveByUserId para filtrar documentos archivados
+        List<Document> allDocuments = documentRepository.findActiveByUserId(userId);
+        log.debug("📊 [DocumentService] Total active documents found: {}", allDocuments.size());
 
         // Agrupar documentos por tipo
         Map<UUID, List<Document>> documentsByType = allDocuments.stream()

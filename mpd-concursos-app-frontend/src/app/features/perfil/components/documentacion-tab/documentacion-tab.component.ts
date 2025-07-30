@@ -19,7 +19,7 @@ import { DocumentManagerService } from '@core/services/documentos/document-manag
 import { TiposDocumentoService } from '@core/services/documentos/tipos-documento.service';
 import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-upload-dialog/documento-upload-dialog.component';
-import { debounceTime, throttleTime, finalize } from 'rxjs/operators';
+import { debounceTime, throttleTime, finalize, filter, take } from 'rxjs/operators';
 import { Subscription, firstValueFrom } from 'rxjs';
 
 interface DocumentoCardViewModel {
@@ -848,82 +848,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   documentosUsuario: DocumentoUsuario[] = [];
   documentosSummary: DocumentoSummary[] = []; // Resumen de documentos agrupados por tipo
   tiposDocumento: TipoDocumento[] = []; // This will hold all document types from the backend
-  documentosRequeridos: TipoDocumento[] = [
-    {
-      id: 'dni-frente',
-      code: 'dni-frente',
-      nombre: 'DNI (Frente)',
-      descripcion: 'Documento Nacional de Identidad - Lado frontal',
-      requerido: true,
-      orden: 1,
-      parentId: 'dni',
-      activo: true
-    },
-    {
-      id: 'dni-dorso',
-      code: 'dni-dorso',
-      nombre: 'DNI (Dorso)',
-      descripcion: 'Documento Nacional de Identidad - Lado posterior',
-      requerido: true,
-      orden: 2,
-      parentId: 'dni',
-      activo: true
-    },
-    {
-      id: 'cuil',
-      code: 'cuil',
-      nombre: 'Constancia de CUIL',
-      descripcion: 'Constancia de CUIL actualizada',
-      requerido: true,
-      orden: 3,
-      activo: true
-    },
-    {
-      id: 'titulo-universitario',
-      code: 'titulo-universitario',
-      nombre: 'Título Universitario',
-      descripcion: 'Título de grado universitario',
-      requerido: true,
-      orden: 4,
-      activo: true
-    },
-    {
-      id: 'antecedentes-penales',
-      code: 'antecedentes-penales',
-      nombre: 'Certificado de Antecedentes Penales',
-      descripcion: 'Certificado vigente con antigüedad no mayor a 90 días desde su emisión',
-      requerido: true,
-      orden: 5,
-      activo: true
-    },
-    {
-      id: 'certificado-profesional',
-      code: 'certificado-profesional',
-      nombre: 'Certificado de Ejercicio Profesional',
-      descripcion: 'Certificado expedido por la Oficina de Profesionales de la SCJ o Colegio de Abogados, o certificación de servicios del Poder Judicial. Antigüedad máxima: 6 meses',
-      requerido: true,
-      orden: 6,
-      activo: true
-    },
-    {
-      id: 'certificado-sanciones',
-      code: 'certificado-sanciones',
-      nombre: 'Certificado de Sanciones Disciplinarias',
-      descripcion: 'Certificado que acredite no registrar sanciones disciplinarias y/o en trámite. Antigüedad máxima: 6 meses',
-      requerido: true,
-      orden: 7,
-      activo: true
-    },
-    {
-      id: 'certificado-ley-micaela',
-      code: 'certificado-ley-micaela',
-      nombre: 'Certificado Ley Micaela',
-      descripcion: 'Certificado de capacitación en Ley Micaela (opcional)',
-      requerido: false,
-      orden: 8,
-      activo: true
-    }
-  ];
+  documentosRequeridos: TipoDocumento[] = []; // ✅ FIXED: Inicializar vacío, solo usar datos del backend
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
 
@@ -1081,6 +1006,13 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     console.log(`- Documentos requeridos: ${this.documentosRequeridos.length}`);
     console.log(`- Documentos del usuario: ${this.documentosUsuario.length}`);
     console.log('- Documentos del usuario IDs:', this.documentosUsuario.map(d => `${d.tipoDocumentoId} (${d.nombreArchivo})`));
+
+    // ✅ FIXED: No construir ViewModel si no hay tipos de documento del backend
+    if (this.documentosRequeridos.length === 0) {
+      console.log('[DocumentacionTab] ⏳ Esperando tipos de documento del backend...');
+      this.documentosViewModel = [];
+      return;
+    }
 
     const viewModel: DocumentoCardViewModel[] = [];
 
@@ -1345,7 +1277,28 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       )
       .subscribe((confirmed) => {
         if (confirmed) {
-          this.documentManager.eliminarDocumento(documento.id!)
+          console.log('[DocumentacionTab] 🗑️ Iniciando eliminación de documento:', documento.nombreArchivo);
+
+          // Suscribirse al evento de documento eliminado para mostrar mensaje de éxito
+          const eliminacionSubscription = this.documentManager.documentoEliminado$.pipe(
+            filter(documentoId => documentoId === documento.id),
+            take(1)
+          ).subscribe(() => {
+            console.log('[DocumentacionTab] ✅ Documento eliminado exitosamente, mostrando mensaje de éxito');
+            this.notification.success(`Documento "${documento.nombreArchivo}" eliminado exitosamente`);
+
+            // Forzar recarga inmediata para actualizar la interfaz
+            setTimeout(() => {
+              console.log('[DocumentacionTab] 🔄 Forzando recarga después de eliminación');
+              this.buildViewModel();
+            }, 500);
+          });
+
+          // Agregar la suscripción para limpiarla después
+          this.subscription.add(eliminacionSubscription);
+
+          // Ejecutar la eliminación
+          this.documentManager.eliminarDocumento(documento.id!);
         }
       });
   }
