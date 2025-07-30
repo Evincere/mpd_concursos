@@ -164,6 +164,13 @@ import { ConfirmationService } from '@shared/services/confirmation.service';
                 </span>
               </div>
               <p class="documento-descripcion" *ngIf="tipo.description">{{tipo.description}}</p>
+              <!-- Mensaje específico para Título Universitario y Certificado Analítico -->
+              <div *ngIf="tipo.tipoDocumentoId === 'TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO'" class="documento-info-especial">
+                <i class="fas fa-info-circle"></i>
+                <small>
+                  <strong>Importante:</strong> Combine ambos documentos (título universitario y certificado analítico) en un solo archivo PDF antes de cargar.
+                </small>
+              </div>
             </div>
 
             <!-- Acciones -->
@@ -601,6 +608,36 @@ import { ConfirmationService } from '@shared/services/confirmation.service';
       line-height: 1.5;
       word-wrap: break-word;
       overflow-wrap: break-word;
+    }
+
+    .documento-info-especial {
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(33, 150, 243, 0.1);
+      border: 1px solid rgba(33, 150, 243, 0.2);
+      border-radius: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      backdrop-filter: blur(4px);
+
+      i {
+        color: #3b82f6;
+        font-size: 0.9rem;
+        margin-top: 0.1rem;
+        flex-shrink: 0;
+      }
+
+      small {
+        margin: 0;
+        line-height: 1.4;
+        color: #90caf9;
+        font-size: 0.85rem;
+
+        strong {
+          color: #3b82f6;
+        }
+      }
     }
 
     .documento-estado {

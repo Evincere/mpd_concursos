@@ -1,6 +1,6 @@
 /**
  * Servicio de Validación para Documentos
- * 
+ *
  * @description Servicio especializado para validación de documentos siguiendo SRP
  * @author Augment Agent
  * @date 2025-01-01
@@ -99,6 +99,10 @@ export class DocumentValidationService {
     ['TITULO', {
       maxFileSize: 8 * 1024 * 1024,
       requiresSpecificPages: { min: 1, max: 3 }
+    }],
+    ['TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO', {
+      maxFileSize: 12 * 1024 * 1024, // 12MB para título y certificado combinados
+      requiresSpecificPages: { min: 2, max: 8 } // Mínimo 2 páginas (título + certificado)
     }]
   ]);
 
@@ -121,10 +125,10 @@ export class DocumentValidationService {
 
       // Validaciones básicas
       this.validateBasicFileProperties(file, rules, errors);
-      
+
       // Validaciones específicas del tipo
       this.validateDocumentTypeSpecific(file, context, rules, errors, warnings);
-      
+
       // Validaciones de negocio
       this.validateBusinessRules(file, context, errors, warnings);
 
@@ -139,7 +143,7 @@ export class DocumentValidationService {
       };
 
       console.log(`[DocumentValidationService] Validación completada: ${result.isValid ? 'VÁLIDO' : 'INVÁLIDO'} (Score: ${score})`);
-      
+
       return of(result);
 
     } catch (error) {
@@ -154,12 +158,12 @@ export class DocumentValidationService {
    * @param context Contexto de validación
    */
   validateMultipleFiles(
-    files: File[], 
+    files: File[],
     context: ValidationContext
   ): Observable<Map<string, ValidationResult>> {
-    
+
     const results = new Map<string, ValidationResult>();
-    
+
     files.forEach(file => {
       this.validateFile(file, context).subscribe(result => {
         results.set(file.name, result);
@@ -179,7 +183,7 @@ export class DocumentValidationService {
     const warnings: ValidationWarning[] = [];
 
     // Verificar nombre duplicado
-    const duplicateName = existingDocuments.find(doc => 
+    const duplicateName = existingDocuments.find(doc =>
       doc.nombreArchivo === file.name
     );
 
@@ -192,7 +196,7 @@ export class DocumentValidationService {
     }
 
     // Verificar tamaño similar (posible duplicado)
-    const similarSize = existingDocuments.find(doc => 
+    const similarSize = existingDocuments.find(doc =>
       Math.abs(doc.tamanoArchivo - file.size) < 1024 // Diferencia menor a 1KB
     );
 
@@ -224,11 +228,11 @@ export class DocumentValidationService {
    * Valida propiedades básicas del archivo
    */
   private validateBasicFileProperties(
-    file: File, 
-    rules: ValidationRules, 
+    file: File,
+    rules: ValidationRules,
     errors: ValidationError[]
   ): void {
-    
+
     // Validar nombre
     if (!file.name || file.name.trim().length === 0) {
       errors.push({
@@ -338,7 +342,7 @@ export class DocumentValidationService {
   ): void {
 
     // Verificar si ya existe un documento del mismo tipo
-    const existingOfSameType = context.existingDocuments.find(doc => 
+    const existingOfSameType = context.existingDocuments.find(doc =>
       doc.tipoDocumento.id === context.documentType.id
     );
 
@@ -377,11 +381,11 @@ export class DocumentValidationService {
     errors: ValidationError[],
     warnings: ValidationWarning[]
   ): void {
-    
+
     // Verificar que el nombre del archivo sea descriptivo
     const fileName = file.name.toLowerCase();
     const isFrente = context.documentType.codigo === 'DNI_FRENTE';
-    
+
     if (isFrente && !fileName.includes('frente') && !fileName.includes('front')) {
       warnings.push({
         code: 'DNI_NAMING_SUGGESTION',
@@ -408,7 +412,7 @@ export class DocumentValidationService {
     errors: ValidationError[],
     warnings: ValidationWarning[]
   ): void {
-    
+
     // Verificar tamaño razonable para CV
     if (file.size > 5 * 1024 * 1024) { // 5MB
       warnings.push({
@@ -438,7 +442,7 @@ export class DocumentValidationService {
     errors: ValidationError[],
     warnings: ValidationWarning[]
   ): void {
-    
+
     // Verificar nombre descriptivo
     const fileName = file.name.toLowerCase();
     if (!fileName.includes('titulo') && !fileName.includes('diploma') && !fileName.includes('certificado')) {

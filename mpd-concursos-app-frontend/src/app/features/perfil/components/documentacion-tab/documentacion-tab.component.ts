@@ -73,6 +73,7 @@ interface DocumentoCardViewModel {
           <ul>
             <li>Solo se permitirán cargar archivos en formato PDF (máximo 10MB).</li>
             <li>En caso de tener múltiples páginas o documentos relacionados, por favor únalo en un único archivo PDF antes de cargarlo.</li>
+            <li><strong>Título Universitario y Certificado Analítico:</strong> Ambos documentos deben combinarse en un solo archivo PDF para su carga. No se aceptarán por separado.</li>
           </ul>
         </div>
       </div>
@@ -130,6 +131,13 @@ interface DocumentoCardViewModel {
                 <div>
                   <h5>{{vm.tipo.nombre}}</h5>
                   <p *ngIf="vm.tipo.descripcion">{{vm.tipo.descripcion}}</p>
+                  <!-- Mensaje específico para Título Universitario y Certificado Analítico -->
+                  <div *ngIf="vm.tipo.code === 'TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO'" class="documento-info-especial">
+                    <i class="fas fa-info-circle text-info"></i>
+                    <small class="text-info">
+                      <strong>Importante:</strong> Combine ambos documentos en un solo archivo PDF antes de cargar.
+                    </small>
+                  </div>
                 </div>
                 <div class="documento-estado">
                   <span class="estado-texto {{vm.estado}}">
@@ -357,6 +365,32 @@ interface DocumentoCardViewModel {
           }
         }
       }
+    }
+
+    .documento-info-especial {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background-color: rgba(33, 150, 243, 0.1);
+      border-radius: 6px;
+      border-left: 3px solid #2196f3;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      small {
+        margin: 0;
+        line-height: 1.4;
+        color: #90caf9;
+      }
+
+      i {
+        color: #2196f3;
+        font-size: 0.9rem;
+      }
+    }
+
+    .text-info {
+      color: #90caf9 !important;
     }
 
     .documentacion-progress {

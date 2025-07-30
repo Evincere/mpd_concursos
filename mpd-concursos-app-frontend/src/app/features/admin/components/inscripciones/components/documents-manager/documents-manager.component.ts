@@ -142,7 +142,7 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
           // Fallback a datos de ejemplo en caso de error
           this.documentTypes = [
             { id: '1', name: 'DNI' },
-            { id: '2', name: 'Título Universitario' },
+            { id: '2', name: 'Título Universitario y Certificado Analítico' },
             { id: '3', name: 'Certificado de Antecedentes Penales' },
             { id: '4', name: 'Curriculum Vitae' },
             { id: '5', name: 'Certificado de Domicilio' }
@@ -529,6 +529,7 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
       'Certificado de Antecedentes Penales': 'ANTECEDENTES',
       'Certificado de Antigüedad Profesional': 'ANTIGÜEDAD_PROFESIONAL',
       'Certificado Sin Sanciones Disciplinarias': 'SIN_SANCIONES',
+      'Título Universitario y Certificado Analítico': 'TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO',
       'Certificado Ley Micaela': 'LEY_MICAELA'
     };
 

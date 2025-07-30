@@ -148,7 +148,8 @@ public class DataInitializationService {
                 createDocumentType("ANTECEDENTES_PENALES", "Certificado de Antecedentes Penales", "Certificado de Antecedentes Penales vigente (antigüedad no mayor a 90 días)", true, 4),
                 createDocumentType("CERTIFICADO_PROFESIONAL_ANTIGUEDAD", "Certificado de Antigüedad Profesional", "Certificado de antigüedad en el ejercicio profesional", true, 5),
                 createDocumentType("CERTIFICADO_SIN_SANCIONES", "Certificado Sin Sanciones Disciplinarias", "Certificado que acredite no registrar sanciones disciplinarias", true, 6),
-                createDocumentType("CERTIFICADO_LEY_MICAELA", "Certificado Ley Micaela", "Certificado de capacitación en Ley Micaela (opcional)", false, 7),
+                createDocumentType("TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", "Título Universitario y Certificado Analítico", "Título universitario y certificado analítico unificados en un solo archivo PDF. Ambos documentos deben combinarse en un único archivo para su carga.", true, 7),
+                createDocumentType("CERTIFICADO_LEY_MICAELA", "Certificado Ley Micaela", "Certificado de capacitación en Ley Micaela (opcional)", false, 8),
                 createDocumentType("DOCUMENTO_ADICIONAL", "Documento Adicional", "Cualquier documento adicional requerido específicamente", false, 99)
         };
 
@@ -168,7 +169,7 @@ public class DataInitializationService {
     }
 
     private void verifyEssentialDocumentTypes(List<DocumentTypeEntity> existingTypes) {
-        String[] essentialCodes = {"DNI_FRONTAL", "DNI_DORSO", "CONSTANCIA_CUIL", "ANTECEDENTES_PENALES", "DOCUMENTO_ADICIONAL"};
+        String[] essentialCodes = {"DNI_FRONTAL", "DNI_DORSO", "CONSTANCIA_CUIL", "ANTECEDENTES_PENALES", "TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", "DOCUMENTO_ADICIONAL"};
         for (String code : essentialCodes) {
             boolean exists = existingTypes.stream().anyMatch(type -> code.equals(type.getCode()));
             if (!exists) {
@@ -196,6 +197,9 @@ public class DataInitializationService {
                 break;
             case "ANTECEDENTES_PENALES":
                 type = createDocumentType("ANTECEDENTES_PENALES", "Certificado de Antecedentes Penales", "Certificado de Antecedentes Penales vigente (antigüedad no mayor a 90 días)", true, 4);
+                break;
+            case "TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO":
+                type = createDocumentType("TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", "Título Universitario y Certificado Analítico", "Título universitario y certificado analítico unificados en un solo archivo PDF. Ambos documentos deben combinarse en un único archivo para su carga.", true, 7);
                 break;
             case "DOCUMENTO_ADICIONAL":
                 type = createDocumentType("DOCUMENTO_ADICIONAL", "Documento Adicional", "Cualquier documento adicional requerido específicamente", false, 99);
@@ -233,6 +237,7 @@ public class DataInitializationService {
             "ANTECEDENTES_PENALES", true,
             "CERTIFICADO_PROFESIONAL_ANTIGUEDAD", true,
             "CERTIFICADO_SIN_SANCIONES", true,
+            "TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", true,
             "CERTIFICADO_LEY_MICAELA", false,
             "DOCUMENTO_ADICIONAL", false
         );
