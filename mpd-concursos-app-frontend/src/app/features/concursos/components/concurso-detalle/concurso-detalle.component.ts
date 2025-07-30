@@ -78,9 +78,12 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
       this.loadContestDocumentAvailability();
 
       // Initialize dates if they don't exist
+      this.loggingService.debug('[ConcursoDetalleComponent] Fechas del concurso:', this.concurso.dates, 'ConcursoDetalle');
       if (!this.concurso.dates || this.concurso.dates.length === 0) {
         this.concurso.dates = this.getDefaultDates();
-        this.loggingService.debug('[ConcursoDetalleComponent] Fechas no definidas. Estableciendo fechas predeterminadas.', undefined, 'ConcursoDetalle');
+        this.loggingService.warn('[ConcursoDetalleComponent] Fechas no definidas. Estableciendo fechas predeterminadas.', undefined, 'ConcursoDetalle');
+      } else {
+        this.loggingService.debug('[ConcursoDetalleComponent] Usando fechas del backend:', this.concurso.dates.length, 'ConcursoDetalle');
       }
 
       // Initialize tabs
@@ -214,28 +217,26 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
    * @returns An array of default ContestDate objects.
    */
   private getDefaultDates(): ContestDate[] {
-    const today = new Date();
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + 15); // Example: 15 days from now
+    // Usar fechas específicas del concurso MULTIFUERO
+    const inscriptionStart = new Date('2025-07-30');
+    const inscriptionEnd = new Date('2025-08-08');
 
-    const resultsStartDate = new Date(endDate);
-    resultsStartDate.setDate(endDate.getDate() + 10);
-
-    const resultsEndDate = new Date(resultsStartDate);
-    resultsEndDate.setDate(resultsStartDate.getDate() + 5);
+    const resultsStart = new Date('2025-08-24');
+    const resultsEnd = new Date('2025-08-29');
 
     return [
       {
         label: 'Fecha de Inscripción',
-        startDate: today, // Use Date objects directly
-        endDate: endDate, // Use Date objects directly
+        startDate: inscriptionStart,
+        endDate: inscriptionEnd,
         type: 'inscription'
       },
       {
         label: 'Publicación de Resultados',
-        startDate: resultsStartDate,
-        endDate: resultsEndDate,
-        type: 'results'
+        startDate: resultsStart,
+        endDate: resultsEnd,
+        type: 'results',
+        description: 'Fecha estimativa que puede diferir según el desarrollo del proceso de selección'
       }
     ];
   }

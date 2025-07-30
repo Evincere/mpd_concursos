@@ -21,6 +21,11 @@ target/
 # Nueva estructura unificada
 storage/
 !storage/.gitkeep
+# Incluir archivos de bases y descripciones de concursos
+!storage/contest-bases/
+!storage/contest-bases/*.pdf
+!storage/contest-descriptions/
+!storage/contest-descriptions/*.pdf
 
 # Carpetas legacy (mantener hasta migración completa)
 document-storage/

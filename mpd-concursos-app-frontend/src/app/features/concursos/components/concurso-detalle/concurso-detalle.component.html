@@ -123,6 +123,7 @@
               <h4>{{ fecha.label }}</h4>
               <p *ngIf="fecha?.label?.includes('A definir')">A definir</p>
               <p *ngIf="!fecha?.label?.includes('A definir')">{{ fecha.startDate | date:'dd/MM/yyyy' }} - {{ fecha.endDate | date:'dd/MM/yyyy' }}</p>
+              <p *ngIf="fecha.description" class="fecha-description">{{ fecha.description }}</p>
             </div>
           </div>
         </div>
