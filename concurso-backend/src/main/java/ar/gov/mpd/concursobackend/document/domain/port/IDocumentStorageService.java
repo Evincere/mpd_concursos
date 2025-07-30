@@ -9,4 +9,9 @@ public interface IDocumentStorageService {
     InputStream getFile(String filePath);
 
     void deleteFile(String filePath);
+
+    /**
+     * Obtiene la ubicación base de almacenamiento de documentos
+     */
+    String getStorageLocation();
 }

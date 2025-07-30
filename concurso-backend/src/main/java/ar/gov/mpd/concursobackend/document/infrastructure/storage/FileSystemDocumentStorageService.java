@@ -343,4 +343,9 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
         return fileName.replaceAll("[^a-zA-Z0-9.-]", "_");
     }
 
+    @Override
+    public String getStorageLocation() {
+        return storageConfig.getDocumentsPath().toString();
+    }
+
 }

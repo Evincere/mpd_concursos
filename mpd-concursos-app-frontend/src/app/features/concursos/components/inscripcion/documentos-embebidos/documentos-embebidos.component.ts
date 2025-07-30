@@ -176,9 +176,10 @@ import { ConfirmationService } from '@shared/services/confirmation.service';
             <!-- Acciones -->
             <div class="documento-actions">
               <app-custom-button
+                *ngIf="!isDocumentoSubido(tipo.tipoDocumentoId)"
                 variant="primary"
-                [label]="isDocumentoSubido(tipo.tipoDocumentoId) ? 'Reemplazar' : 'Cargar'"
-                [icon]="isDocumentoSubido(tipo.tipoDocumentoId) ? 'sync' : 'upload'"
+                label="Cargar"
+                icon="upload"
                 size="small"
                 (buttonClick)="cargarDocumentoTipo(tipo.tipoDocumentoId)">
               </app-custom-button>

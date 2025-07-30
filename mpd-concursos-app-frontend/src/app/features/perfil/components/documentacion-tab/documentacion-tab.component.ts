@@ -155,13 +155,6 @@ interface DocumentoCardViewModel {
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
-                      color="success"
-                      icon="sync-alt"
-                      [tooltip]="'Reemplazar documento'"
-                      (buttonClick)="reemplazarDocumento(vm.documento)">
-                    </app-custom-button>
-                    <app-custom-button
-                      variant="icon"
                       color="danger"
                       icon="trash"
                       [tooltip]="'Eliminar documento'"
@@ -229,13 +222,6 @@ interface DocumentoCardViewModel {
                       icon="eye"
                       [tooltip]="'Ver documento'"
                       (buttonClick)="verDocumento(vm.documento)">
-                    </app-custom-button>
-                    <app-custom-button
-                      variant="icon"
-                      color="success"
-                      icon="sync-alt"
-                      [tooltip]="'Reemplazar documento'"
-                      (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
@@ -1337,43 +1323,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     });
   }
 
+  // FUNCIONALIDAD REMOVIDA: reemplazarDocumento
+  // El usuario debe eliminar el documento y cargar uno nuevo
   async reemplazarDocumento(documento: DocumentoUsuario | null): Promise<void> {
-    if (!documento || !documento.id || !documento.tipoDocumentoId) {
-      this.notification.error('No se pudo encontrar el documento para reemplazar');
-      return;
-    }
-
-    try {
-      const file = await this.selectFile();
-
-      const checkResp: any = await firstValueFrom(this.documentManager.checkReplaceDocumento(documento.id!, file, 'Reemplazo de documento'));
-
-      if (checkResp.warning && checkResp.impactedEntities && checkResp.impactedEntities.length > 0) {
-        const detalle = checkResp.impactedEntities.map((e: string) => `<li>${e}</li>`).join('');
-        const confirmado = await firstValueFrom(this.dialog.openConfirm({
-          title: 'Advertencia de reemplazo',
-          icon: 'warning',
-          message: `${checkResp.warning}<ul>${detalle}</ul><p>¿Deseas continuar y reemplazar el documento?</p>`,
-          confirmButtonText: 'Reemplazar',
-          cancelButtonText: 'Cancelar',
-          size: 'medium',
-        }).afterClosed());
-
-        if (confirmado) {
-          const resp2: any = await firstValueFrom(this.documentManager.replaceDocumento(documento.id!, file, 'Reemplazo de documento', true));
-          this.notification.success(resp2.message || 'Documento reemplazado exitosamente.');
-        }
-      } else {
-        const resp: any = await firstValueFrom(this.documentManager.replaceDocumento(documento.id!, file, 'Reemplazo de documento'));
-        this.notification.success(resp.message || 'Documento reemplazado exitosamente.');
-      }
-    } catch (error: any) {
-      if(error.message.includes('cancelada')){
-        this.notification.info('La operación de reemplazo fue cancelada.');
-      } else {
-        this.notification.error(error.message || 'Error al reemplazar el documento');
-      }
-    }
+    this.notification.info('Para reemplazar un documento, primero elimínelo y luego cargue el nuevo documento.');
   }
 
   eliminarDocumento(documento: DocumentoUsuario | null): void {
@@ -1403,9 +1356,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     switch (event.action) {
       case 'view':
         this.verDocumento(documento);
-        break;
-      case 'replace':
-        this.reemplazarDocumento(documento);
         break;
       case 'delete':
         this.eliminarDocumento(documento);
@@ -1459,9 +1409,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     switch (event.action) {
       case 'view':
         this.verDocumento(documento);
-        break;
-      case 'replace':
-        this.reemplazarDocumento(documento);
         break;
       case 'delete':
         this.eliminarDocumento(documento);
