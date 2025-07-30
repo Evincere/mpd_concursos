@@ -1,0 +1,465 @@
+import { Injectable } from '@angular/core';
+import { IInscription } from '@shared/interfaces/inscripcion/inscription.interface';
+import { InscriptionStep } from '@shared/enums/inscription-step.enum';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { LoggingService } from '@core/services/logging/logging.service';
+
+/**
+ * Interfaz para el estado completo del formulario de inscripción
+ */
+export interface IInscriptionFormState {
+  inscriptionId: string;
+  contestId: number;
+  currentStep: InscriptionStep;
+  formData: {
+    termsAccepted: boolean;
+    centroDeVida: string;
+    selectedCircunscripciones: string[];
+    documentosCompletos: boolean;
+    confirmedPersonalData: boolean;
+    // Otros campos que puedan ser necesarios
+  };
+  timestamp: string;
+  contestTitle?: string; // Título del concurso para mostrar en diálogos
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class InscriptionStateService {
+  // ✅ SOLUCIÓN PROBLEMA 7: Consolidación gradual de almacenamiento
+  private readonly STORAGE_KEY = 'mpd_inscription_in_progress';
+  private readonly REDIRECT_FROM_DOCS_KEY = 'mpd_redirect_from_inscription';
+  private readonly FORM_STATE_KEY = 'mpd_inscription_form_state';
+  private readonly INCOMPLETE_INSCRIPTIONS_KEY = 'mpd_incomplete_inscriptions';
+  private readonly DIRECT_CONTINUATION_KEY = 'mpd_direct_continuation';
+
+  constructor(private loggingService: LoggingService) {}
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 6: Guarda inscripción respetando estado real del backend
+   * Guarda el estado de una inscripción en progreso sin forzar estados incorrectos
+   * @param inscription Datos de la inscripción
+   */
+  saveInProgressInscription(inscription: IInscription): void {
+    try {
+      // ✅ SOLUCIÓN PROBLEMA 6: Respetar estado real del backend, no forzar PENDING
+      const inscriptionData = {
+        ...inscription,
+        // ✅ MANTENER estado original del backend
+        state: inscription.state || InscripcionState.ACTIVE, // Solo usar ACTIVE como fallback
+        // ✅ MANTENER paso actual real, no forzar DATA_CONFIRMATION
+        currentStep: inscription.currentStep || InscriptionStep.INITIAL, // Fallback al primer paso
+        timestamp: new Date().toISOString(),
+        // ✅ AGREGAR metadatos para validación temporal
+        lastSyncWithBackend: new Date().toISOString(),
+        source: 'frontend_save'
+      };
+
+      this.loggingService.debug('[InscriptionStateService] Saving inscription with real backend state', {
+        inscriptionId: inscription.id,
+        originalState: inscription.state,
+        savedState: inscriptionData.state,
+        originalStep: inscription.currentStep,
+        savedStep: inscriptionData.currentStep
+      }, 'InscriptionStateService');
+
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(inscriptionData));
+
+    } catch (error) {
+      this.loggingService.error('[InscriptionStateService] Error saving inscription in progress', error, 'InscriptionStateService');
+    }
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 6: Validación temporal de sincronización
+   * Verifica si los datos locales están sincronizados con el backend
+   * @param localData Datos locales de la inscripción
+   * @param maxAgeMinutes Edad máxima en minutos (default: 30)
+   * @returns true si los datos están sincronizados
+   */
+  private isDataSyncValid(localData: any, maxAgeMinutes: number = 30): boolean {
+    if (!localData.lastSyncWithBackend) {
+      this.loggingService.warn('[InscriptionStateService] Local data missing sync timestamp', {
+        inscriptionId: localData.id
+      }, 'InscriptionStateService');
+      return false;
+    }
+
+    const syncTime = new Date(localData.lastSyncWithBackend);
+    const now = new Date();
+    const ageMinutes = (now.getTime() - syncTime.getTime()) / (1000 * 60);
+
+    const isValid = ageMinutes <= maxAgeMinutes;
+
+    if (!isValid) {
+      this.loggingService.debug('[InscriptionStateService] Local data is stale', {
+        inscriptionId: localData.id,
+        ageMinutes,
+        maxAgeMinutes
+      }, 'InscriptionStateService');
+    }
+
+    return isValid;
+  }
+
+  /**
+   * Obtiene la inscripción en progreso guardada
+   * @returns Datos de la inscripción o null si no hay ninguna
+   */
+  getInProgressInscription(): IInscription | null {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY);
+      if (!data) {
+        return null;
+      }
+
+      // Parsear los datos guardados
+      const savedData = JSON.parse(data);
+      const inscription = savedData as IInscription;
+
+      // ✅ SOLUCIÓN PROBLEMA 6: Validación temporal mejorada
+      // Verificar si los datos están sincronizados con el backend
+      if (!this.isDataSyncValid(savedData, 30)) { // 30 minutos de validez
+        this.loggingService.info('[InscriptionStateService] Local data is stale, clearing cache', {
+          inscriptionId: savedData.id,
+          lastSync: savedData.lastSyncWithBackend
+        }, 'InscriptionStateService');
+
+        this.clearInProgressInscription();
+        return null;
+      }
+
+      // Verificar si la inscripción es reciente (menos de 24 horas) - fallback
+      const timestamp = new Date(savedData.timestamp || new Date().toISOString());
+      const now = new Date();
+      const diffHours = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60);
+
+      if (diffHours > 24) {
+        this.loggingService.info('[InscriptionStateService] Inscription data too old (>24h), clearing', {
+          inscriptionId: savedData.id,
+          ageHours: diffHours
+        }, 'InscriptionStateService');
+
+        this.clearInProgressInscription();
+        return null;
+      }
+
+      return inscription;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al recuperar inscripción en progreso:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Elimina la inscripción en progreso guardada
+   */
+  clearInProgressInscription(): void {
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+      this.loggingService.debug('[InscriptionStateService] Cleared inscription in progress', undefined, 'InscriptionStateService');
+    } catch (error) {
+      this.loggingService.error('[InscriptionStateService] Error clearing inscription in progress', error, 'InscriptionStateService');
+    }
+  }
+
+  /**
+   * Marca que el usuario viene de la inscripción al ir a la pestaña de documentación
+   * @param inscriptionId ID de la inscripción
+   */
+  setRedirectFromInscription(inscriptionId: string): void {
+    try {
+      localStorage.setItem(this.REDIRECT_FROM_DOCS_KEY, inscriptionId);
+      // Logging implementado con LoggingService;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al establecer redirección desde inscripción:', error);
+    }
+  }
+
+  /**
+   * Verifica si el usuario viene de la inscripción
+   * @returns ID de la inscripción o null
+   */
+  getRedirectFromInscription(): string | null {
+    try {
+      return localStorage.getItem(this.REDIRECT_FROM_DOCS_KEY);
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al recuperar redirección desde inscripción:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Elimina la marca de redirección desde inscripción
+   */
+  clearRedirectFromInscription(): void {
+    try {
+      localStorage.removeItem(this.REDIRECT_FROM_DOCS_KEY);
+      // Logging implementado con LoggingService;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al limpiar redirección desde inscripción:', error);
+    }
+  }
+
+  /**
+   * Guarda el estado completo del formulario de inscripción
+   * @param inscriptionId ID de la inscripción
+   * @param contestId ID del concurso
+   * @param currentStep Paso actual del proceso
+   * @param formData Datos del formulario
+   * @param contestTitle Título del concurso (opcional)
+   */
+  saveInscriptionState(inscriptionId: string, contestId: number, currentStep: InscriptionStep, formData: unknown, contestTitle?: string): void {
+    try {
+      const state: IInscriptionFormState = {
+        inscriptionId,
+        contestId,
+        currentStep,
+        formData: {
+          termsAccepted: (formData as Record<string, unknown>)['termsAccepted'] as boolean || false,
+          centroDeVida: (formData as Record<string, unknown>)['centroDeVida'] as string || '',
+          selectedCircunscripciones: (formData as Record<string, unknown>)['selectedCircunscripciones'] as string[] || [],
+          documentosCompletos: (formData as Record<string, unknown>)['documentosCompletos'] as boolean || false,
+          confirmedPersonalData: (formData as Record<string, unknown>)['confirmedPersonalData'] as boolean || false
+        },
+        timestamp: new Date().toISOString(),
+        contestTitle
+      };
+
+      // Guardar el estado individual
+      localStorage.setItem(`${this.FORM_STATE_KEY}_${inscriptionId}`, JSON.stringify(state));
+
+      // Actualizar la lista de inscripciones incompletas
+      this.addToIncompleteInscriptions(inscriptionId, contestId, contestTitle);
+
+      // Logging implementado con LoggingService;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al guardar estado de inscripción:', error);
+    }
+  }
+
+  /**
+   * Obtiene el estado completo del formulario de inscripción
+   * @param inscriptionId ID de la inscripción
+   * @returns Estado del formulario o null si no existe
+   */
+  getInscriptionState(inscriptionId: string): IInscriptionFormState | null {
+    try {
+      const data = localStorage.getItem(`${this.FORM_STATE_KEY}_${inscriptionId}`);
+      if (!data) {
+        return null;
+      }
+
+      const state = JSON.parse(data) as IInscriptionFormState;
+
+      // Verificar si el estado es reciente (menos de 24 horas)
+      const timestamp = new Date(state.timestamp);
+      const now = new Date();
+      const diffHours = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60);
+
+      if (diffHours > 24) {
+        // Si han pasado más de 24 horas, eliminar el estado guardado
+        this.clearInscriptionState(inscriptionId);
+        return null;
+      }
+
+      return state;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al recuperar estado de inscripción:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Elimina el estado del formulario de inscripción
+   * @param inscriptionId ID de la inscripción
+   */
+  clearInscriptionState(inscriptionId: string): void {
+    try {
+      localStorage.removeItem(`${this.FORM_STATE_KEY}_${inscriptionId}`);
+      this.removeFromIncompleteInscriptions(inscriptionId);
+      // Logging implementado con LoggingService;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al limpiar estado de inscripción:', error);
+    }
+  }
+
+  /**
+   * Verifica si hay inscripciones incompletas
+   * @returns true si hay inscripciones incompletas, false en caso contrario
+   */
+  hasIncompleteInscriptions(): boolean {
+    try {
+      const data = localStorage.getItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
+      if (!data) {
+        return false;
+      }
+
+      const inscriptions = JSON.parse(data) as {id: string, contestId: number, timestamp: string, contestTitle?: string}[];
+      return inscriptions.length > 0;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al verificar inscripciones incompletas:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtiene todas las inscripciones incompletas
+   * @returns Array de estados de inscripción o array vacío si no hay ninguna
+   */
+  getAllIncompleteInscriptions(): IInscriptionFormState[] {
+    try {
+      const data = localStorage.getItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
+      if (!data) {
+        return [];
+      }
+
+      const incompleteIds = JSON.parse(data) as {id: string, contestId: number, timestamp: string, contestTitle?: string}[];
+
+      // Filtrar por tiempo (menos de 24 horas)
+      const now = new Date();
+      const validIncompleteIds = incompleteIds.filter(item => {
+        const timestamp = new Date(item.timestamp);
+        const diffHours = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60);
+        return diffHours <= 24;
+      });
+
+      // Si se filtraron elementos, actualizar la lista
+      if (validIncompleteIds.length !== incompleteIds.length) {
+        localStorage.setItem(this.INCOMPLETE_INSCRIPTIONS_KEY, JSON.stringify(validIncompleteIds));
+      }
+
+      // Obtener los estados completos
+      const result: IInscriptionFormState[] = [];
+      for (const item of validIncompleteIds) {
+        const state = this.getInscriptionState(item.id);
+        if (state) {
+          result.push(state);
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al obtener inscripciones incompletas:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Agrega una inscripción a la lista de incompletas
+   * @param inscriptionId ID de la inscripción
+   * @param contestId ID del concurso
+   * @param contestTitle Título del concurso (opcional)
+   */
+  private addToIncompleteInscriptions(inscriptionId: string, contestId: number, contestTitle?: string): void {
+    try {
+      const data = localStorage.getItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
+      let inscriptions: {id: string, contestId: number, timestamp: string, contestTitle?: string}[] = [];
+
+      if (data) {
+        inscriptions = JSON.parse(data);
+      }
+
+      // Verificar si ya existe
+      const existingIndex = inscriptions.findIndex(item => item.id === inscriptionId);
+      if (existingIndex >= 0) {
+        // Actualizar timestamp
+        inscriptions[existingIndex].timestamp = new Date().toISOString();
+        if (contestTitle) {
+          inscriptions[existingIndex].contestTitle = contestTitle;
+        }
+      } else {
+        // Agregar nueva inscripción
+        inscriptions.push({
+          id: inscriptionId,
+          contestId,
+          timestamp: new Date().toISOString(),
+          contestTitle
+        });
+      }
+
+      localStorage.setItem(this.INCOMPLETE_INSCRIPTIONS_KEY, JSON.stringify(inscriptions));
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al agregar a inscripciones incompletas:', error);
+    }
+  }
+
+  /**
+   * Elimina una inscripción de la lista de incompletas
+   * @param inscriptionId ID de la inscripción
+   */
+  private removeFromIncompleteInscriptions(inscriptionId: string): void {
+    try {
+      const data = localStorage.getItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
+      if (!data) {
+        return;
+      }
+
+      let inscriptions = JSON.parse(data) as {id: string, contestId: number, timestamp: string}[];
+      inscriptions = inscriptions.filter(item => item.id !== inscriptionId);
+
+      localStorage.setItem(this.INCOMPLETE_INSCRIPTIONS_KEY, JSON.stringify(inscriptions));
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al eliminar de inscripciones incompletas:', error);
+    }
+  }
+
+  /**
+   * Establece el flag de continuación directa
+   * @param value Valor del flag
+   */
+  setDirectContinuation(value: boolean): void {
+    if (value) {
+      localStorage.setItem(this.DIRECT_CONTINUATION_KEY, 'true');
+      // Logging implementado con LoggingService;
+    } else {
+      localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
+    }
+  }
+
+  /**
+   * Obtiene el flag de continuación directa
+   * @returns true si está establecido, false en caso contrario
+   */
+  getDirectContinuation(): boolean {
+    const value = localStorage.getItem(this.DIRECT_CONTINUATION_KEY);
+    return value === 'true';
+  }
+
+  /**
+   * Limpia el flag de continuación directa
+   */
+  clearDirectContinuation(): void {
+    localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
+    // Logging implementado con LoggingService;
+  }
+
+  /**
+   * Limpia todos los datos de inscripción guardados
+   */
+  clearAllInscriptionData(): void {
+    try {
+      // Limpiar lista de inscripciones incompletas
+      localStorage.removeItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
+
+      // Limpiar flag de continuación directa
+      localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
+
+      // Limpiar todos los estados de formulario de inscripción
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.FORM_STATE_KEY)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // Logging implementado con LoggingService;
+    } catch (error) {
+      console.error('[InscriptionStateService] Error al limpiar todos los datos de inscripción:', error);
+    }
+  }
+}
