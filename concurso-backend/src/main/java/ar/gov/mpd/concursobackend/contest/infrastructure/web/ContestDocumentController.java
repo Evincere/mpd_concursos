@@ -1,22 +1,63 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.web;
 
+import ar.gov.mpd.concursobackend.contest.application.service.ContestDocumentService;
+import ar.gov.mpd.concursobackend.contest.infrastructure.web.dto.ContestDocumentAvailabilityResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Controlador para manejar documentos de concursos
+ *
+ * Proporciona endpoints para:
+ * - Verificar disponibilidad de documentos (bases y descripción)
+ * - Inicializar datos de documentos en base de datos
+ * - Obtener estado del sistema de documentos
  */
+
 @RestController
 @RequestMapping("/api/contest-documents")
+@RequiredArgsConstructor
+@Slf4j
 public class ContestDocumentController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    private final ContestDocumentService contestDocumentService;
+
+    /**
+     * Obtiene la disponibilidad de documentos para un concurso específico
+     *
+     * Verifica la existencia de archivos de bases y descripción del puesto
+     * usando la nomenclatura estándar del sistema.
+     *
+     * @param contestId ID del concurso
+     * @return Información de disponibilidad de documentos (bases y descripción)
+     */
+    @GetMapping("/{contestId}/availability")
+    public ResponseEntity<ContestDocumentAvailabilityResponse> getDocumentAvailability(@PathVariable Long contestId) {
+
+        log.info("Solicitando disponibilidad de documentos para concurso: {}", contestId);
+
+        try {
+            ContestDocumentAvailabilityResponse availability =
+                contestDocumentService.getDocumentAvailability(contestId);
+
+            log.info("Disponibilidad obtenida para concurso {}: bases={}, descripción={}",
+                    contestId, availability.isBasesAvailable(), availability.isDescriptionAvailable());
+
+            return ResponseEntity.ok(availability);
+
+        } catch (Exception e) {
+            log.error("Error al obtener disponibilidad de documentos para concurso {}: {}",
+                     contestId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     /**
      * Endpoint para inicializar los datos de documentos de concursos

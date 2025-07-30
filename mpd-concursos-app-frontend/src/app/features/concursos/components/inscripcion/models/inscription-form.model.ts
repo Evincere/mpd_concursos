@@ -43,9 +43,26 @@ export interface RequiredDocument {
 }
 
 /**
- * Interfaz para las circunscripciones
+ * Interfaz para las circunscripciones (mantenida para compatibilidad)
  */
 export interface Circunscripcion {
   value: string;
   label: string;
+}
+
+/**
+ * Interfaz extendida para la selección de circunscripciones con departamentos
+ */
+export interface CircunscripcionSeleccion {
+  circunscripcion: string;
+  departamentos?: string[];
+  esCompleta: boolean;
+}
+
+/**
+ * Interfaz para los datos de circunscripciones en el formulario
+ */
+export interface CircunscripcionFormData {
+  selecciones: CircunscripcionSeleccion[];
+  valoresFormateados: string[]; // Para compatibilidad con el backend actual
 }

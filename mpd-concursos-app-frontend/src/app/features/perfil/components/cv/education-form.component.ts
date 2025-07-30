@@ -235,7 +235,16 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
     if (form.valid && this.documentValidation.isValid) {
       const validationResult = this.validationState();
       if (validationResult.isValid && validationResult.sanitizedData) {
-        this.save.emit(validationResult.sanitizedData as EducationDto);
+        // ✅ Obtener documentos temporales antes de enviar (igual que en experiencia)
+        const tempDocuments = this.documentUploader?.getTempDocuments() || [];
+
+        if (tempDocuments.length > 0) {
+          console.log(`[EducationForm] 📁 Enviando educación con ${tempDocuments.length} documentos temporales`);
+          this.saveWithDocuments(validationResult.sanitizedData as EducationDto, tempDocuments);
+        } else {
+          // Sin documentos temporales, envío normal
+          this.save.emit(validationResult.sanitizedData as EducationDto);
+        }
       } else {
         this.notificationService.showError('Error de validación inesperado al guardar.');
         this.cdr.markForCheck();
@@ -669,6 +678,47 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
   /**
    * @deprecated Método obsoleto. Ahora se usa updateFormValidators dentro de updateDynamicFieldsConfiguration
    */
+
+  /**
+   * Guarda la educación junto con los documentos temporales
+   * ✅ CRITICAL FIX: No mostrar éxito automáticamente, esperar respuesta del backend
+   */
+  private async saveWithDocuments(educationData: EducationDto, tempDocuments: any[]): Promise<void> {
+    try {
+      this.isLoading = true;
+      console.log('[EducationForm] 💾 Guardando educación con documentos...');
+
+      // ✅ CRITICAL FIX: Solo emitir los datos, no simular éxito
+      // El componente padre manejará la respuesta del backend
+      this.save.emit(educationData);
+
+      // ✅ CRITICAL FIX: No limpiar documentos ni mostrar éxito automáticamente
+      // Esto se hará solo cuando el backend confirme el éxito
+      console.log('[EducationForm] 📤 Educación enviada al backend, esperando respuesta...');
+
+    } catch (error) {
+      console.error('[EducationForm] ❌ Error guardando educación con documentos:', error);
+      this.notificationService.showError('Error al guardar la educación con documentos');
+      this.isLoading = false;
+    }
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Método para manejar éxito desde el componente padre
+   */
+  public onSaveSuccess(): void {
+    console.log('[EducationForm] ✅ Educación guardada exitosamente, limpiando documentos temporales...');
+    this.documentUploader?.clearTempDocuments();
+    this.isLoading = false;
+  }
+
+  /**
+   * ✅ CRITICAL FIX: Método para manejar error desde el componente padre
+   */
+  public onSaveError(): void {
+    console.log('[EducationForm] ❌ Error al guardar educación, manteniendo documentos temporales...');
+    this.isLoading = false;
+  }
 
   private groupErrorsByField(errors: string[]): Record<string, string[]> {
     const errorMap: Record<string, string[]> = {};

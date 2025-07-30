@@ -81,8 +81,10 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - document_storage_prod:/app/document-storage
+      - storage_data_prod:/app/storage
+      - backup_data_prod:/app/backups
       - ./logs:/app/logs
+      - ./scripts:/app/scripts:ro
     deploy:
       resources:
         limits:
@@ -141,7 +143,9 @@ services:
 volumes:
   mysql_data_prod:
     driver: local
-  document_storage_prod:
+  storage_data_prod:
+    driver: local
+  backup_data_prod:
     driver: local
 
 networks:

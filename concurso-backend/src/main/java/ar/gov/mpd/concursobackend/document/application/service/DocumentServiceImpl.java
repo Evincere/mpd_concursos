@@ -31,6 +31,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,8 +105,21 @@ public class DocumentServiceImpl implements DocumentService {
         versioningLog.error("💾 [UPLOAD] BEFORE_SAVE_WITH_FILEPATH | ID: {} | FilePath: {}",
             newDocument.getId().value(), filePath);
 
+        // Verificar si existe un documento anterior del mismo tipo para archivarlo
+        Optional<Document> existingDocument = documentRepository.findActiveByUserAndType(userId, documentType.getId());
+
         Document savedDocument = documentRepository.save(newDocument);
         auditService.recordCreation(savedDocument, userId);
+
+        // Si existe un documento anterior del mismo tipo, archivarlo con referencia al nuevo
+        if (existingDocument.isPresent()) {
+            Document oldDocument = existingDocument.get();
+            log.info("📁 [DocumentService] Archivando documento anterior: {} reemplazado por: {}",
+                    oldDocument.getId().value(), savedDocument.getId().value());
+
+            // Archivar el documento anterior con referencia al nuevo
+            archiveReplacedDocument(oldDocument, savedDocument.getId(), userId);
+        }
 
         // CRITICAL FIX: Actualizar estado de inscripciones después de cargar documento
         updateInscriptionStatusAfterDocumentUpload(userId);
@@ -322,17 +338,18 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional(readOnly = true)
     public List<DocumentDto> getUserDocuments(UUID userId) {
-        log.debug("🔍 [DocumentService] Getting documents for user: {}", userId);
+        log.debug("🔍 [DocumentService] Getting active documents for user: {}", userId);
 
-        List<Document> documents = documentRepository.findByUserId(userId);
-        log.debug("📊 [DocumentService] Documents found in repository: {}", documents.size());
+        // ✅ FIXED: Usar findActiveByUserId para filtrar documentos archivados
+        List<Document> documents = documentRepository.findActiveByUserId(userId);
+        log.debug("📊 [DocumentService] Active documents found in repository: {}", documents.size());
 
         if (!documents.isEmpty()) {
-            log.debug("📄 [DocumentService] First document: {}", documents.get(0));
+            log.debug("📄 [DocumentService] First active document: {}", documents.get(0));
         }
 
         List<DocumentDto> documentDtos = documentMapper.toDtoList(documents);
-        log.debug("✅ [DocumentService] Documents mapped to DTOs: {}", documentDtos.size());
+        log.debug("✅ [DocumentService] Active documents mapped to DTOs: {}", documentDtos.size());
 
         return documentDtos;
     }
@@ -340,10 +357,11 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional(readOnly = true)
     public List<DocumentSummaryDto> getUserDocumentsSummary(UUID userId) {
-        log.debug("🔍 [DocumentService] Getting documents summary for user: {}", userId);
+        log.debug("🔍 [DocumentService] Getting active documents summary for user: {}", userId);
 
-        List<Document> allDocuments = documentRepository.findByUserId(userId);
-        log.debug("📊 [DocumentService] Total documents found: {}", allDocuments.size());
+        // ✅ FIXED: Usar findActiveByUserId para filtrar documentos archivados
+        List<Document> allDocuments = documentRepository.findActiveByUserId(userId);
+        log.debug("📊 [DocumentService] Total active documents found: {}", allDocuments.size());
 
         // Agrupar documentos por tipo
         Map<UUID, List<Document>> documentsByType = allDocuments.stream()
@@ -579,7 +597,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional
     public void deleteDocument(String documentId, UUID userId) {
-        log.debug("Deleting document: {} for user: {}", documentId, userId);
+        log.info("🗑️ [DocumentService] Iniciando eliminación (soft delete) de documento: {} para usuario: {}", documentId, userId);
 
         Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
                 .orElseThrow(() -> new DocumentException("Document not found"));
@@ -589,11 +607,118 @@ public class DocumentServiceImpl implements DocumentService {
             throw new DocumentException("Document does not belong to the user");
         }
 
-        // Delete the file
-        documentStorageService.deleteFile(document.getFilePath());
+        // Realizar soft delete con renombrado del archivo
+        performSoftDeleteWithRename(document, userId);
 
-        // Delete the document metadata
-        documentRepository.deleteById(document.getId());
+        log.info("✅ [DocumentService] Documento archivado exitosamente: {}", documentId);
+    }
+
+    /**
+     * Realiza soft delete con renombrado del archivo físico
+     */
+    private void performSoftDeleteWithRename(Document document, UUID userId) {
+        try {
+            // Generar nuevo nombre para el archivo archivado
+            String archivedFileName = generateArchivedFileName(document);
+
+            // Renombrar el archivo físico
+            String newFilePath = renameFileForArchiving(document.getFilePath(), archivedFileName);
+
+            // Actualizar el documento con información de archivado
+            document.setFilePath(newFilePath);
+            document.archive(null, userId); // null porque no hay documento de reemplazo aún
+
+            // Guardar cambios en base de datos
+            documentRepository.save(document);
+
+            log.info("📁 [DocumentService] Archivo renombrado y archivado: {} -> {}",
+                    document.getFileName().value(), archivedFileName);
+
+        } catch (Exception e) {
+            log.error("❌ [DocumentService] Error durante soft delete con renombrado", e);
+            throw new DocumentException("Error al archivar documento: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Genera el nombre del archivo archivado con la nomenclatura solicitada
+     * Formato: ARCHIVED_{originalId}_{documentType}_{timestamp}.pdf
+     */
+    private String generateArchivedFileName(Document document) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String documentTypeCode = document.getDocumentType().getCode();
+        String originalId = document.getId().value().toString();
+
+        return String.format("ARCHIVED_%s_%s_%s.pdf",
+                originalId, documentTypeCode, timestamp);
+    }
+
+    /**
+     * Renombra el archivo físico para archivado
+     */
+    private String renameFileForArchiving(String originalFilePath, String archivedFileName) {
+        try {
+            Path originalPath = Paths.get(documentStorageService.getStorageLocation()).resolve(originalFilePath);
+            Path archivedPath = originalPath.getParent().resolve(archivedFileName);
+
+            // Verificar que el archivo original existe
+            if (!Files.exists(originalPath)) {
+                log.warn("⚠️ [DocumentService] Archivo original no encontrado: {}", originalFilePath);
+                return originalFilePath; // Mantener path original si no existe el archivo
+            }
+
+            // Renombrar archivo
+            Files.move(originalPath, archivedPath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Retornar el nuevo path relativo
+            Path storagePath = Paths.get(documentStorageService.getStorageLocation());
+            return storagePath.relativize(archivedPath).toString();
+
+        } catch (IOException e) {
+            log.error("❌ [DocumentService] Error renombrando archivo: {} -> {}", originalFilePath, archivedFileName, e);
+            throw new DocumentException("Error al renombrar archivo para archivado: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Archiva un documento reemplazado con referencia al nuevo documento
+     */
+    private void archiveReplacedDocument(Document oldDocument, DocumentId newDocumentId, UUID userId) {
+        try {
+            // Generar nuevo nombre para el archivo archivado incluyendo el ID del nuevo documento
+            String archivedFileName = generateArchivedFileNameWithReplacement(oldDocument, newDocumentId);
+
+            // Renombrar el archivo físico
+            String newFilePath = renameFileForArchiving(oldDocument.getFilePath(), archivedFileName);
+
+            // Actualizar el documento con información de archivado
+            oldDocument.setFilePath(newFilePath);
+            oldDocument.archive(newDocumentId, userId);
+
+            // Guardar cambios en base de datos
+            documentRepository.save(oldDocument);
+
+            log.info("📁 [DocumentService] Documento archivado exitosamente: {} -> {} (reemplazado por: {})",
+                    oldDocument.getFileName().value(), archivedFileName, newDocumentId.value());
+
+        } catch (Exception e) {
+            log.error("❌ [DocumentService] Error archivando documento reemplazado: {}", oldDocument.getId().value(), e);
+            // No lanzar excepción para no interrumpir la carga del nuevo documento
+        }
+    }
+
+    /**
+     * Genera el nombre del archivo archivado incluyendo el ID del documento de reemplazo
+     * Formato: ARCHIVED_{originalId}_{documentType}_{replacedById}_{timestamp}.pdf
+     */
+    private String generateArchivedFileNameWithReplacement(Document document, DocumentId replacedById) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String documentTypeCode = document.getDocumentType().getCode();
+        String originalId = document.getId().value().toString();
+        String replacedByIdStr = replacedById.value().toString();
+
+        return String.format("ARCHIVED_%s_%s_%s_%s.pdf",
+                originalId, documentTypeCode, replacedByIdStr, timestamp);
     }
 
     @Override

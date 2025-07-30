@@ -773,24 +773,43 @@ app-custom-table {
 }
 
 .estado-activo {
-  background-color: rgba(76, 175, 80, 0.12) !important;
-  color: var(--color-success) !important;
+  background-color: rgba(76, 175, 80, 0.8) !important;
+  color: #ffffff !important;
   box-shadow: 0 2px 10px rgba(76, 175, 80, 0.15) !important;
   border: 1px solid rgba(76, 175, 80, 0.2) !important;
 }
 
 .estado-inactivo {
-  background-color: rgba(255, 152, 0, 0.12) !important;
-  color: var(--color-warning) !important;
+  background-color: rgba(255, 152, 0, 0.8) !important;
+  color: #ffffff !important;
   box-shadow: 0 2px 10px rgba(255, 152, 0, 0.15) !important;
   border: 1px solid rgba(255, 152, 0, 0.2) !important;
 }
 
 .estado-bloqueado {
-  background-color: rgba(244, 67, 54, 0.12) !important;
-  color: var(--color-error) !important;
+  background-color: rgba(244, 67, 54, 0.8) !important;
+  color: #ffffff !important;
   box-shadow: 0 2px 10px rgba(244, 67, 54, 0.15) !important;
   border: 1px solid rgba(244, 67, 54, 0.2) !important;
+}
+
+// Forzar texto blanco en badges de posición específicos
+.badge-posicion.estado-bloqueado {
+  background: #f44336 !important;
+  color: white !important;
+
+  span, i {
+    color: white !important;
+  }
+}
+
+.badge-posicion.estado-activo {
+  background: #4caf50 !important;
+  color: white !important;
+
+  span, i {
+    color: white !important;
+  }
 }
 
 // Estilos para los enlaces de email

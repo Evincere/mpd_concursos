@@ -112,8 +112,8 @@ export class DocumentosService {
         this.documentosCache = documentos;
         this.ultimaActualizacion = Date.now();
 
-        // CRITICAL FIX: Notificar actualización para que los componentes se refresquen
-        this.documentoActualizadoSource.next(Date.now());
+        // REMOVED: No notificar actualización en consultas normales para evitar bucle infinito
+        // Solo notificar cuando realmente se modifique un documento (upload, delete, replace)
       }),
       finalize(() => {
         // CRITICAL FIX: Liberar mutex al finalizar (éxito o error)

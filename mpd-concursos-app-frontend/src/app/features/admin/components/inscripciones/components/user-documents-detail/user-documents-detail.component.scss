@@ -1,0 +1,579 @@
+@use 'src/styles/variables' as *;
+
+/* Enhanced Glassmorphism Design System Variables */
+$glass-background-primary: rgba(55, 65, 81, 0.8);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(31, 41, 55, 0.85);
+$glass-hover-primary: rgba(75, 85, 99, 0.6);
+$glass-active-primary: rgba(55, 65, 81, 0.95);
+
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-muted: #9ca3af;
+
+$focus-color: #3b82f6;
+$focus-color-secondary: rgba(59, 130, 246, 0.2);
+
+$theme-inscripciones: #4CAF50;
+$theme-inscripciones-light: rgba(76, 175, 80, 0.1);
+$theme-inscripciones-dark: #388E3C;
+
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+$border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.2);
+
+$card-shadow-base: 0 8px 32px rgba(0, 0, 0, 0.3);
+$card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+$card-shadow-focus: 0 0 0 3px rgba(76, 175, 80, 0.3);
+
+$transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+.user-documents-detail-container {
+  background: $glass-background-primary;
+  backdrop-filter: blur(20px);
+  border: $border-glass-medium;
+  border-radius: $border-radius-xl;
+  color: $text-primary;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: $card-shadow-base;
+}
+
+/* Header con información del usuario */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: $border-glass-light;
+  background: linear-gradient(135deg, $glass-background-secondary, $glass-background-tertiary);
+  border-radius: $border-radius-xl $border-radius-xl 0 0;
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .user-avatar {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, $theme-inscripciones, $theme-inscripciones-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    .user-details {
+      .user-name {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: $text-primary;
+      }
+
+      .user-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        span {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.9rem;
+          color: $text-secondary;
+
+          i {
+            width: 16px;
+            color: $theme-inscripciones;
+          }
+        }
+      }
+    }
+  }
+
+  .modal-actions {
+    .close-button {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fca5a5;
+      cursor: pointer;
+      transition: $transition-fast;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.3);
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+/* Indicadores de progreso */
+.progress-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+  background: $glass-background-tertiary;
+
+  .progress-card {
+    background: $glass-background-primary;
+    border: $border-glass-light;
+    border-radius: $border-radius-lg;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+
+    .progress-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+      color: $text-primary;
+
+      i {
+        color: $theme-inscripciones;
+      }
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: $transition-smooth;
+      }
+    }
+
+    .progress-text {
+      font-size: 0.9rem;
+      color: $text-secondary;
+      text-align: center;
+    }
+  }
+}
+
+/* Estado general */
+.general-status {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: center;
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: $border-radius-lg;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+
+    &.status-completa {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      color: #a5d6a7;
+    }
+
+    &.status-incompleta {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    &.status-pendiente_revision {
+      background: rgba(255, 152, 0, 0.2);
+      border: 1px solid rgba(255, 152, 0, 0.3);
+      color: #ffcc80;
+    }
+  }
+}
+
+/* Tabs */
+.tabs-container {
+  .tabs-header {
+    display: flex;
+    background: $glass-background-secondary;
+    border-bottom: $border-glass-light;
+
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      background: transparent;
+      border: none;
+      color: $text-secondary;
+      cursor: pointer;
+      transition: $transition-fast;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      position: relative;
+
+      &:hover {
+        background: $glass-hover-primary;
+        color: $text-primary;
+      }
+
+      &.active {
+        background: $glass-active-primary;
+        color: $text-primary;
+        border-bottom: 2px solid $theme-inscripciones;
+      }
+
+      .tab-badge {
+        background: $theme-inscripciones;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .tabs-content {
+    min-height: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+
+    .tab-content {
+      padding: 1.5rem;
+    }
+  }
+}
+
+/* Grid de documentos */
+.documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1rem;
+
+  .document-card {
+    background: $glass-background-primary;
+    border: $border-glass-light;
+    border-radius: $border-radius-lg;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    transition: $transition-fast;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: $card-shadow-hover;
+    }
+
+    .document-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .document-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border-radius: $border-radius-md;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+      }
+
+      .document-info {
+        flex: 1;
+
+        .document-name {
+          margin: 0 0 0.25rem 0;
+          font-size: 1rem;
+          font-weight: 500;
+          color: $text-primary;
+        }
+
+        .document-type {
+          margin: 0 0 0.25rem 0;
+          font-size: 0.85rem;
+          color: $theme-inscripciones;
+        }
+
+        .document-date {
+          margin: 0;
+          font-size: 0.8rem;
+          color: $text-muted;
+        }
+      }
+
+      .document-status {
+        flex-shrink: 0;
+      }
+    }
+
+    .document-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+
+      .action-button {
+        width: 32px;
+        height: 32px;
+        border-radius: $border-radius-sm;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: $transition-fast;
+
+        &.view {
+          background: rgba(59, 130, 246, 0.2);
+          color: #93c5fd;
+          border: 1px solid rgba(59, 130, 246, 0.3);
+
+          &:hover {
+            background: rgba(59, 130, 246, 0.3);
+          }
+        }
+
+        &.approve {
+          background: rgba(76, 175, 80, 0.2);
+          color: #a5d6a7;
+          border: 1px solid rgba(76, 175, 80, 0.3);
+
+          &:hover {
+            background: rgba(76, 175, 80, 0.3);
+          }
+        }
+
+        &.reject {
+          background: rgba(239, 68, 68, 0.2);
+          color: #fca5a5;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+
+          &:hover {
+            background: rgba(239, 68, 68, 0.3);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Sección CV */
+.cv-section {
+  h3 {
+    color: $text-primary;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: $border-glass-light;
+  }
+
+  .cv-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+
+    .cv-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: $glass-background-primary;
+      border: $border-glass-light;
+      border-radius: $border-radius-lg;
+      backdrop-filter: blur(10px);
+
+      .cv-item-info {
+        flex: 1;
+
+        h4 {
+          margin: 0 0 0.25rem 0;
+          color: $text-primary;
+          font-size: 1rem;
+        }
+
+        .cv-item-period,
+        .cv-item-institution,
+        .cv-item-type {
+          margin: 0;
+          font-size: 0.85rem;
+          color: $text-secondary;
+        }
+      }
+
+      .cv-item-document {
+        flex-shrink: 0;
+      }
+
+      .cv-item-missing {
+        .missing-badge {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: rgba(255, 152, 0, 0.2);
+          border: 1px solid rgba(255, 152, 0, 0.3);
+          border-radius: $border-radius-sm;
+          color: #ffcc80;
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+}
+
+/* Timeline del historial */
+.history-timeline {
+  .history-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+
+    &:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 20px;
+      top: 40px;
+      bottom: -24px;
+      width: 2px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+    }
+
+    .history-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      backdrop-filter: blur(10px);
+
+      &.action-uploaded {
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: #93c5fd;
+      }
+
+      &.action-approved {
+        background: rgba(76, 175, 80, 0.2);
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        color: #a5d6a7;
+      }
+
+      &.action-rejected {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+      }
+
+      &.action-replaced {
+        background: rgba(255, 152, 0, 0.2);
+        border: 1px solid rgba(255, 152, 0, 0.3);
+        color: #ffcc80;
+      }
+
+      &.action-deleted {
+        background: rgba(156, 163, 175, 0.2);
+        border: 1px solid rgba(156, 163, 175, 0.3);
+        color: #d1d5db;
+      }
+    }
+
+    .history-content {
+      flex: 1;
+      background: $glass-background-primary;
+      border: $border-glass-light;
+      border-radius: $border-radius-lg;
+      padding: 1rem;
+      backdrop-filter: blur(10px);
+
+      .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+
+        .history-action {
+          margin: 0;
+          color: $text-primary;
+          font-size: 1rem;
+          font-weight: 500;
+        }
+
+        .history-date {
+          font-size: 0.85rem;
+          color: $text-muted;
+        }
+      }
+
+      .history-user {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+        color: $text-secondary;
+      }
+
+      .history-comments {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+        color: $text-primary;
+        font-style: italic;
+      }
+
+      .history-states {
+        .state-change {
+          display: inline-block;
+          padding: 0.25rem 0.5rem;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: $border-radius-sm;
+          font-size: 0.8rem;
+          color: $text-secondary;
+          font-family: monospace;
+        }
+      }
+    }
+  }
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: $text-secondary;
+
+  .loading-spinner {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: $theme-inscripciones;
+  }
+}

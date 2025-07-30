@@ -31,6 +31,11 @@ public class DocumentEntityMapper {
         document.setRejectionReason(entity.getRejectionReason());
         document.setErrorMessage(entity.getErrorMessage());
 
+        // ✅ FIXED: Mapear campos de archivado que faltaban
+        document.setIsArchived(entity.getIsArchived());
+        document.setArchivedAt(entity.getArchivedAt());
+        document.setArchivedBy(entity.getArchivedBy());
+
         return document;
     }
 
@@ -72,6 +77,11 @@ public class DocumentEntityMapper {
         entity.setValidatedAt(domain.getValidatedAt());
         entity.setRejectionReason(domain.getRejectionReason());
         entity.setErrorMessage(domain.getErrorMessage());
+
+        // ✅ FIXED: Mapear campos de archivado que faltaban
+        entity.setIsArchived(domain.isArchived());
+        entity.setArchivedAt(domain.getArchivedAt());
+        entity.setArchivedBy(domain.getArchivedBy());
 
         return entity;
     }

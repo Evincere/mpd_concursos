@@ -7,7 +7,7 @@ import { ReportesAdminComponent } from './components/reportes/reportes-admin.com
 import { ConfiguracionAdminComponent } from './components/configuracion/configuracion-admin.component';
 import { ExamenesAdminComponent } from './components/examenes/examenes-admin.component';
 import { PreguntasAdminComponent } from './components/preguntas/preguntas-admin.component';
-import { DocumentosAdminComponent } from './components/documentos/documentos-admin.component';
+// import { DocumentosAdminComponent } from './components/documentos/documentos-admin.component';
 import { ComunicacionesAdminComponent } from './components/comunicaciones/comunicaciones-admin.component';
 
 import { RolesAdminComponent } from './components/roles/roles-admin.component';
@@ -40,7 +40,8 @@ export const ADMIN_ROUTES: Routes = [
         redirectTo: 'users',
         pathMatch: 'full'
       },
-      { path: 'documentos', component: DocumentosAdminComponent },
+      // Redireccionar documentos a la vista que funciona
+      { path: 'documentos', redirectTo: 'inscripciones/documentos', pathMatch: 'full' },
       // Rutas para reportes
       {
         path: 'reportes',

@@ -18,9 +18,21 @@
 
   h1 {
     margin: 0;
-    font-size: $font-size-xl;
+    font-size: 1.5rem;
     font-weight: 500;
     color: $color-text-primary;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    i {
+      color: $color-primary;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
   }
 }
 
@@ -108,7 +120,7 @@
   }
 
   .stat-label {
-    font-size: $font-size-sm;
+    font-size: 0.75rem;
     color: $color-text-secondary;
   }
 }
@@ -175,6 +187,236 @@ table {
 .estado-rechazado {
   background-color: rgba($color-error, 0.15);
   color: $color-error;
+}
+
+.estado-desconocido {
+  background-color: rgba($color-text-muted, 0.15);
+  color: $color-text-muted;
+}
+
+// Estilos para la nueva tabla customizada
+.table-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  overflow: hidden;
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid $color-border;
+    background: rgba($color-primary, 0.05);
+
+    h3 {
+      margin: 0;
+      font-size: 1.125rem;
+      color: $color-text-primary;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      i {
+        color: $color-primary;
+      }
+    }
+
+    .results-count {
+      font-size: 0.75rem;
+      color: $color-text-secondary;
+      font-weight: 500;
+    }
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: $color-surface;
+
+    thead {
+      background: rgba($color-primary, 0.05);
+
+      th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: $color-text-primary;
+        border-bottom: 2px solid $color-border;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+
+    tbody {
+      .table-row {
+        transition: $transition-default;
+
+        &:hover {
+          background: rgba($color-primary, 0.03);
+        }
+
+        &:not(:last-child) {
+          border-bottom: 1px solid $color-border;
+        }
+
+        td {
+          padding: 12px 16px;
+          vertical-align: middle;
+          color: $color-text-primary;
+          font-size: 0.75rem;
+
+          &.document-id {
+            font-family: monospace;
+            font-size: 11px;
+            color: $color-text-muted;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          &.document-type {
+            font-weight: 500;
+            color: $color-text-secondary;
+          }
+
+          &.date-text {
+            color: $color-text-secondary;
+            font-size: 0.6875rem;
+          }
+
+          .file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .file-icon {
+              color: $color-error;
+              font-size: 16px;
+            }
+          }
+
+          .user-info {
+            .user-name {
+              display: block;
+              font-weight: 500;
+              color: $color-text-primary;
+              font-size: 0.75rem;
+            }
+
+            .user-email {
+              display: block;
+              color: $color-text-muted;
+              font-size: 0.6875rem;
+              margin-top: 2px;
+            }
+          }
+
+          .table-actions {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-start;
+          }
+        }
+      }
+    }
+  }
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: $color-text-muted;
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: $color-text-muted;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+.loading-container {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: $color-text-muted;
+
+  i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: $color-primary;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-top: 1px solid $color-border;
+  background: rgba($color-primary, 0.02);
+
+  .pagination-info {
+    font-size: 0.75rem;
+    color: $color-text-secondary;
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .page-info {
+      font-size: 0.75rem;
+      color: $color-text-primary;
+      font-weight: 500;
+    }
+  }
+}
+
+// Actualizar estilos de iconos para FontAwesome
+.stat-icon {
+  i {
+    font-size: 1.5rem;
+  }
+
+  &.pending-icon {
+    background-color: rgba($color-warning, 0.15);
+    i {
+      color: $color-warning;
+    }
+  }
+
+  &.approved-icon {
+    background-color: rgba($color-success, 0.15);
+    i {
+      color: $color-success;
+    }
+  }
+
+  &.rejected-icon {
+    background-color: rgba($color-error, 0.15);
+    i {
+      color: $color-error;
+    }
+  }
 }
 
 // Estilos para los botones de acción

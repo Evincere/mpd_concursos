@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
@@ -81,8 +81,8 @@ export class InscripcionDetalleAdminComponent implements OnInit, OnDestroy {
     private inscripcionesService: AdminInscriptionsService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    public dialogRef: MatDialogRef<InscripcionDetalleAdminComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
+    @Optional() public dialogRef: MatDialogRef<InscripcionDetalleAdminComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
     this.statusForm = this.fb.group({
       status: ['', [Validators.required]],
@@ -100,24 +100,110 @@ export class InscripcionDetalleAdminComponent implements OnInit, OnDestroy {
   }
 
   loadInscriptionDetail(): void {
+    if (!this.data?.inscriptionId) {
+      console.error('No inscription ID provided');
+      return;
+    }
+
     this.isLoading = true;
 
     this.inscripcionesService.getInscriptionById(this.data.inscriptionId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (detail) => {
-          this.inscriptionDetail = detail;
-          this.statusForm.patchValue({
-            status: detail.inscription.state,
-            observations: detail.inscription.observations || ''
-          });
+          console.log('Detalle de inscripción recibido:', detail);
+
+          // Validar que la respuesta tenga la estructura esperada
+          if (!detail) {
+            console.error('Respuesta vacía del servidor');
+            this.snackBar.open('Error: Respuesta vacía del servidor', 'Cerrar', { duration: 3000 });
+            this.isLoading = false;
+            this.dialogRef?.close();
+            return;
+          }
+
+          // Si la respuesta es directamente la inscripción (sin wrapper)
+          if ((detail as any).id && (detail as any).state && !(detail as any).inscription) {
+            console.log('Respuesta directa de inscripción, adaptando estructura...');
+            console.log('Datos completos recibidos:', JSON.stringify(detail, null, 2));
+
+            const rawData = detail as any;
+
+            this.inscriptionDetail = {
+              inscription: {
+                id: rawData.id,
+                contestId: rawData.contestId,
+                userId: rawData.userId,
+                state: rawData.state,
+                createdAt: rawData.createdAt || rawData.inscriptionDate,
+                updatedAt: rawData.updatedAt || rawData.lastUpdated,
+                reviewDate: rawData.reviewDate,
+                observations: rawData.observations,
+                // Usar contestInfo si existe, sino valores por defecto
+                contestTitle: rawData.contestInfo?.title || rawData.contestTitle || 'No disponible',
+                contestCategory: rawData.contestInfo?.category || rawData.contestCategory || 'No disponible',
+                contestDepartment: rawData.contestInfo?.department || rawData.contestDepartment || 'No disponible',
+                // Usar userInfo si existe, sino valores por defecto
+                userFullName: rawData.userInfo?.fullName || rawData.userFullName || 'No disponible',
+                userEmail: rawData.userInfo?.email || rawData.userEmail || 'No disponible',
+                userDni: rawData.userInfo?.dni || rawData.userDni || 'No disponible',
+                // Propiedades adicionales requeridas por AdminInscription
+                documentsCount: rawData.documentsCount || 0,
+                pendingDocuments: rawData.pendingDocuments || 0,
+                approvedDocuments: rawData.approvedDocuments || 0,
+                rejectedDocuments: rawData.rejectedDocuments || 0,
+                inscriptionDate: rawData.inscriptionDate || rawData.createdAt,
+                lastUpdated: rawData.lastUpdated || rawData.updatedAt,
+                lastUpdate: new Date(rawData.lastUpdated || rawData.updatedAt || Date.now()),
+                reviewedBy: rawData.reviewedBy
+              },
+              user: {
+                id: rawData.userId,
+                firstName: rawData.userInfo?.firstName || rawData.userInfo?.fullName?.split(' ')[0] || 'No disponible',
+                lastName: rawData.userInfo?.lastName || rawData.userInfo?.fullName?.split(' ').slice(1).join(' ') || 'No disponible',
+                dni: rawData.userInfo?.dni || rawData.userDni || 'No disponible',
+                email: rawData.userInfo?.email || rawData.userEmail || 'No disponible',
+                telefono: rawData.userInfo?.telefono || rawData.userTelefono || null,
+                direccion: rawData.userInfo?.direccion || rawData.userDireccion || null,
+                // Propiedades adicionales requeridas por UserProfile
+                username: rawData.userInfo?.username || rawData.userInfo?.email || rawData.username || 'No disponible',
+                cuit: rawData.userInfo?.cuit || rawData.userCuit || null
+              },
+              documents: rawData.documents || [],
+              history: rawData.history || []
+            };
+
+            console.log('Estructura adaptada:', JSON.stringify(this.inscriptionDetail, null, 2));
+
+            this.statusForm.patchValue({
+              status: rawData.state,
+              observations: rawData.observations || ''
+            });
+          }
+          // Si la respuesta tiene la estructura esperada
+          else if (detail.inscription) {
+            this.inscriptionDetail = detail;
+            this.statusForm.patchValue({
+              status: detail.inscription.state,
+              observations: detail.inscription.observations || ''
+            });
+          }
+          // Estructura inesperada
+          else {
+            console.error('Estructura de respuesta inesperada:', detail);
+            this.snackBar.open('Error: Estructura de datos inesperada', 'Cerrar', { duration: 3000 });
+            this.isLoading = false;
+            this.dialogRef?.close();
+            return;
+          }
+
           this.isLoading = false;
         },
         error: (error) => {
           console.error(`Error obteniendo detalle de inscripción con ID ${this.data.inscriptionId}:`, error);
           this.snackBar.open('Error al cargar el detalle de la inscripción', 'Cerrar', { duration: 3000 });
           this.isLoading = false;
-          this.dialogRef.close();
+          this.dialogRef?.close();
         }
       });
   }
@@ -252,6 +338,6 @@ export class InscripcionDetalleAdminComponent implements OnInit, OnDestroy {
   }
 
   onClose(): void {
-    this.dialogRef.close(true);
+    this.dialogRef?.close(true);
   }
 }

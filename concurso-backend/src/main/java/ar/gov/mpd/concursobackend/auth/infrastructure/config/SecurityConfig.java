@@ -90,6 +90,8 @@ public class SecurityConfig {
                         // ✅ CRITICAL FIX: Permitir acceso público a imágenes de perfil para que funcionen en <img> tags
                         // Las imágenes de perfil necesitan ser accesibles sin autenticación para mostrarse en el navegador
                         .requestMatchers("/api/files/profile-images/**").permitAll()
+                        // ✅ Permitir acceso público a bases de concursos para descarga
+                        .requestMatchers("/api/files/contest-bases/**").permitAll()
                         .requestMatchers("/api/v1/roles/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

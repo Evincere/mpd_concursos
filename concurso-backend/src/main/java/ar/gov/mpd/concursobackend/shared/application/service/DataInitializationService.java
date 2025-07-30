@@ -115,14 +115,15 @@ public class DataInitializationService {
         User createdUser = userService.createUser(user);
         logger.info("✅ [DataInitializationService] Super admin '{}' creado con ID: {}", username, createdUser.getId().value());
 
-        // TEMPORALMENTE DESHABILITADO: La asignación de ROLE_ADMIN causa conflictos de concurrencia optimista
-        // El usuario admin se crea con ROLE_USER por defecto, el rol ROLE_ADMIN se puede asignar manualmente después
-        logger.info("⚠️ [DataInitializationService] NOTA: Usuario admin creado solo con ROLE_USER. Asignar ROLE_ADMIN manualmente si es necesario.");
-
-        // TODO: Implementar asignación de roles sin conflictos de concurrencia
-        // logger.info("🔑 [DataInitializationService] Asignando rol ROLE_ADMIN a '{}'...", username);
-        // rolService.assignRoleToUser(username, RoleEnum.ROLE_ADMIN);
-        // logger.info("✅ [DataInitializationService] Rol ROLE_ADMIN asignado a '{}'", username);
+        // Asignar rol ROLE_ADMIN de forma segura después de la creación
+        try {
+            logger.info("🔑 [DataInitializationService] Asignando rol ROLE_ADMIN a '{}'...", username);
+            assignAdminRoleSafely(username);
+            logger.info("✅ [DataInitializationService] Rol ROLE_ADMIN asignado a '{}'", username);
+        } catch (Exception e) {
+            logger.error("❌ [DataInitializationService] Error al asignar rol ROLE_ADMIN a '{}': {}", username, e.getMessage());
+            logger.info("⚠️ [DataInitializationService] Usuario admin creado solo con ROLE_USER. Asignar ROLE_ADMIN manualmente si es necesario.");
+        }
     }
 
     private void initializeDocumentTypes() {
@@ -147,7 +148,8 @@ public class DataInitializationService {
                 createDocumentType("ANTECEDENTES_PENALES", "Certificado de Antecedentes Penales", "Certificado de Antecedentes Penales vigente (antigüedad no mayor a 90 días)", true, 4),
                 createDocumentType("CERTIFICADO_PROFESIONAL_ANTIGUEDAD", "Certificado de Antigüedad Profesional", "Certificado de antigüedad en el ejercicio profesional", true, 5),
                 createDocumentType("CERTIFICADO_SIN_SANCIONES", "Certificado Sin Sanciones Disciplinarias", "Certificado que acredite no registrar sanciones disciplinarias", true, 6),
-                createDocumentType("CERTIFICADO_LEY_MICAELA", "Certificado Ley Micaela", "Certificado de capacitación en Ley Micaela (opcional)", false, 7),
+                createDocumentType("TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", "Título Universitario y Certificado Analítico", "Título universitario y certificado analítico unificados en un solo archivo PDF. Ambos documentos deben combinarse en un único archivo para su carga.", true, 7),
+                createDocumentType("CERTIFICADO_LEY_MICAELA", "Certificado Ley Micaela", "Certificado de capacitación en Ley Micaela (opcional)", false, 8),
                 createDocumentType("DOCUMENTO_ADICIONAL", "Documento Adicional", "Cualquier documento adicional requerido específicamente", false, 99)
         };
 
@@ -167,7 +169,7 @@ public class DataInitializationService {
     }
 
     private void verifyEssentialDocumentTypes(List<DocumentTypeEntity> existingTypes) {
-        String[] essentialCodes = {"DNI_FRONTAL", "DNI_DORSO", "CONSTANCIA_CUIL", "ANTECEDENTES_PENALES", "DOCUMENTO_ADICIONAL"};
+        String[] essentialCodes = {"DNI_FRONTAL", "DNI_DORSO", "CONSTANCIA_CUIL", "ANTECEDENTES_PENALES", "TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", "DOCUMENTO_ADICIONAL"};
         for (String code : essentialCodes) {
             boolean exists = existingTypes.stream().anyMatch(type -> code.equals(type.getCode()));
             if (!exists) {
@@ -195,6 +197,9 @@ public class DataInitializationService {
                 break;
             case "ANTECEDENTES_PENALES":
                 type = createDocumentType("ANTECEDENTES_PENALES", "Certificado de Antecedentes Penales", "Certificado de Antecedentes Penales vigente (antigüedad no mayor a 90 días)", true, 4);
+                break;
+            case "TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO":
+                type = createDocumentType("TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", "Título Universitario y Certificado Analítico", "Título universitario y certificado analítico unificados en un solo archivo PDF. Ambos documentos deben combinarse en un único archivo para su carga.", true, 7);
                 break;
             case "DOCUMENTO_ADICIONAL":
                 type = createDocumentType("DOCUMENTO_ADICIONAL", "Documento Adicional", "Cualquier documento adicional requerido específicamente", false, 99);
@@ -232,6 +237,7 @@ public class DataInitializationService {
             "ANTECEDENTES_PENALES", true,
             "CERTIFICADO_PROFESIONAL_ANTIGUEDAD", true,
             "CERTIFICADO_SIN_SANCIONES", true,
+            "TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO", true,
             "CERTIFICADO_LEY_MICAELA", false,
             "DOCUMENTO_ADICIONAL", false
         );
@@ -253,6 +259,47 @@ public class DataInitializationService {
             logger.info("✅ [DataInitializationService] Campos 'required' corregidos exitosamente");
         } else {
             logger.info("✅ [DataInitializationService] Todos los campos 'required' están correctos");
+        }
+    }
+
+    /**
+     * Asigna el rol ROLE_ADMIN al usuario de forma segura, manejando conflictos de concurrencia
+     */
+    private void assignAdminRoleSafely(String username) {
+        int maxRetries = 3;
+        int retryCount = 0;
+
+        while (retryCount < maxRetries) {
+            try {
+                // Esperar un poco antes de intentar asignar el rol para evitar conflictos
+                if (retryCount > 0) {
+                    Thread.sleep(500 * retryCount); // Backoff exponencial
+                }
+
+                rolService.assignRoleToUser(username, RoleEnum.ROLE_ADMIN);
+                logger.info("✅ [DataInitializationService] Rol ROLE_ADMIN asignado exitosamente a '{}' en intento {}",
+                           username, retryCount + 1);
+                return; // Éxito, salir del método
+
+            } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+                retryCount++;
+                logger.warn("⚠️ [DataInitializationService] Error de concurrencia optimista al asignar rol a '{}' (intento {}): {}",
+                           username, retryCount, e.getMessage());
+
+                if (retryCount >= maxRetries) {
+                    logger.error("❌ [DataInitializationService] Falló la asignación de rol después de {} intentos", maxRetries);
+                    throw new RuntimeException("No se pudo asignar el rol ROLE_ADMIN después de " + maxRetries + " intentos", e);
+                }
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Proceso interrumpido durante la asignación de rol", e);
+
+            } catch (Exception e) {
+                logger.error("❌ [DataInitializationService] Error inesperado al asignar rol ROLE_ADMIN a '{}': {}",
+                           username, e.getMessage(), e);
+                throw e;
+            }
         }
     }
 }

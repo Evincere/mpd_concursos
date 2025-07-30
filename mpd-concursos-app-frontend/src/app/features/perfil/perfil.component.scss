@@ -192,105 +192,206 @@
 // Animations are now handled by the unified glassmorphism system
 // See glassmorphism-system.scss for glassFadeIn, glassSlideUp, and glassScaleIn
 
-// Custom Tabs Styling Override
+/* ===== PERFIL TABS REDESIGN - MÁXIMA CLARIDAD Y VISIBILIDAD ===== */
+/* Rediseño completo para eliminar conflictos de especificidad */
+
 :host ::ng-deep {
   app-custom-tabs {
-    .tabs-container {
-      background: transparent;
-      border-bottom: 2px solid var(--border-primary);
-      margin-bottom: 0;
+    /* Container principal */
+    .custom-tabs-container {
+      background: linear-gradient(135deg,
+        rgba(30, 41, 59, 0.95) 0%,
+        rgba(51, 65, 85, 0.9) 100%) !important;
+      border: 1px solid rgba(148, 163, 184, 0.2) !important;
+      border-radius: 16px !important;
+      backdrop-filter: blur(20px) !important;
+      box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.3),
+        0 10px 10px -5px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+      overflow: hidden !important;
     }
 
+    /* Header de pestañas */
     .tabs-header {
-      background: transparent;
-      border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-      padding: 0;
-      gap: 0;
-      display: flex;
-      width: 100%;
-      overflow: visible;
-    }
+      background: linear-gradient(135deg,
+        rgba(15, 23, 42, 0.98) 0%,
+        rgba(30, 41, 59, 0.95) 100%) !important;
+      backdrop-filter: blur(16px) !important;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15) !important;
+      padding: 8px !important;
+      border-radius: 16px 16px 0 0 !important;
+      position: relative !important;
 
-    .tab-header {
-      background: transparent;
-      border-radius: 12px 12px 0 0;
-      padding: 0;
-      gap: 0;
-      display: flex;
-      width: 100%;
-      overflow: visible;
-
-      .tab-button {
-        flex: 1;
-        padding: var(--spacing-md) var(--spacing-2xl);
-        border: none;
-        background: transparent;
-        color: var(--user-text-tab-inactive, var(--text-tertiary));
-        font-weight: 500;
-        font-size: var(--user-font-size-tab, 1rem); /* Use accessibility-improved font size */
-        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-        transition: var(--transition-normal);
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        min-width: 0;
-        min-height: 52px; /* Improved touch target size */
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.08); /* Improved hover visibility */
-          color: var(--user-text-primary, var(--text-primary));
-          transform: var(--transform-hover);
-          box-shadow: var(--shadow-md);
-        }
-
-        &.active {
-          background: rgba(96, 165, 250, 0.15); /* Enhanced active state background */
-          color: var(--user-text-tab-active, var(--text-primary));
-          font-weight: 600;
-          box-shadow: var(--shadow-md), var(--shadow-inset);
-          border: 1px solid var(--user-border-tab-active, var(--border-primary));
-          border-bottom: 2px solid var(--user-border-tab-active, var(--border-primary)); /* Enhanced bottom border */
-
-          &::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 3px; /* Thicker indicator for better visibility */
-            background: linear-gradient(90deg, var(--user-text-accent, #60a5fa), #60a5fa);
-            box-shadow: 0 -2px 8px rgba(96, 165, 250, 0.4);
-          }
-        }
-
-        i {
-          margin-right: var(--spacing-sm);
-          font-size: 1.1rem;
-        }
-
-        @media (max-width: 768px) {
-          padding: var(--spacing-md) var(--spacing-md);
-          font-size: var(--user-font-size-tab-mobile, 0.9375rem); /* Improved mobile font size */
-          min-height: 48px; /* Better touch targets on mobile */
-
-          .tab-label {
-            display: none;
-          }
-
-          i {
-            margin-right: 0;
-            font-size: 1.2rem; /* Larger icons for better visibility */
-          }
-        }
+      /* Efecto de brillo superior */
+      &::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 1px !important;
+        background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.4),
+          transparent) !important;
       }
     }
 
+    /* Navegación de pestañas */
+    .tabs-nav {
+      display: flex !important;
+      position: relative !important;
+      gap: 4px !important;
+      padding: 0 !important;
+    }
+
+    /* BOTONES DE PESTAÑA - REDISEÑO COMPLETO */
+    .tab-button {
+      flex: 1 !important;
+      padding: 16px 24px !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: 12px !important;
+      cursor: pointer !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      position: relative !important;
+      min-height: 60px !important;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+
+      /* ESTADO INACTIVO - Texto gris claro */
+      color: #94a3b8 !important;
+      font-size: 15px !important;
+      font-weight: 500 !important;
+
+      /* Iconos en estado inactivo */
+      i {
+        font-size: 18px !important;
+        opacity: 0.7 !important;
+        color: #94a3b8 !important;
+        transition: all 0.3s ease !important;
+        margin-right: 8px !important;
+      }
+
+      /* Texto en estado inactivo */
+      span {
+        color: #94a3b8 !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+      }
+
+      /* HOVER para pestañas inactivas */
+      &:hover:not(.active):not(.disabled) {
+        background: rgba(148, 163, 184, 0.1) !important;
+        color: #e2e8f0 !important;
+        transform: translateY(-1px) !important;
+
+        i {
+          opacity: 1 !important;
+          color: #60a5fa !important;
+          transform: scale(1.05) !important;
+        }
+
+        span {
+          color: #e2e8f0 !important;
+        }
+      }
+
+      /* ESTADO ACTIVO - MÁXIMA VISIBILIDAD */
+      &.active {
+        /* Fondo distintivo para pestaña activa */
+        background: linear-gradient(135deg,
+          rgba(59, 130, 246, 0.25) 0%,
+          rgba(37, 99, 235, 0.2) 100%) !important;
+
+        /* TEXTO BLANCO PURO - FORZADO CON MÁXIMA ESPECIFICIDAD */
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+
+        /* Borde distintivo */
+        border: 1px solid rgba(59, 130, 246, 0.4) !important;
+        box-shadow:
+          0 8px 25px rgba(59, 130, 246, 0.15),
+          0 4px 10px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+
+        /* Iconos en estado activo */
+        i {
+          color: #ffffff !important;
+          opacity: 1 !important;
+          font-size: 18px !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+          margin-right: 8px !important;
+        }
+
+        /* Texto en estado activo */
+        span {
+          color: #ffffff !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+          font-size: 15px !important;
+          font-weight: 700 !important;
+        }
+
+        /* Forzar blanco en TODOS los elementos hijos */
+        * {
+          color: #ffffff !important;
+        }
+
+        /* Indicador inferior distintivo */
+        &::after {
+          content: '' !important;
+          position: absolute !important;
+          bottom: -1px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          width: 60% !important;
+          height: 3px !important;
+          background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
+          border-radius: 2px !important;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.6) !important;
+        }
+      }
+
+      /* Estado deshabilitado */
+      &.disabled {
+        color: #64748b !important;
+        cursor: not-allowed !important;
+        opacity: 0.4 !important;
+
+        i {
+          opacity: 0.3 !important;
+          color: #64748b !important;
+        }
+
+        span {
+          color: #64748b !important;
+        }
+      }
+
+      /* Focus para accesibilidad */
+      &:focus-visible {
+        outline: 2px solid #60a5fa !important;
+        outline-offset: 2px !important;
+        z-index: 10 !important;
+      }
+    }
+
+    /* Contenido de pestañas */
+    .tabs-content {
+      background: transparent !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+
     .tab-content {
-      background: transparent;
-      padding: 0;
-      border: none;
+      background: transparent !important;
+      padding: 0 !important;
+      border: none !important;
     }
   }
 }
@@ -327,14 +428,54 @@
   }
 }
 
-// Enhanced accessibility support for profile tabs
+/* ===== SOBRESCRITURA ADICIONAL PARA MÁXIMA ESPECIFICIDAD ===== */
+/* Estilos adicionales para garantizar que el texto blanco se aplique */
+
 :host ::ng-deep {
   app-custom-tabs {
+    /* Sobrescritura de variables CSS globales */
+    --color-primary-dark: #94a3b8 !important;
+    --color-primary: #94a3b8 !important;
+    --text-primary: #94a3b8 !important;
+    --user-text-primary: #94a3b8 !important;
+
+    /* Forzar estilos específicos para pestañas activas */
+    .tab-button.active,
+    button.tab-button.active,
+    .tabs-nav .tab-button.active,
+    .tabs-header .tab-button.active {
+      /* Variables CSS específicas para pestaña activa */
+      --color-primary-dark: #ffffff !important;
+      --color-primary: #ffffff !important;
+      --text-primary: #ffffff !important;
+      --user-text-primary: #ffffff !important;
+
+      /* Texto blanco forzado con máxima especificidad */
+      color: #ffffff !important;
+
+      /* Forzar blanco en todos los elementos hijos */
+      i, span, *,
+      .fas, .fa,
+      [class*="fa-"] {
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+      }
+    }
+
+    /* Sobrescritura para elementos específicos que podrían tener estilos conflictivos */
+    .tab-button.active i.fas,
+    .tab-button.active i.fa,
+    .tab-button.active span,
+    .tab-button.active [class*="fa-"] {
+      color: #ffffff !important;
+      opacity: 1 !important;
+    }
+
     /* High contrast mode support */
     @media (prefers-contrast: high) {
       .tab-button {
         &.active {
-          background: rgba(96, 165, 250, 0.3) !important;
+          background: rgba(96, 165, 250, 0.4) !important;
           color: #ffffff !important;
           border: 2px solid #60a5fa !important;
           font-weight: 700 !important;

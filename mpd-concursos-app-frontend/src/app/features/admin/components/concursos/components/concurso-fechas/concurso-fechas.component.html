@@ -104,7 +104,8 @@
             <div class="date-info">
               <div class="info-item">
                 <i class="icon">📅</i>
-                <span>{{ formatDate(fecha?.date) || 'Fecha no disponible' }}</span>
+                <span *ngIf="fecha?.title?.includes('A definir')">A definir</span>
+                <span *ngIf="!fecha?.title?.includes('A definir')">{{ formatDate(fecha?.date) || 'Fecha no disponible' }}</span>
               </div>
 
               <div class="info-item">

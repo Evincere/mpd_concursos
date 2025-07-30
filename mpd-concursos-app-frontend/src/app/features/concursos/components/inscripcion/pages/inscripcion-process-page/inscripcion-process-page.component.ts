@@ -1,4 +1,17 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef, HostListener } from '@angular/core';
+
+/**
+ * ✅ SOLUCIÓN PROBLEMA 10: Enum para tipos de navegación
+ * Permite distinguir claramente la intención de navegación
+ */
+enum NavigationType {
+  INTERNAL_STEP = 'internal_step',           // Navegación entre pasos del proceso
+  EXTERNAL_INTENTIONAL = 'external_intentional', // Navegación externa confirmada por usuario
+  EXTERNAL_ACCIDENTAL = 'external_accidental',   // Navegación externa no confirmada
+  BROWSER_NAVIGATION = 'browser_navigation',      // Botones atrás/adelante del navegador
+  WINDOW_CLOSE = 'window_close',                  // Cierre de ventana/pestaña
+  GUARD_CONFIRMATION = 'guard_confirmation'       // Navegación confirmada por guard
+}
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -14,6 +27,8 @@ import { InscriptionStateService } from '@core/services/inscripcion/inscription-
 import { ProfileService, UserProfile } from '@core/services/profile/profile.service';
 import { ConcursosService } from '@core/services/concursos/concursos.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
+import { ContestDocumentService } from '@core/services/contest-document/contest-document.service';
+import { ContestDocumentAvailability, ContestDocumentType } from '@shared/interfaces/concurso/contest-document.interface';
 
 import { AuthService } from '@core/services/auth/auth.service';
 import { Contest } from '@shared/interfaces/concurso/concurso.interface';
@@ -28,6 +43,16 @@ import { RequiredDocument } from '@core/services/documentos/documento-validation
 import { DocumentoUsuario, TipoDocumento } from '@core/models/documento.model'; // Import TipoDocumento
 import { LoggingService } from '@core/services/logging/logging.service';
 import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
+import { CanComponentDeactivate } from '../../guards/inscription-deactivate.guard';
+import {
+  DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION,
+  CIRCUNSCRIPCIONES_JUDICIALES,
+  DepartamentoCircunscripcion,
+  SeleccionCircunscripcion,
+  convertirSeleccionAFormato,
+  convertirFormatoASeleccion,
+  validarSeleccionCircunscripciones
+} from '@shared/constants/circunscripciones.constants';
 
 /**
  * Componente para el proceso de inscripción a concursos
@@ -65,7 +90,7 @@ import { PostulacionesService } from '@core/services/postulaciones/postulaciones
     ])
   ]
 })
-export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
+export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   // Pasos de inscripción
   steps = [
     { label: 'Términos' },
@@ -86,8 +111,23 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   // CONCURRENCY FIX: Flag para prevenir múltiples creaciones de inscripción simultáneas
   private isCreatingInscription = false;
 
-  // CRITICAL FIX: Bandera para evitar reinicialización en navegaciones internas
-  private isInternalNavigation: boolean = false;
+  // ✅ SOLUCIÓN PROBLEMA 10: Sistema de contexto de navegación mejorado
+
+  /**
+   * Contexto de navegación con información detallada
+   */
+  private navigationContext: {
+    type: NavigationType;
+    timestamp: number;
+    source?: string;
+    metadata?: Record<string, any>;
+  } | null = null;
+
+  // ✅ PÚBLICO para acceso desde guard - simplificado
+  public get isInternalNavigation(): boolean {
+    return this.navigationContext?.type === NavigationType.INTERNAL_STEP &&
+           (Date.now() - this.navigationContext.timestamp) < 2000; // 2 segundos de ventana
+  }
 
   // CRITICAL FIX: Guardar el paso solicitado desde la URL para navegación directa
   private requestedStepFromUrl: number | null = null;
@@ -108,6 +148,15 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // ✅ CORRECCIÓN: Agregar propiedad para documentos del usuario
   documentosUsuario: DocumentoUsuario[] = [];
+
+  // Disponibilidad de documentos del concurso
+  contestDocumentAvailability: ContestDocumentAvailability | null = null;
+  loadingDocumentAvailability = false;
+
+  // Propiedades para manejo de circunscripciones con departamentos
+  departamentosSegundaCircunscripcion = DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION;
+  seleccionesCircunscripciones: SeleccionCircunscripcion[] = [];
+  circunscripcionesDisponibles = CIRCUNSCRIPCIONES_JUDICIALES;
 
   // ✅ CRITICAL FIX: Propiedades computadas para evitar loops infinitos
   private _canProceedWithDocumentation = false;
@@ -155,7 +204,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   }
 
   private destroy$ = new Subject<void>();
-  private inscriptionCompleted = false; // Flag to track if inscription was successfully completed
+  // ✅ PÚBLICO para acceso desde guard
+  public inscriptionCompleted = false; // Flag to track if inscription was successfully completed
 
   constructor(
     private route: ActivatedRoute,
@@ -172,7 +222,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private loggingService: LoggingService,
     private inscriptionDocumentationService: InscriptionDocumentationService,
-    private postulacionesService: PostulacionesService // Inyectar servicio de postulaciones para refrescar cache
+    private postulacionesService: PostulacionesService, // Inyectar servicio de postulaciones para refrescar cache
+    private contestDocumentService: ContestDocumentService // Servicio para documentos de concurso
   ) {
     // Inicializar formulario reactivo
     this.inscriptionForm = this.fb.group({
@@ -189,10 +240,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     this.route.queryParams.pipe(
       takeUntil(this.destroy$)
     ).subscribe(params => {
-      // CRITICAL FIX: Evitar reinicialización en navegaciones internas
-      if (this.isInternalNavigation) {
-        this.loggingService.debug('[InscripcionProcess] Navegación interna detectada - omitiendo reinicialización', undefined, 'InscripcionProcessPage');
-        this.isInternalNavigation = false; // Reset flag
+      // ✅ SOLUCIÓN PROBLEMA 10: Verificar contexto de navegación mejorado
+      if (this.isRecentNavigationType(NavigationType.INTERNAL_STEP)) {
+        this.loggingService.debug('[InscripcionProcess] Navegación interna reciente detectada - omitiendo reinicialización', {
+          navigationContext: this.navigationContext
+        }, 'InscripcionProcessPage');
+
+        this.clearNavigationContext(); // Limpiar contexto después de usar
         return;
       }
 
@@ -322,34 +376,31 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
     // CRITICAL FIX: Evitar suscripciones duplicadas - ya se configuran en ngOnInit
     // Las suscripciones al estado de documentación y checkbox ya están configuradas en ngOnInit
+
+    // Inicializar selecciones de circunscripciones
+    this.inicializarSeleccionesCircunscripciones();
   }
 
   ngOnDestroy(): void {
-    // Solo cancelar la inscripción si NO se completó exitosamente y el paso es menor a 5
+    // ✅ SOLUCIÓN PROBLEMA 9: Solo guardar estado, NO cancelar automáticamente
+    // La cancelación debe ser una decisión explícita del usuario, no automática por navegación
     if (this.inscriptionId && this.currentStep < 5 && !this.inscriptionCompleted) {
-      // Guardar el estado actual antes de destruir el componente
+      // ✅ GUARDAR estado para recuperación posterior
       this.guardarEstadoActual();
 
-      this.loggingService.debug('[InscripcionProcess] Inscripción interrumpida - marcando como cancelada', {
+      this.loggingService.debug('[InscripcionProcess] Proceso interrumpido - estado guardado para recuperación', {
         inscriptionId: this.inscriptionId,
         currentStep: this.currentStep,
-        completed: this.inscriptionCompleted
+        completed: this.inscriptionCompleted,
+        reason: 'component_destruction'
       }, 'InscripcionProcessPage');
 
-      // Marcar la inscripción como cancelada
-      this.inscriptionService.markAsCancelled(this.inscriptionId).pipe(
-        takeUntil(this.destroy$), // Ensure this subscription is also cleaned up
-        catchError(error => {
-          console.error('[InscripcionProcess] Error al marcar inscripción como interrumpida:', error);
-          return of(null); // Continue gracefully
-        })
-      ).subscribe({
-        next: () => {
-          this.loggingService.debug('[InscripcionProcess] Inscripción marcada como INTERRUMPIDA:', this.inscriptionId, 'InscripcionProcessPage');
-        }
-      });
+      // ✅ NO CANCELAR - permitir recuperación posterior
+      // Comentario: El comportamiento anterior cancelaba automáticamente cualquier navegación
+      // Ahora solo guardamos el estado para que el usuario pueda recuperar su progreso
+
     } else if (this.inscriptionCompleted) {
-      this.loggingService.debug('[InscripcionProcess] Inscripción completada exitosamente - NO se cancela', {
+      this.loggingService.debug('[InscripcionProcess] Inscripción completada exitosamente', {
         inscriptionId: this.inscriptionId,
         currentStep: this.currentStep
       }, 'InscripcionProcessPage');
@@ -357,6 +408,102 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 19: Handler para beforeunload
+   * Advierte al usuario antes de cerrar ventana/pestaña durante inscripción
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    // Solo mostrar advertencia si hay inscripción en progreso
+    if (this.inscriptionId && this.currentStep > 1 && this.currentStep < 5 && !this.inscriptionCompleted) {
+      // Guardar estado antes de que se cierre
+      this.guardarEstadoActual();
+
+      this.loggingService.debug('[InscripcionProcess] Advertencia beforeunload - guardando estado', {
+        inscriptionId: this.inscriptionId,
+        currentStep: this.currentStep,
+        reason: 'window_beforeunload'
+      }, 'InscripcionProcessPage');
+
+      // Mostrar advertencia del navegador
+      event.preventDefault();
+      event.returnValue = 'Tiene una inscripción en progreso. ¿Está seguro que desea salir? Su progreso se guardará automáticamente.';
+      return event.returnValue;
+    }
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 19: Handler para visibilitychange (mobile)
+   * Guarda estado cuando la página se oculta en dispositivos móviles
+   */
+  @HostListener('document:visibilitychange', ['$event'])
+  onVisibilityChange(): void {
+    if (document.hidden && this.inscriptionId && this.currentStep > 1 && this.currentStep < 5) {
+      // Guardar estado cuando la página se oculta (mobile)
+      this.guardarEstadoActual();
+
+      this.loggingService.debug('[InscripcionProcess] Página oculta - guardando estado', {
+        inscriptionId: this.inscriptionId,
+        currentStep: this.currentStep,
+        reason: 'visibility_hidden'
+      }, 'InscripcionProcessPage');
+    }
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 10: Métodos para manejo de contexto de navegación
+   */
+
+  /**
+   * Marca el tipo de navegación con contexto detallado
+   * @param type Tipo de navegación
+   * @param source Fuente de la navegación (opcional)
+   * @param metadata Metadatos adicionales (opcional)
+   */
+  private markNavigationType(type: NavigationType, source?: string, metadata?: Record<string, any>): void {
+    this.navigationContext = {
+      type,
+      timestamp: Date.now(),
+      source,
+      metadata
+    };
+
+    this.loggingService.debug('[InscripcionProcess] Contexto de navegación establecido', {
+      type,
+      source,
+      metadata,
+      timestamp: this.navigationContext.timestamp
+    }, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Verifica si la navegación es reciente y del tipo especificado
+   * @param type Tipo de navegación a verificar
+   * @param maxAgeMs Edad máxima en milisegundos (default: 2000ms)
+   * @returns true si la navegación es del tipo especificado y reciente
+   */
+  private isRecentNavigationType(type: NavigationType, maxAgeMs: number = 2000): boolean {
+    if (!this.navigationContext) return false;
+
+    const isCorrectType = this.navigationContext.type === type;
+    const isRecent = (Date.now() - this.navigationContext.timestamp) < maxAgeMs;
+
+    return isCorrectType && isRecent;
+  }
+
+  /**
+   * Limpia el contexto de navegación
+   */
+  private clearNavigationContext(): void {
+    if (this.navigationContext) {
+      this.loggingService.debug('[InscripcionProcess] Contexto de navegación limpiado', {
+        previousContext: this.navigationContext
+      }, 'InscripcionProcessPage');
+
+      this.navigationContext = null;
+    }
   }
 
   // Métodos para navegación entre pasos
@@ -477,8 +624,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       queryParams.inscriptionId = this.inscriptionId;
     }
 
-    // CRITICAL FIX: Marcar como navegación interna para evitar reinicialización
-    this.isInternalNavigation = true;
+    // ✅ SOLUCIÓN PROBLEMA 10: Marcar como navegación interna con contexto detallado
+    this.markNavigationType(NavigationType.INTERNAL_STEP, 'step_navigation', {
+      fromStep: this.currentStep - 1,
+      toStep: this.currentStep,
+      contestId: this.contestId,
+      inscriptionId: this.inscriptionId
+    });
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1068,6 +1220,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       tap(contest => {
         if (contest) {
           this.contest = contest;
+          // Cargar disponibilidad de documentos del concurso
+          this.loadContestDocumentAvailability();
         } else {
           this.notificationService.error('Concurso no encontrado.');
           this.router.navigate(['/dashboard/concursos']);
@@ -2024,36 +2178,169 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Verifica si una circunscripción está seleccionada
+   * Verifica si una circunscripción está seleccionada (para circunscripciones simples)
    */
-  isCircunscripcionSelected(circunscripcion: any): boolean {
-    const selectedCircunscripciones = this.selectedCircunscripcionesControl.value || [];
-    return selectedCircunscripciones.includes(circunscripcion.id || circunscripcion);
+  isCircunscripcionSelected(circunscripcion: string): boolean {
+    const seleccion = this.seleccionesCircunscripciones.find(s => s.circunscripcion === circunscripcion);
+    return seleccion?.esCompleta || false;
   }
 
   /**
-   * Maneja el cambio de selección de circunscripción
+   * Verifica si una circunscripción completa está seleccionada (para Segunda Circunscripción)
    */
-  onCircunscripcionChange(event: Event, circunscripcion: any): void {
+  isCircunscripcionCompletaSelected(circunscripcion: string): boolean {
+    const seleccion = this.seleccionesCircunscripciones.find(s => s.circunscripcion === circunscripcion);
+    return seleccion?.esCompleta || false;
+  }
+
+  /**
+   * Verifica si un departamento específico está seleccionado
+   */
+  isDepartamentoSelected(circunscripcion: string, departamentoId: string): boolean {
+    const seleccion = this.seleccionesCircunscripciones.find(s => s.circunscripcion === circunscripcion);
+    return seleccion?.departamentos?.includes(departamentoId) || false;
+  }
+
+  /**
+   * Maneja el cambio de selección de circunscripción simple (Primera, Tercera, Cuarta)
+   */
+  onCircunscripcionChange(event: Event, circunscripcion: string): void {
     const checkbox = event.target as HTMLInputElement;
-    const selectedCircunscripciones = [...(this.selectedCircunscripcionesControl.value || [])];
-    const circunscripcionId = circunscripcion.id || circunscripcion;
 
     if (checkbox.checked) {
-      // Agregar circunscripción si no está ya seleccionada
-      if (!selectedCircunscripciones.includes(circunscripcionId)) {
-        selectedCircunscripciones.push(circunscripcionId);
-      }
+      // Agregar circunscripción completa
+      this.agregarSeleccionCircunscripcion(circunscripcion, true);
     } else {
       // Remover circunscripción
-      const index = selectedCircunscripciones.indexOf(circunscripcionId);
-      if (index > -1) {
-        selectedCircunscripciones.splice(index, 1);
+      this.removerSeleccionCircunscripcion(circunscripcion);
+    }
+
+    this.actualizarFormularioCircunscripciones();
+    this.loggingService.debug(`[InscripcionProcess] Circunscripción ${checkbox.checked ? 'seleccionada' : 'deseleccionada'}: ${circunscripcion}`, undefined, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Maneja el cambio de selección de circunscripción completa (para Segunda Circunscripción)
+   */
+  onCircunscripcionCompletaChange(event: Event, circunscripcion: string): void {
+    const checkbox = event.target as HTMLInputElement;
+
+    if (checkbox.checked) {
+      // Seleccionar toda la circunscripción y limpiar departamentos específicos
+      this.agregarSeleccionCircunscripcion(circunscripcion, true);
+    } else {
+      // Remover selección completa, mantener departamentos si los hay
+      const seleccionExistente = this.seleccionesCircunscripciones.find(s => s.circunscripcion === circunscripcion);
+      if (seleccionExistente && seleccionExistente.departamentos && seleccionExistente.departamentos.length > 0) {
+        seleccionExistente.esCompleta = false;
+      } else {
+        this.removerSeleccionCircunscripcion(circunscripcion);
       }
     }
 
-    this.selectedCircunscripcionesControl.setValue(selectedCircunscripciones);
-    this.loggingService.debug(`[InscripcionProcess] Circunscripción ${checkbox.checked ? 'seleccionada' : 'deseleccionada'}: ${circunscripcionId}`, undefined, 'InscripcionProcessPage');
+    this.actualizarFormularioCircunscripciones();
+    this.loggingService.debug(`[InscripcionProcess] Circunscripción completa ${checkbox.checked ? 'seleccionada' : 'deseleccionada'}: ${circunscripcion}`, undefined, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Maneja el cambio de selección de departamento específico
+   */
+  onDepartamentoChange(event: Event, circunscripcion: string, departamentoId: string): void {
+    const checkbox = event.target as HTMLInputElement;
+
+    let seleccion = this.seleccionesCircunscripciones.find(s => s.circunscripcion === circunscripcion);
+
+    if (!seleccion) {
+      seleccion = {
+        circunscripcion,
+        departamentos: [],
+        esCompleta: false
+      };
+      this.seleccionesCircunscripciones.push(seleccion);
+    }
+
+    if (checkbox.checked) {
+      // Agregar departamento
+      if (!seleccion.departamentos) {
+        seleccion.departamentos = [];
+      }
+      if (!seleccion.departamentos.includes(departamentoId)) {
+        seleccion.departamentos.push(departamentoId);
+      }
+      seleccion.esCompleta = false; // No puede ser completa si se seleccionan departamentos específicos
+    } else {
+      // Remover departamento
+      if (seleccion.departamentos) {
+        const index = seleccion.departamentos.indexOf(departamentoId);
+        if (index > -1) {
+          seleccion.departamentos.splice(index, 1);
+        }
+
+        // Si no quedan departamentos, remover la selección completa
+        if (seleccion.departamentos.length === 0) {
+          this.removerSeleccionCircunscripcion(circunscripcion);
+        }
+      }
+    }
+
+    this.actualizarFormularioCircunscripciones();
+    this.loggingService.debug(`[InscripcionProcess] Departamento ${checkbox.checked ? 'seleccionado' : 'deseleccionado'}: ${departamentoId} en ${circunscripcion}`, undefined, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Agrega una selección de circunscripción
+   */
+  private agregarSeleccionCircunscripcion(circunscripcion: string, esCompleta: boolean): void {
+    const index = this.seleccionesCircunscripciones.findIndex(s => s.circunscripcion === circunscripcion);
+
+    if (index > -1) {
+      // Actualizar selección existente
+      this.seleccionesCircunscripciones[index].esCompleta = esCompleta;
+      if (esCompleta) {
+        this.seleccionesCircunscripciones[index].departamentos = [];
+      }
+    } else {
+      // Crear nueva selección
+      this.seleccionesCircunscripciones.push({
+        circunscripcion,
+        esCompleta,
+        departamentos: []
+      });
+    }
+  }
+
+  /**
+   * Remueve una selección de circunscripción
+   */
+  private removerSeleccionCircunscripcion(circunscripcion: string): void {
+    const index = this.seleccionesCircunscripciones.findIndex(s => s.circunscripcion === circunscripcion);
+    if (index > -1) {
+      this.seleccionesCircunscripciones.splice(index, 1);
+    }
+  }
+
+  /**
+   * Actualiza el formulario con las selecciones de circunscripciones
+   */
+  private actualizarFormularioCircunscripciones(): void {
+    const valoresFormateados = convertirSeleccionAFormato(this.seleccionesCircunscripciones);
+    this.selectedCircunscripcionesControl.setValue(valoresFormateados);
+
+    // Validar selecciones
+    const validacion = validarSeleccionCircunscripciones(this.seleccionesCircunscripciones);
+    if (!validacion.esValida) {
+      this.selectedCircunscripcionesControl.setErrors({ 'seleccionInvalida': validacion.errores });
+    } else {
+      this.selectedCircunscripcionesControl.setErrors(null);
+    }
+  }
+
+  /**
+   * Inicializa las selecciones de circunscripciones desde el formulario
+   */
+  private inicializarSeleccionesCircunscripciones(): void {
+    const valoresActuales = this.selectedCircunscripcionesControl.value || [];
+    this.seleccionesCircunscripciones = convertirFormatoASeleccion(valoresActuales);
   }
 
   /**
@@ -2175,5 +2462,110 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     }
 
     return cuitWithoutVerifier + verifier.toString();
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 17: Implementación del método requerido por CanComponentDeactivate
+   * Este método es llamado por el InscriptionDeactivateGuard para determinar si se puede navegar
+   * @returns boolean | Promise<boolean> | Observable<boolean>
+   */
+  canDeactivate(): boolean | Promise<boolean> | Observable<boolean> {
+    this.loggingService.debug('[InscripcionProcess] canDeactivate called', {
+      inscriptionId: this.inscriptionId,
+      currentStep: this.currentStep,
+      inscriptionCompleted: this.inscriptionCompleted,
+      isInternalNavigation: this.isInternalNavigation
+    }, 'InscripcionProcessPage');
+
+    // ✅ El guard maneja toda la lógica de confirmación
+    // Este método solo necesita existir para cumplir con la interface
+    // La lógica real está en InscriptionDeactivateGuard.canDeactivate()
+    return true;
+  }
+
+  // ==========================================
+  // MÉTODOS PARA DOCUMENTOS DE CONCURSO
+  // ==========================================
+
+  /**
+   * Carga la disponibilidad de documentos del concurso
+   */
+  private loadContestDocumentAvailability(): void {
+    if (!this.contestId) return;
+
+    this.loadingDocumentAvailability = true;
+
+    this.contestDocumentService.getDocumentAvailability(this.contestId).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.loadingDocumentAvailability = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (availability: ContestDocumentAvailability) => {
+        this.contestDocumentAvailability = availability;
+        this.loggingService.debug('[InscripcionProcess] Disponibilidad de documentos cargada:', availability, 'InscripcionProcessPage');
+      },
+      error: (error) => {
+        console.error('[InscripcionProcess] Error al cargar disponibilidad de documentos:', error);
+        // No mostrar error al usuario, simplemente no mostrar los botones
+        this.contestDocumentAvailability = {
+          contestId: this.contestId!,
+          basesAvailable: false,
+          descriptionAvailable: false,
+          message: 'Error al verificar disponibilidad'
+        };
+      }
+    });
+  }
+
+  /**
+   * Abre las bases del concurso en una nueva pestaña
+   */
+  viewContestBases(): void {
+    if (!this.contestId || !this.contestDocumentAvailability?.basesAvailable) {
+      this.notificationService.warning('Las bases del concurso no están disponibles en este momento.');
+      return;
+    }
+
+    this.contestDocumentService.openDocumentInNewTab(this.contestId, ContestDocumentType.BASES);
+    this.loggingService.debug('[InscripcionProcess] Abriendo bases del concurso', { contestId: this.contestId }, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Abre la descripción del puesto en una nueva pestaña
+   */
+  viewContestDescription(): void {
+    if (!this.contestId || !this.contestDocumentAvailability?.descriptionAvailable) {
+      this.notificationService.warning('La descripción del puesto no está disponible en este momento.');
+      return;
+    }
+
+    this.contestDocumentService.openDocumentInNewTab(this.contestId, ContestDocumentType.DESCRIPTION);
+    this.loggingService.debug('[InscripcionProcess] Abriendo descripción del puesto', { contestId: this.contestId }, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Verifica si hay documentos disponibles para mostrar
+   */
+  get hasAvailableDocuments(): boolean {
+    return this.contestDocumentAvailability?.basesAvailable ||
+           this.contestDocumentAvailability?.descriptionAvailable ||
+           false;
+  }
+
+  /**
+   * Obtiene el mensaje a mostrar cuando no hay documentos disponibles
+   */
+  get documentsNotAvailableMessage(): string {
+    if (this.loadingDocumentAvailability) {
+      return 'Verificando disponibilidad de documentos...';
+    }
+
+    if (!this.contestDocumentAvailability) {
+      return 'No se pudo verificar la disponibilidad de los documentos.';
+    }
+
+    return 'Las bases y condiciones aún no se han publicado. Serán publicadas próximamente.';
   }
 }

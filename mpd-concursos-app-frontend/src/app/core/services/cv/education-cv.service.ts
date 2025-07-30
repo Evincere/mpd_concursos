@@ -312,6 +312,7 @@ export class EducationCvService {
       startDate: startDate,
       endDate: endDate,
       isOngoing: isOngoing,
+      documentUrl: response.documentUrl, // ✅ AGREGADO: Campo documentUrl para visualización
       document: response.documentUrl ? {
         id: response.id + '_doc',
         fileName: response.documentUrl.split('/').pop() || 'documento.pdf',

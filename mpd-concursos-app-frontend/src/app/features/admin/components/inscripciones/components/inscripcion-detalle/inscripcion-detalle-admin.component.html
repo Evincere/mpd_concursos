@@ -1,11 +1,11 @@
-<h2 mat-dialog-title>
+<h2 class="dialog-title">
   Detalle de Inscripción
-  <button mat-icon-button mat-dialog-close class="close-button">
-    <mat-icon>close</mat-icon>
+  <button class="close-button" (click)="onClose()">
+    <i class="fas fa-times"></i>
   </button>
 </h2>
 
-<mat-dialog-content>
+<div class="dialog-content">
   <div *ngIf="isLoading" class="loading-container">
     <mat-spinner diameter="40"></mat-spinner>
     <p>Cargando información de la inscripción...</p>
@@ -41,9 +41,33 @@
     </div>
 
     <!-- Pestañas de contenido -->
-    <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
+    <div class="custom-tabs">
+      <div class="tab-headers">
+        <button
+          class="tab-header"
+          [class.active]="activeTab === 0"
+          (click)="activeTab = 0">
+          <i class="fas fa-info-circle"></i>
+          Información General
+        </button>
+        <button
+          class="tab-header"
+          [class.active]="activeTab === 1"
+          (click)="activeTab = 1">
+          <i class="fas fa-file-alt"></i>
+          Documentos
+        </button>
+        <button
+          class="tab-header"
+          [class.active]="activeTab === 2"
+          (click)="activeTab = 2">
+          <i class="fas fa-history"></i>
+          Historial
+        </button>
+      </div>
+
       <!-- Pestaña de Información General -->
-      <mat-tab label="Información General">
+      <div class="tab-panel" *ngIf="activeTab === 0">
         <div class="tab-content">
           <div class="info-section">
             <h3>Información del Concurso</h3>
@@ -102,35 +126,46 @@
 
             <form [formGroup]="statusForm" (ngSubmit)="updateStatus()" class="status-form">
               <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Estado</mat-label>
-                  <mat-select formControlName="status">
-                    <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+                <div class="form-group">
+                  <label for="status-select">Estado</label>
+                  <select id="status-select" formControlName="status" class="form-control">
+                    <option value="" disabled>Seleccionar estado</option>
+                    <option *ngFor="let option of statusOptions" [value]="option.value">
                       {{option.label}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
+                    </option>
+                  </select>
+                </div>
               </div>
 
               <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Observaciones</mat-label>
-                  <textarea matInput formControlName="observations" rows="3" placeholder="Ingrese observaciones sobre esta inscripción"></textarea>
-                </mat-form-field>
+                <div class="form-group full-width">
+                  <label for="observations-textarea">Observaciones</label>
+                  <textarea
+                    id="observations-textarea"
+                    formControlName="observations"
+                    rows="3"
+                    class="form-control"
+                    placeholder="Ingrese observaciones sobre esta inscripción">
+                  </textarea>
+                </div>
               </div>
 
               <div class="form-actions">
-                <button type="submit" mat-raised-button color="primary" [disabled]="statusForm.invalid || isLoading">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="statusForm.invalid || isLoading">
+                  <i class="fas fa-save"></i>
                   Actualizar Estado
                 </button>
               </div>
             </form>
           </div>
         </div>
-      </mat-tab>
+      </div>
 
       <!-- Pestaña de Documentos -->
-      <mat-tab label="Documentos">
+      <div class="tab-panel" *ngIf="activeTab === 1">
         <div class="tab-content">
           <div class="documents-section">
             <h3>Documentos Presentados</h3>
@@ -179,22 +214,22 @@
                   </div>
 
                   <div class="document-actions">
-                    <button mat-stroked-button color="primary" (click)="downloadDocument(document)">
-                      <mat-icon>download</mat-icon>
+                    <button class="btn btn-primary btn-sm" (click)="downloadDocument(document)">
+                      <i class="fas fa-download"></i>
                       Descargar
                     </button>
 
-                    <button mat-stroked-button color="accent"
+                    <button class="btn btn-success btn-sm"
                             (click)="updateDocumentStatus(document, 'APPROVED')"
                             [disabled]="document.status === 'APPROVED'">
-                      <mat-icon>check_circle</mat-icon>
+                      <i class="fas fa-check-circle"></i>
                       Aprobar
                     </button>
 
-                    <button mat-stroked-button color="warn"
+                    <button class="btn btn-danger btn-sm"
                             (click)="updateDocumentStatus(document, 'REJECTED')"
                             [disabled]="document.status === 'REJECTED'">
-                      <mat-icon>cancel</mat-icon>
+                      <i class="fas fa-times-circle"></i>
                       Rechazar
                     </button>
                   </div>
@@ -203,62 +238,63 @@
             </div>
 
             <div *ngIf="inscriptionDetail.documents.length === 0" class="empty-documents">
-              <mat-icon>description_off</mat-icon>
+              <i class="fas fa-file-alt empty-icon"></i>
               <p>No hay documentos asociados a esta inscripción</p>
             </div>
           </div>
         </div>
-      </mat-tab>
+      </div>
 
       <!-- Pestaña de Historial -->
-      <mat-tab label="Historial">
+      <div class="tab-panel" *ngIf="activeTab === 2">
         <div class="tab-content">
           <div class="history-section">
             <h3>Historial de Cambios</h3>
 
             <div class="history-list" *ngIf="inscriptionDetail.history.length > 0">
-              <mat-list>
-                <mat-list-item *ngFor="let item of inscriptionDetail.history">
-                  <div class="history-item">
-                    <div class="history-icon">
-                      <mat-icon>history</mat-icon>
-                    </div>
-
-                    <div class="history-content">
-                      <div class="history-header">
-                        <span class="history-action">{{item.action}}</span>
-                        <span class="history-date">{{formatDateTime(item.date)}}</span>
-                      </div>
-
-                      <div class="history-details">
-                        <span class="history-user">{{item.userName}} ({{item.userRole}})</span>
-
-                        <div *ngIf="item.previousState && item.newState" class="state-change">
-                          <span class="previous-state">{{getStatusLabel(item.previousState)}}</span>
-                          <mat-icon>arrow_forward</mat-icon>
-                          <span class="new-state">{{getStatusLabel(item.newState)}}</span>
-                        </div>
-                      </div>
-
-                      <p *ngIf="item.details" class="history-details-text">{{item.details}}</p>
-                    </div>
+              <div class="history-items">
+                <div class="history-item" *ngFor="let item of inscriptionDetail.history">
+                  <div class="history-icon">
+                    <i class="fas fa-history"></i>
                   </div>
-                  <mat-divider></mat-divider>
-                </mat-list-item>
-              </mat-list>
+
+                  <div class="history-content">
+                    <div class="history-header">
+                      <span class="history-action">{{item.action}}</span>
+                      <span class="history-date">{{formatDateTime(item.date)}}</span>
+                    </div>
+
+                    <div class="history-details">
+                      <span class="history-user">{{item.userName}} ({{item.userRole}})</span>
+
+                      <div *ngIf="item.previousState && item.newState" class="state-change">
+                        <span class="previous-state">{{getStatusLabel(item.previousState)}}</span>
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="new-state">{{getStatusLabel(item.newState)}}</span>
+                      </div>
+                    </div>
+
+                    <p *ngIf="item.details" class="history-details-text">{{item.details}}</p>
+                  </div>
+                  <hr class="history-divider">
+                </div>
+              </div>
             </div>
 
             <div *ngIf="inscriptionDetail.history.length === 0" class="empty-history">
-              <mat-icon>history_toggle_off</mat-icon>
+              <i class="fas fa-history empty-icon"></i>
               <p>No hay historial de cambios para esta inscripción</p>
             </div>
           </div>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+      </div>
+    </div>
   </ng-container>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onClose()">Cerrar</button>
-</mat-dialog-actions>
+<div class="dialog-actions">
+  <button class="btn btn-secondary" (click)="onClose()">
+    <i class="fas fa-times"></i>
+    Cerrar
+  </button>
+</div>

@@ -112,7 +112,7 @@ export class ConcursoRequisitosComponent implements OnInit, OnDestroy {
         tap(data => this.loggingService.debug('[ConcursoRequisitosComponent] Document Types loaded:', data, 'ContestRequirements')),
         catchError(error => {
           this.loggingService.error('[ConcursoRequisitosComponent] Error loading document types. Using fallback data.', error, 'ContestRequirements');
-          return of(['titulo-universitario', 'certificado-profesional', 'antecedentes-penales', 'certificado-ley-micaela', 'dni-frente', 'dni-dorso', 'cuil', 'curriculum-vitae']);
+          return of(['titulo-universitario', 'titulo-universitario-y-certificado-analitico', 'certificado-profesional', 'antecedentes-penales', 'certificado-ley-micaela', 'dni-frente', 'dni-dorso', 'cuil', 'curriculum-vitae']);
         })
       ),
       templates: this.requisitosService.getRequirementTemplates().pipe(
@@ -136,7 +136,7 @@ export class ConcursoRequisitosComponent implements OnInit, OnDestroy {
         // Ensure default data is set even if a critical error occurs
         return of({
           categories: ['EDUCACION', 'PROFESIONAL', 'ANTECEDENTES', 'EXPERIENCIA', 'CONOCIMIENTOS', 'CAPACITACION', 'CERTIFICACIONES'],
-          documentTypes: ['titulo-universitario', 'certificado-profesional', 'antecedentes-penales', 'certificado-ley-micaela', 'dni-frente', 'dni-dorso', 'cuil', 'curriculum-vitae'],
+          documentTypes: ['titulo-universitario', 'titulo-universitario-y-certificado-analitico', 'certificado-profesional', 'antecedentes-penales', 'certificado-ley-micaela', 'dni-frente', 'dni-dorso', 'cuil', 'curriculum-vitae'],
           templates: []
         });
       })

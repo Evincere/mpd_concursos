@@ -150,6 +150,7 @@ export class AdminContestRequirementsService {
           'DNI',
           'CURRICULUM',
           'TITULO',
+          'TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO',
           'CERTIFICADO_ANTECEDENTES',
           'CERTIFICADO_DOMICILIO',
           'OTRO'

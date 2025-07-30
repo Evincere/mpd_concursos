@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { LoggingService } from '@core/services/logging/logging.service';
-import { HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -19,6 +19,7 @@ export interface DocumentoAnotacion {
 export interface DocumentoAdminView extends DocumentoUsuario {
   nombreUsuario?: string;
   emailUsuario?: string;
+  dniUsuario?: string;
 }
 
 export interface EstadisticasDocumentos {
@@ -36,10 +37,22 @@ export interface DocumentoFiltros {
   fechaHasta?: Date;
   usuarioId?: string;
   busqueda?: string;
+  // Nuevos filtros
+  userSearch?: string; // Búsqueda por usuario (DNI, nombre, email)
+  documentCategory?: string; // Categoría del documento (OBLIGATORY, CV_PROOF, OPTIONAL)
+  search?: string; // Búsqueda general
   page?: number;
   size?: number;
   sort?: string;
   direction?: 'asc' | 'desc';
+}
+
+export interface PagedDocumentResponse {
+  content: DocumentoAdminView[];
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  size: number;
 }
 
 @Injectable({
@@ -47,22 +60,11 @@ export interface DocumentoFiltros {
 })
 export class AdminDocumentosService {
   private apiUrl = `${environment.apiUrl}/admin/documentos`;
-  private http: {
-    get: <T>(url: string, options?: { params?: HttpParams }) => Observable<T>;
-    post: <T>(url: string, body: Record<string, unknown>) => Observable<T>;
-    patch: <T>(url: string, body: Record<string, unknown>) => Observable<T>;
-  };
 
   constructor(
+    private http: HttpClient,
     private loggingService: LoggingService
-  ) {
-    // En una implementación real, se inyectaría HttpClient
-    this.http = {
-      get: <T>(_url: string, _options?: { params?: HttpParams }) => of({} as T),
-      post: <T>(_url: string, _body: Record<string, unknown>) => of({} as T),
-      patch: <T>(_url: string, _body: Record<string, unknown>) => of({} as T)
-    };
-  }
+  ) {}
 
   /**
    * Obtiene todos los documentos con filtros y paginación
@@ -84,12 +86,13 @@ export class AdminDocumentosService {
       if (filtros.direction) params = params.set('direction', filtros.direction);
     }
 
-    return this.http.get<{ content: DocumentoAdminView[], totalElements: number }>(`${this.apiUrl}`, { params }).pipe(
+    return this.http.get<PagedDocumentResponse>(`${this.apiUrl}`, { params }).pipe(
       map(response => ({
-        documentos: response.content,
-        total: response.totalElements
+        documentos: response.content || [],
+        total: response.totalElements || 0
       })),
       catchError(error => {
+        this.loggingService.error('Error al obtener documentos', error);
         console.error('Error al obtener documentos:', error);
         return of({ documentos: [], total: 0 });
       })
@@ -102,6 +105,7 @@ export class AdminDocumentosService {
   getEstadisticas(): Observable<EstadisticasDocumentos> {
     return this.http.get<EstadisticasDocumentos>(`${this.apiUrl}/estadisticas`).pipe(
       catchError(error => {
+        this.loggingService.error('Error al obtener estadísticas de documentos', error);
         console.error('Error al obtener estadísticas de documentos:', error);
         return of({
           totalDocumentos: 0,
@@ -117,10 +121,13 @@ export class AdminDocumentosService {
   /**
    * Aprueba un documento
    * @param documentoId ID del documento
+   * @param comentarios Comentarios opcionales
    */
-  aprobarDocumento(documentoId: string): Observable<DocumentoUsuario> {
-    return this.http.patch<DocumentoUsuario>(`${this.apiUrl}/${documentoId}/aprobar`, {}).pipe(
+  aprobarDocumento(documentoId: string, comentarios?: string): Observable<DocumentoUsuario> {
+    const body = { estado: 'APPROVED', comentarios };
+    return this.http.patch<DocumentoUsuario>(`${this.apiUrl}/${documentoId}/estado`, body).pipe(
       catchError(error => {
+        this.loggingService.error('Error al aprobar documento', error);
         console.error('Error al aprobar documento:', error);
         throw error;
       })
@@ -133,8 +140,10 @@ export class AdminDocumentosService {
    * @param motivo Motivo del rechazo
    */
   rechazarDocumento(documentoId: string, motivo: string): Observable<DocumentoUsuario> {
-    return this.http.patch<DocumentoUsuario>(`${this.apiUrl}/${documentoId}/rechazar`, { motivo }).pipe(
+    const body = { estado: 'REJECTED', comentarios: motivo };
+    return this.http.patch<DocumentoUsuario>(`${this.apiUrl}/${documentoId}/estado`, body).pipe(
       catchError(error => {
+        this.loggingService.error('Error al rechazar documento', error);
         console.error('Error al rechazar documento:', error);
         throw error;
       })
@@ -155,6 +164,7 @@ export class AdminDocumentosService {
       posicionY
     }).pipe(
       catchError(error => {
+        this.loggingService.error('Error al agregar anotación', error);
         console.error('Error al agregar anotación:', error);
         throw error;
       })
@@ -168,9 +178,38 @@ export class AdminDocumentosService {
   getAnotaciones(documentoId: string): Observable<DocumentoAnotacion[]> {
     return this.http.get<DocumentoAnotacion[]>(`${this.apiUrl}/${documentoId}/anotaciones`).pipe(
       catchError(error => {
+        this.loggingService.error('Error al obtener anotaciones', error);
         console.error('Error al obtener anotaciones:', error);
         return of([]);
       })
     );
   }
+
+  /**
+   * Obtiene toda la documentación de un usuario específico
+   */
+  getUserDocumentation(userId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/usuario/${userId}/documentacion`)
+      .pipe(
+        catchError(error => {
+          this.loggingService.error(`Error obteniendo documentación del usuario ${userId}`, error);
+          throw error;
+        })
+      );
+  }
+
+  /**
+   * Obtiene el historial de cambios de documentos de un usuario
+   */
+  getUserDocumentHistory(userId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/usuario/${userId}/historial`)
+      .pipe(
+        catchError(error => {
+          this.loggingService.error(`Error obteniendo historial de documentos del usuario ${userId}`, error);
+          throw error;
+        })
+      );
+  }
+
+
 }

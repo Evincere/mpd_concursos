@@ -203,13 +203,17 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
         continue;
       }
 
+      const updatedAt = new Date(createdAt.getTime() + (Math.random() * 10 * 60 * 60 * 1000));
+
       const inscription: AdminInscription = {
         id: `insc-${i}`,
         contestId: i % 5 + 1,
         userId: `user-${i}`,
         state: inscriptionState,
         createdAt: createdAt,
-        updatedAt: new Date(createdAt.getTime() + (Math.random() * 10 * 60 * 60 * 1000)),
+        updatedAt: updatedAt,
+        inscriptionDate: createdAt.toISOString(),
+        lastUpdated: updatedAt.toISOString(),
         contestTitle: `Concurso para ${i % 2 === 0 ? 'Defensor' : 'Fiscal'} ${i % 3 === 0 ? 'Penal' : 'Civil'}`,
         contestCategory: i % 2 === 0 ? 'Defensor' : 'Fiscal',
         contestDepartment: ['Capital', 'San Rafael', 'General Alvear', 'Malargüe'][i % 4],
@@ -220,7 +224,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
         pendingDocuments: Math.floor(Math.random() * 3),
         approvedDocuments: Math.floor(Math.random() * 3),
         rejectedDocuments: Math.floor(Math.random() * 2),
-        lastUpdate: new Date(createdAt.getTime() + (Math.random() * 10 * 60 * 60 * 1000))
+        lastUpdate: updatedAt
       };
 
       result.push(inscription);

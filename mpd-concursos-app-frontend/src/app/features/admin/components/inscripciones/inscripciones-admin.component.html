@@ -30,6 +30,7 @@
     (viewInscription)="viewInscripcion($event)"
     (approveInscription)="updateStatus($event, 'APPROVED')"
     (rejectInscription)="updateStatus($event, 'REJECTED')"
+    (actionExecuted)="handleActionExecuted($event)"
     (filterChange)="loadInscripciones()"
     (pageChange)="onPageChange($event)"
     (sortChange)="onSortChange($event)">

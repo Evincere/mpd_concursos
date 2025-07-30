@@ -6,7 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 // Componentes
 import { InscripcionesAdminComponent } from './inscripciones-admin.component';
 import { InscripcionesDashboardComponent } from './components/inscripciones-dashboard/inscripciones-dashboard.component';
-import { DocumentsManagerComponent } from './components/documents-manager/documents-manager.component';
+
 import { InscripcionesTrackingComponent } from './components/inscripciones-tracking/inscripciones-tracking.component';
 
 import { InscripcionesLifecycleComponent } from './components/inscripciones-lifecycle/inscripciones-lifecycle.component';
@@ -29,7 +29,10 @@ const routes: Routes = [
   { path: 'pendientes', component: InscripcionesAdminComponent, data: { filter: { status: 'PENDING' } } },
   { path: 'aprobadas', component: InscripcionesAdminComponent, data: { filter: { status: 'APPROVED' } } },
   { path: 'rechazadas', component: InscripcionesAdminComponent, data: { filter: { status: 'REJECTED' } } },
-  { path: 'documentos', component: DocumentsManagerComponent },
+  {
+    path: 'documentos',
+    loadComponent: () => import('./components/documents-manager/documents-manager.component').then(m => m.DocumentsManagerComponent)
+  },
   { path: 'seguimiento', component: InscripcionesTrackingComponent },
   { path: 'ciclo-vida', component: InscripcionesLifecycleComponent }
 ];
@@ -44,7 +47,6 @@ const routes: Routes = [
     // Componentes standalone
     InscripcionesAdminComponent,
     InscripcionesDashboardComponent,
-    DocumentsManagerComponent,
     InscripcionesTrackingComponent,
     InscripcionesLifecycleComponent,
     CustomButtonComponent,

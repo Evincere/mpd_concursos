@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject, of, EMPTY } from 'rxjs';
-import { catchError, tap, map, take, finalize, share } from 'rxjs/operators';
+import { Observable, throwError, BehaviorSubject, of, EMPTY, timer } from 'rxjs';
+import { catchError, tap, map, take, finalize, share, retry, retryWhen, delayWhen, switchMap } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { AuthService } from '@core/services/auth/auth.service';
 import { TokenService } from '../auth/token.service';
@@ -20,6 +20,18 @@ import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { InscriptionStateService } from './inscription-state.service';
 import { InscriptionStateMachineService } from './inscription-state-machine.service';
+
+/**
+ * ✅ SOLUCIÓN PROBLEMA 12: Interface para contexto de cancelación
+ * Proporciona información detallada sobre el tipo y razón de la cancelación
+ */
+interface CancellationContext {
+  type: 'USER_EXPLICIT' | 'PROCESS_INTERRUPTION' | 'ADMIN_ACTION' | 'SYSTEM_TIMEOUT';
+  reason: string;
+  source: string;
+  preserveInList?: boolean;
+  metadata?: Record<string, any>;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -146,14 +158,24 @@ export class InscriptionService {
   }
 
   /**
-   * Helper to handle common HTTP errors.
+   * ✅ SOLUCIÓN PROBLEMA 28: Helper mejorado para manejo de errores HTTP con reintentos inteligentes
    */
   private handleSimpleError(error: HttpErrorResponse): Observable<never> {
-    // Log silently for expected errors (404, 500) to avoid console spam
-    if (error.status === 404 || error.status === 500) {
-      this.loggingService.debug('[InscriptionService] Expected error occurred:', error.status, 'Inscription');
+    // ✅ Detectar errores de red
+    if (this.isNetworkError(error)) {
+      this.trackNetworkError();
+      this.loggingService.warn('[InscriptionService] Network error detected', {
+        status: error.status,
+        message: error.message,
+        networkErrorCount: this.networkErrorCount
+      }, 'Inscription');
     } else {
-      this.loggingService.error('[InscriptionService] Unexpected error occurred:', error, 'Inscription');
+      // Log silently for expected errors (404, 500) to avoid console spam
+      if (error.status === 404 || error.status === 500) {
+        this.loggingService.debug('[InscriptionService] Expected error occurred:', error.status, 'Inscription');
+      } else {
+        this.loggingService.error('[InscriptionService] Unexpected error occurred:', error, 'Inscription');
+      }
     }
 
     let errorMessage = 'Ocurrió un error inesperado.';
@@ -163,6 +185,66 @@ export class InscriptionService {
       errorMessage = `Error del servidor: ${error.status} ${error.statusText || ''} - ${error.error?.message || error.message}`;
     }
     return throwError(() => new Error(errorMessage));
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 28: Detecta si un error es de red
+   */
+  private isNetworkError(error: HttpErrorResponse): boolean {
+    return error.status === 0 || // Sin conexión
+           error.status === 408 || // Request timeout
+           error.status === 502 || // Bad gateway
+           error.status === 503 || // Service unavailable
+           error.status === 504 || // Gateway timeout
+           (error as any).name === 'TimeoutError' ||
+           error.message?.includes('timeout') ||
+           error.message?.includes('network') ||
+           error.message?.includes('connection');
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 28: Rastrea errores de red para métricas
+   */
+  private trackNetworkError(): void {
+    this.networkErrorCount++;
+    this.lastNetworkError = new Date();
+
+    this.loggingService.info('[InscriptionService] Network error tracked', {
+      totalNetworkErrors: this.networkErrorCount,
+      lastError: this.lastNetworkError.toISOString()
+    }, 'Inscription');
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 28: Crea observable con reintentos inteligentes para errores de red
+   * @param source Observable fuente
+   * @param context Contexto para logging
+   * @returns Observable con reintentos configurados
+   */
+  private withNetworkRetry<T>(source: Observable<T>, context: string): Observable<T> {
+    return source.pipe(
+      retryWhen(errors =>
+        errors.pipe(
+          switchMap((error: HttpErrorResponse, index: number) => {
+            // Solo reintentar errores de red
+            if (this.isNetworkError(error) && index < this.NETWORK_RETRY_ATTEMPTS) {
+              const delay = this.RETRY_DELAY_MS * Math.pow(2, index); // Backoff exponencial
+
+              this.loggingService.info(`[InscriptionService] Network retry ${index + 1}/${this.NETWORK_RETRY_ATTEMPTS} for ${context}`, {
+                error: error.status,
+                delay,
+                attempt: index + 1
+              }, 'Inscription');
+
+              return timer(delay);
+            } else {
+              // No reintentar o se agotaron los intentos
+              return throwError(() => error);
+            }
+          })
+        )
+      )
+    );
   }
 
   /**
@@ -178,33 +260,73 @@ export class InscriptionService {
     return true;
   }
 
+
+
   /**
-   * Marks an inscription as cancelled and sends a notification to the user.
-   * @param inscriptionId ID of the inscription.
-   * @returns Observable<void>
+   * ✅ MÉTODO LEGACY: Mantener compatibilidad con código existente
+   * @deprecated Usar cancelInscription() con CancellationContext
    */
   markAsCancelled(inscriptionId: string): Observable<void> {
-    if (!this.validateAuthentication()) return EMPTY;
-    if (!inscriptionId) {
-      this.loggingService.error('[InscriptionService] markAsCancelled: Inscription ID is required.', undefined, 'Inscription');
-      return throwError(() => new Error('El ID de inscripción es requerido'));
+    const context: CancellationContext = {
+      type: 'PROCESS_INTERRUPTION',
+      reason: 'Proceso interrumpido por navegación',
+      source: 'legacy_markAsCancelled',
+      preserveInList: false
+    };
+    return this.cancelInscription(inscriptionId, true); // Usar API legacy por ahora
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 12: Manejo unificado de cancelación exitosa
+   */
+  private handleSuccessfulCancellation(inscriptionId: string, context: CancellationContext): void {
+    this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} cancelled successfully`, {
+      context,
+      timestamp: new Date().toISOString()
+    }, 'Inscription');
+
+    // Actualizar estado local
+    this.updateLocalInscriptionState(inscriptionId, InscripcionState.CANCELLED);
+
+    // Limpiar estado según el contexto
+    if (!context.preserveInList) {
+      this.inscriptionStateService.clearInscriptionState(inscriptionId);
     }
 
-    this.loggingService.info(`[InscriptionService] Marking inscription ${inscriptionId} as CANCELLED.`, undefined, 'Inscription');
-    return this.http.patch<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/cancel`, {}).pipe(
-      tap(() => {
-        this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} successfully marked as CANCELLED on backend.`, undefined, 'Inscription');
-        this.updateLocalInscriptionState(inscriptionId, InscripcionState.CANCELLED);
-        // Clear local state for cancelled inscriptions
-        this.inscriptionStateService.clearInscriptionState(inscriptionId);
-      }),
-      catchError(error => {
-        console.error(`[InscriptionService] Error marking inscription ${inscriptionId} as CANCELLED:`, error);
-        // Even if there's an error, we don't want the UI to show an error to the user for this background task.
-        // We log it, but return a successful observable.
-        return of(void 0);
-      })
-    );
+    // Refrescar caché con delay para permitir procesamiento del backend
+    setTimeout(() => {
+      this.loggingService.debug('[InscriptionService] Clearing cache after successful cancellation', context, 'Inscription');
+      this.clearCacheAndRefresh().subscribe({
+        next: () => {
+          this.loggingService.debug('[InscriptionService] Cache cleared and refreshed after cancellation', undefined, 'Inscription');
+        },
+        error: (error) => {
+          console.error('[InscriptionService] Error clearing cache after cancellation:', error);
+        }
+      });
+    }, 1000);
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 12: Manejo unificado de errores de cancelación
+   */
+  private handleCancellationError(inscriptionId: string, context: CancellationContext, error: HttpErrorResponse): Observable<void> {
+    this.loggingService.error(`[InscriptionService] Error cancelling inscription ${inscriptionId}`, {
+      context,
+      error: error.status,
+      message: error.message
+    }, 'Inscription');
+
+    // Manejo local independientemente del error para evitar estados inconsistentes
+    this.clearFormState(inscriptionId);
+    this.handleLocalCancellation(inscriptionId, context.type === 'PROCESS_INTERRUPTION');
+
+    // Forzar actualización desde backend
+    setTimeout(() => {
+      this.refreshInscriptions();
+    }, 500);
+
+    return this.handleSimpleError(error);
   }
 
   /**
@@ -224,9 +346,13 @@ export class InscriptionService {
     // and let the backend return appropriate errors if needed
     this.loggingService.info('[InscriptionService] Creating new inscription for contest:', request.contestId, 'Inscription');
 
-    return this.http.post<any>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}`,
-      request
+    // ✅ SOLUCIÓN PROBLEMA 28: Aplicar reintentos inteligentes para errores de red
+    return this.withNetworkRetry(
+      this.http.post<any>(
+        `${this.baseUrl}${this.inscriptionsEndpoint}`,
+        request
+      ),
+      'createInscription'
     ).pipe(
       map(response => {
         this.loggingService.debug('[InscriptionService] Full response from createInscription:', response, 'Inscription');
@@ -352,9 +478,13 @@ export class InscriptionService {
 
     this.loggingService.info(`[InscriptionService] Fetching user inscriptions for userId: ${userId} with params: ${params.toString()}`, undefined, 'Inscription');
 
-    return this.http.get<Page<IInscriptionResponse>>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}`,
-      { params }
+    // ✅ SOLUCIÓN PROBLEMA 28: Aplicar reintentos inteligentes para errores de red
+    return this.withNetworkRetry(
+      this.http.get<Page<IInscriptionResponse>>(
+        `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}`,
+        { params }
+      ),
+      'getUserInscriptions'
     ).pipe(
       tap(response => {
         this.loggingService.debug('[InscriptionService] User inscriptions fetched successfully (new endpoint):', response, 'Inscription');
@@ -542,54 +672,53 @@ export class InscriptionService {
   }
 
   /**
-   * Cancels an inscription on the backend.
-   * @param inscriptionId ID of the inscription to cancel.
-   * @param isProcessCancellation Indicates if it's a cancellation during the inscription process (true) or a cancellation of an already completed application (false).
+   * ✅ MÉTODO LEGACY SOBRECARGADO: Mantener compatibilidad con código existente
+   * @deprecated Usar cancelInscription(inscriptionId, context) con CancellationContext
+   * @param inscriptionId ID de la inscripción
+   * @param isProcessCancellation Indica si es cancelación durante proceso
    * @returns Observable<void>
    */
-  cancelInscription(inscriptionId: string, isProcessCancellation = true): Observable<void> {
+  cancelInscription(inscriptionId: string, isProcessCancellation: boolean): Observable<void>;
+  cancelInscription(inscriptionId: string, context: CancellationContext): Observable<void>;
+  cancelInscription(inscriptionId: string, contextOrFlag: CancellationContext | boolean): Observable<void> {
+    // Determinar si se está usando la nueva API o la legacy
+    if (typeof contextOrFlag === 'boolean') {
+      // API legacy - convertir a nuevo formato
+      const context: CancellationContext = {
+        type: contextOrFlag ? 'PROCESS_INTERRUPTION' : 'USER_EXPLICIT',
+        reason: contextOrFlag ? 'Proceso interrumpido durante inscripción' : 'Cancelación explícita del usuario',
+        source: 'legacy_cancelInscription',
+        preserveInList: !contextOrFlag
+      };
+      return this.performCancellation(inscriptionId, context);
+    } else {
+      // Nueva API con contexto
+      return this.performCancellation(inscriptionId, contextOrFlag);
+    }
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 12: Implementación unificada de cancelación
+   * Método privado que realiza la cancelación real
+   */
+  private performCancellation(inscriptionId: string, context: CancellationContext): Observable<void> {
     if (!this.validateAuthentication()) return EMPTY;
     if (!inscriptionId) {
-      this.loggingService.error('[InscriptionService] cancelInscription: Inscription ID is required.', undefined, 'Inscription');
+      this.loggingService.error('[InscriptionService] cancelInscription: Inscription ID is required.', context, 'Inscription');
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
-    this.loggingService.info(`[InscriptionService] Attempting to cancel inscription ${inscriptionId}. Process cancellation: ${isProcessCancellation}`, undefined, 'Inscription');
+    this.loggingService.info(`[InscriptionService] Cancelling inscription ${inscriptionId}. Context: ${context.type}`, context, 'Inscription');
 
-    // Use the correct endpoint for user cancellation
-    return this.http.patch<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/cancel`, {}).pipe(
+    return this.http.patch<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/cancel`, {
+      reason: context.reason,
+      source: context.source,
+      metadata: context.metadata
+    }).pipe(
       tap(() => {
-        this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} cancelled successfully via PATCH.`, undefined, 'Inscription');
-        this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local state
-
-        // Add delay to ensure backend processes cancellation
-        setTimeout(() => {
-          this.loggingService.debug('[InscriptionService] Clearing cache after successful cancellation (PATCH).', undefined, 'Inscription');
-          this.clearCacheAndRefresh().subscribe({
-            next: () => {
-              this.loggingService.debug('[InscriptionService] Cache cleared and refreshed after cancellation (PATCH).', undefined, 'Inscription');
-            },
-            error: (error) => {
-              console.error('[InscriptionService] Error clearing cache after cancellation (PATCH):', error);
-            }
-          });
-        }, 1000); // Increase delay for more backend processing time
+        this.handleSuccessfulCancellation(inscriptionId, context);
       }),
-      catchError((error: HttpErrorResponse) => {
-        this.loggingService.error(`[InscriptionService] Error cancelling inscription ${inscriptionId}:`, error.status, 'Inscription');
-
-        // ✅ REFACTORING: Eliminado código de fallback obsoleto PATCH/DELETE
-        // Manejo simplificado de errores - solo PATCH es necesario
-        this.clearFormState(inscriptionId);
-        this.handleLocalCancellation(inscriptionId, isProcessCancellation);
-
-        // Forzar actualización desde backend
-        setTimeout(() => {
-          this.refreshInscriptions();
-        }, 500);
-
-        return this.handleSimpleError(error);
-      })
+      catchError(error => this.handleCancellationError(inscriptionId, context, error))
     );
   }
 
@@ -619,9 +748,16 @@ export class InscriptionService {
     }
   }
 
-  // Variable to control retry attempts for status update
+  // ✅ SOLUCIÓN PROBLEMA 28: Configuración mejorada de reintentos y manejo de errores de red
   private updateStatusRetryCount: Record<string, number> = {};
   private readonly MAX_RETRY_ATTEMPTS = 3;
+  private readonly NETWORK_RETRY_ATTEMPTS = 2;
+  private readonly RETRY_DELAY_MS = 1000;
+  private readonly NETWORK_TIMEOUT_MS = 10000;
+
+  // ✅ Tracking de errores de red para métricas
+  private networkErrorCount = 0;
+  private lastNetworkError: Date | null = null;
 
   /**
    * Maps frontend states to backend states.

@@ -1,0 +1,248 @@
+/* ===== PERFIL TABS OVERRIDE - MÁXIMA ESPECIFICIDAD ===== */
+/* Archivo específico para sobrescribir TODOS los estilos conflictivos de las pestañas */
+
+/* Sobrescritura global para el componente de perfil */
+.perfil-container {
+  /* Variables CSS específicas para este componente */
+  --perfil-tab-active-color: #ffffff !important;
+  --perfil-tab-inactive-color: #94a3b8 !important;
+  --perfil-tab-active-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.2) 100%) !important;
+  --perfil-tab-hover-bg: rgba(148, 163, 184, 0.1) !important;
+
+  /* Sobrescritura de variables CSS problemáticas */
+  --color-primary-dark: var(--perfil-tab-inactive-color) !important;
+  --color-primary: var(--perfil-tab-inactive-color) !important;
+  --text-primary: var(--perfil-tab-inactive-color) !important;
+  --user-text-primary: var(--perfil-tab-inactive-color) !important;
+
+  /* Estilos específicos para app-custom-tabs dentro del perfil */
+  app-custom-tabs {
+    /* Container principal */
+    .custom-tabs-container {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.9) 100%) !important;
+      border: 1px solid rgba(148, 163, 184, 0.2) !important;
+      border-radius: 16px !important;
+      backdrop-filter: blur(20px) !important;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+      overflow: hidden !important;
+    }
+
+    /* Header de pestañas */
+    .tabs-header {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%) !important;
+      backdrop-filter: blur(16px) !important;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15) !important;
+      padding: 8px !important;
+      border-radius: 16px 16px 0 0 !important;
+      position: relative !important;
+    }
+
+    /* Navegación de pestañas */
+    .tabs-nav {
+      display: flex !important;
+      position: relative !important;
+      gap: 4px !important;
+      padding: 0 !important;
+    }
+
+    /* BOTONES DE PESTAÑA - ESPECIFICIDAD MÁXIMA */
+    .tab-button,
+    button.tab-button,
+    .tabs-nav .tab-button,
+    .tabs-header .tab-button,
+    .tabs-nav button.tab-button,
+    .tabs-header button.tab-button {
+      /* Propiedades base */
+      flex: 1 !important;
+      padding: 16px 24px !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: 12px !important;
+      cursor: pointer !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      position: relative !important;
+      min-height: 60px !important;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+      
+      /* ESTADO INACTIVO */
+      color: var(--perfil-tab-inactive-color) !important;
+      font-size: 15px !important;
+      font-weight: 500 !important;
+
+      /* Iconos en estado inactivo */
+      i, .fas, .fa, [class*="fa-"] {
+        font-size: 18px !important;
+        opacity: 0.7 !important;
+        color: var(--perfil-tab-inactive-color) !important;
+        transition: all 0.3s ease !important;
+        margin-right: 8px !important;
+      }
+
+      /* Texto en estado inactivo */
+      span {
+        color: var(--perfil-tab-inactive-color) !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+      }
+
+      /* HOVER para pestañas inactivas */
+      &:hover:not(.active):not(.disabled) {
+        background: var(--perfil-tab-hover-bg) !important;
+        color: #e2e8f0 !important;
+        transform: translateY(-1px) !important;
+
+        i, .fas, .fa, [class*="fa-"] {
+          opacity: 1 !important;
+          color: #60a5fa !important;
+          transform: scale(1.05) !important;
+        }
+
+        span {
+          color: #e2e8f0 !important;
+        }
+      }
+    }
+
+    /* ESTADO ACTIVO - MÁXIMA ESPECIFICIDAD POSIBLE */
+    .tab-button.active,
+    button.tab-button.active,
+    .tabs-nav .tab-button.active,
+    .tabs-header .tab-button.active,
+    .tabs-nav button.tab-button.active,
+    .tabs-header button.tab-button.active,
+    .custom-tabs-container .tabs-header .tabs-nav .tab-button.active,
+    .custom-tabs-container .tabs-header .tabs-nav button.tab-button.active {
+      /* Variables CSS específicas para pestaña activa */
+      --color-primary-dark: var(--perfil-tab-active-color) !important;
+      --color-primary: var(--perfil-tab-active-color) !important;
+      --text-primary: var(--perfil-tab-active-color) !important;
+      --user-text-primary: var(--perfil-tab-active-color) !important;
+      
+      /* Fondo distintivo */
+      background: var(--perfil-tab-active-bg) !important;
+      
+      /* TEXTO BLANCO PURO - FORZADO CON MÁXIMA ESPECIFICIDAD */
+      color: var(--perfil-tab-active-color) !important;
+      font-weight: 700 !important;
+      font-size: 15px !important;
+      
+      /* Borde distintivo */
+      border: 1px solid rgba(59, 130, 246, 0.4) !important;
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+
+      /* Iconos en estado activo */
+      i, .fas, .fa, [class*="fa-"] {
+        color: var(--perfil-tab-active-color) !important;
+        opacity: 1 !important;
+        font-size: 18px !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+        margin-right: 8px !important;
+      }
+
+      /* Texto en estado activo */
+      span {
+        color: var(--perfil-tab-active-color) !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+      }
+
+      /* Forzar blanco en TODOS los elementos hijos */
+      * {
+        color: var(--perfil-tab-active-color) !important;
+      }
+
+      /* Indicador inferior distintivo */
+      &::after {
+        content: '' !important;
+        position: absolute !important;
+        bottom: -1px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 60% !important;
+        height: 3px !important;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
+        border-radius: 2px !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.6) !important;
+      }
+    }
+
+    /* Estado deshabilitado */
+    .tab-button.disabled,
+    button.tab-button.disabled {
+      color: #64748b !important;
+      cursor: not-allowed !important;
+      opacity: 0.4 !important;
+
+      i, .fas, .fa, [class*="fa-"], span {
+        opacity: 0.3 !important;
+        color: #64748b !important;
+      }
+    }
+
+    /* Focus para accesibilidad */
+    .tab-button:focus-visible,
+    button.tab-button:focus-visible {
+      outline: 2px solid #60a5fa !important;
+      outline-offset: 2px !important;
+      z-index: 10 !important;
+    }
+
+    /* Contenido de pestañas */
+    .tabs-content,
+    .tab-content {
+      background: transparent !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+  }
+}
+
+/* Sobrescritura adicional para elementos específicos que podrían interferir */
+.perfil-container app-custom-tabs .tab-button.active i.fas,
+.perfil-container app-custom-tabs .tab-button.active i.fa,
+.perfil-container app-custom-tabs .tab-button.active span,
+.perfil-container app-custom-tabs .tab-button.active [class*="fa-"] {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Media queries para responsive */
+@media (max-width: 768px) {
+  .perfil-container app-custom-tabs .tab-button {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    min-height: 52px !important;
+
+    i, .fas, .fa, [class*="fa-"] {
+      font-size: 16px !important;
+      margin-right: 6px !important;
+    }
+
+    span {
+      font-size: 14px !important;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .perfil-container app-custom-tabs .tab-button {
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    min-height: 48px !important;
+
+    span {
+      display: none !important;
+    }
+
+    i, .fas, .fa, [class*="fa-"] {
+      font-size: 18px !important;
+      margin-right: 0 !important;
+    }
+  }
+}

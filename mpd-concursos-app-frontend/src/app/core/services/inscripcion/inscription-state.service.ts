@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { IInscription } from '@shared/interfaces/inscripcion/inscription.interface';
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { LoggingService } from '@core/services/logging/logging.service';
 
 /**
  * Interfaz para el estado completo del formulario de inscripción
@@ -26,33 +27,80 @@ export interface IInscriptionFormState {
   providedIn: 'root'
 })
 export class InscriptionStateService {
+  // ✅ SOLUCIÓN PROBLEMA 7: Consolidación gradual de almacenamiento
   private readonly STORAGE_KEY = 'mpd_inscription_in_progress';
   private readonly REDIRECT_FROM_DOCS_KEY = 'mpd_redirect_from_inscription';
   private readonly FORM_STATE_KEY = 'mpd_inscription_form_state';
   private readonly INCOMPLETE_INSCRIPTIONS_KEY = 'mpd_incomplete_inscriptions';
   private readonly DIRECT_CONTINUATION_KEY = 'mpd_direct_continuation';
 
-
+  constructor(private loggingService: LoggingService) {}
 
   /**
-   * Guarda el estado de una inscripción en progreso
+   * ✅ SOLUCIÓN PROBLEMA 6: Guarda inscripción respetando estado real del backend
+   * Guarda el estado de una inscripción en progreso sin forzar estados incorrectos
    * @param inscription Datos de la inscripción
    */
   saveInProgressInscription(inscription: IInscription): void {
     try {
-      // Marcar la inscripción como "en proceso"
+      // ✅ SOLUCIÓN PROBLEMA 6: Respetar estado real del backend, no forzar PENDING
       const inscriptionData = {
         ...inscription,
-        state: InscripcionState.PENDING,
-        currentStep: InscriptionStep.DATA_CONFIRMATION, // Paso 4 (ahora que tenemos el paso de documentación)
-        timestamp: new Date().toISOString()
+        // ✅ MANTENER estado original del backend
+        state: inscription.state || InscripcionState.ACTIVE, // Solo usar ACTIVE como fallback
+        // ✅ MANTENER paso actual real, no forzar DATA_CONFIRMATION
+        currentStep: inscription.currentStep || InscriptionStep.INITIAL, // Fallback al primer paso
+        timestamp: new Date().toISOString(),
+        // ✅ AGREGAR metadatos para validación temporal
+        lastSyncWithBackend: new Date().toISOString(),
+        source: 'frontend_save'
       };
 
+      this.loggingService.debug('[InscriptionStateService] Saving inscription with real backend state', {
+        inscriptionId: inscription.id,
+        originalState: inscription.state,
+        savedState: inscriptionData.state,
+        originalStep: inscription.currentStep,
+        savedStep: inscriptionData.currentStep
+      }, 'InscriptionStateService');
+
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(inscriptionData));
-      // Logging implementado con LoggingService;
+
     } catch (error) {
-      console.error('[InscriptionStateService] Error al guardar inscripción en progreso:', error);
+      this.loggingService.error('[InscriptionStateService] Error saving inscription in progress', error, 'InscriptionStateService');
     }
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 6: Validación temporal de sincronización
+   * Verifica si los datos locales están sincronizados con el backend
+   * @param localData Datos locales de la inscripción
+   * @param maxAgeMinutes Edad máxima en minutos (default: 30)
+   * @returns true si los datos están sincronizados
+   */
+  private isDataSyncValid(localData: any, maxAgeMinutes: number = 30): boolean {
+    if (!localData.lastSyncWithBackend) {
+      this.loggingService.warn('[InscriptionStateService] Local data missing sync timestamp', {
+        inscriptionId: localData.id
+      }, 'InscriptionStateService');
+      return false;
+    }
+
+    const syncTime = new Date(localData.lastSyncWithBackend);
+    const now = new Date();
+    const ageMinutes = (now.getTime() - syncTime.getTime()) / (1000 * 60);
+
+    const isValid = ageMinutes <= maxAgeMinutes;
+
+    if (!isValid) {
+      this.loggingService.debug('[InscriptionStateService] Local data is stale', {
+        inscriptionId: localData.id,
+        ageMinutes,
+        maxAgeMinutes
+      }, 'InscriptionStateService');
+    }
+
+    return isValid;
   }
 
   /**
@@ -70,14 +118,29 @@ export class InscriptionStateService {
       const savedData = JSON.parse(data);
       const inscription = savedData as IInscription;
 
-      // Verificar si la inscripción es reciente (menos de 24 horas)
-      // La propiedad timestamp es agregada por nosotros al guardar, no es parte de IInscription
+      // ✅ SOLUCIÓN PROBLEMA 6: Validación temporal mejorada
+      // Verificar si los datos están sincronizados con el backend
+      if (!this.isDataSyncValid(savedData, 30)) { // 30 minutos de validez
+        this.loggingService.info('[InscriptionStateService] Local data is stale, clearing cache', {
+          inscriptionId: savedData.id,
+          lastSync: savedData.lastSyncWithBackend
+        }, 'InscriptionStateService');
+
+        this.clearInProgressInscription();
+        return null;
+      }
+
+      // Verificar si la inscripción es reciente (menos de 24 horas) - fallback
       const timestamp = new Date(savedData.timestamp || new Date().toISOString());
       const now = new Date();
       const diffHours = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60);
 
       if (diffHours > 24) {
-        // Si han pasado más de 24 horas, eliminar la inscripción guardada
+        this.loggingService.info('[InscriptionStateService] Inscription data too old (>24h), clearing', {
+          inscriptionId: savedData.id,
+          ageHours: diffHours
+        }, 'InscriptionStateService');
+
         this.clearInProgressInscription();
         return null;
       }
@@ -95,9 +158,9 @@ export class InscriptionStateService {
   clearInProgressInscription(): void {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
-      // Logging implementado con LoggingService;
+      this.loggingService.debug('[InscriptionStateService] Cleared inscription in progress', undefined, 'InscriptionStateService');
     } catch (error) {
-      console.error('[InscriptionStateService] Error al limpiar inscripción en progreso:', error);
+      this.loggingService.error('[InscriptionStateService] Error clearing inscription in progress', error, 'InscriptionStateService');
     }
   }
 

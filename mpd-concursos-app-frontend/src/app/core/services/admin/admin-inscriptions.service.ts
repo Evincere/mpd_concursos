@@ -40,6 +40,8 @@ export interface AdminInscription extends IInscription {
   pendingDocuments: number;
   approvedDocuments: number;
   rejectedDocuments: number;
+  inscriptionDate: string;
+  lastUpdated: string;
   lastUpdate: Date;
   reviewedBy?: string;
   reviewDate?: Date;
@@ -112,6 +114,54 @@ export class AdminInscriptionsService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * Transforma los datos del backend al formato esperado por el frontend
+   * @param backendData Datos del backend
+   * @returns Datos transformados para el frontend
+   */
+  private transformBackendData(backendData: any): AdminInscription {
+    // Calcular estadísticas de documentos
+    const documents = backendData.documents || [];
+    const documentsCount = documents.length;
+    const pendingDocuments = documents.filter((doc: any) => doc.status === 'PENDING').length;
+    const approvedDocuments = documents.filter((doc: any) => doc.status === 'APPROVED').length;
+    const rejectedDocuments = documents.filter((doc: any) => doc.status === 'REJECTED').length;
+
+    return {
+      // Campos básicos
+      id: backendData.id,
+      contestId: backendData.contestId,
+      userId: backendData.userId,
+      state: backendData.state,
+      inscriptionDate: backendData.inscriptionDate,
+      lastUpdated: backendData.lastUpdated,
+      createdAt: backendData.inscriptionDate,
+      updatedAt: backendData.lastUpdated,
+
+      // Información del usuario (mapear desde userInfo)
+      userFullName: backendData.userInfo?.fullName || 'Usuario no disponible',
+      userEmail: backendData.userInfo?.email || 'Email no disponible',
+      userDni: backendData.userInfo?.dni || 'DNI no disponible',
+
+      // Información del concurso (mapear desde contestInfo)
+      contestTitle: backendData.contestInfo?.title || 'Concurso no disponible',
+      contestCategory: backendData.contestInfo?.category || 'Categoría no disponible',
+      contestDepartment: backendData.contestInfo?.position || 'Departamento no disponible',
+
+      // Estadísticas de documentos
+      documentsCount,
+      pendingDocuments,
+      approvedDocuments,
+      rejectedDocuments,
+
+      // Campos adicionales
+      lastUpdate: new Date(backendData.lastUpdated || backendData.inscriptionDate),
+      reviewedBy: backendData.reviewedBy,
+      reviewDate: backendData.reviewDate ? new Date(backendData.reviewDate) : undefined,
+      observations: backendData.observations
+    };
+  }
+
 
   /**
    * Obtiene todas las inscripciones con filtros y paginación
@@ -146,7 +196,19 @@ export class AdminInscriptionsService {
       }
     }
 
-    return this.http.get<InscriptionPage>(`${this.apiUrl}`, { params }).pipe(
+    return this.http.get<any>(`${this.apiUrl}`, { params }).pipe(
+      map(response => {
+        // Transformar los datos del backend al formato esperado por el frontend
+        const transformedContent = response.content.map((item: any) => this.transformBackendData(item));
+
+        return {
+          content: transformedContent,
+          totalElements: response.totalElements || 0,
+          totalPages: response.totalPages || 0,
+          size: response.size || 10,
+          number: response.number || 0
+        };
+      }),
       catchError(error => {
         console.error('Error obteniendo inscripciones:', error);
         return of({
@@ -308,7 +370,7 @@ export class AdminInscriptionsService {
             originalError: error,
             timestamp: Date.now()
           });
-          
+
           // Devolver datos simulados mientras se implementa el backend
           return of({
             success: true,

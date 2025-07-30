@@ -5,7 +5,8 @@ import { CommonModule } from '@angular/common';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
-import { CustomTableComponent, TableColumn } from '@shared/components/custom-table/custom-table.component';
+import { CustomTableComponent, TableColumn } from '@shared/components/custom-form/custom-table/custom-table.component';
+import { CustomTableColumnComponent } from '@shared/components/custom-form/custom-table/custom-table-column.component';
 
 // Services
 import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
@@ -18,7 +19,7 @@ import { DocumentManagerService } from '@core/services/documentos/document-manag
 import { TiposDocumentoService } from '@core/services/documentos/tipos-documento.service';
 import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-upload-dialog/documento-upload-dialog.component';
-import { debounceTime, throttleTime, finalize } from 'rxjs/operators';
+import { debounceTime, throttleTime, finalize, filter, take } from 'rxjs/operators';
 import { Subscription, firstValueFrom } from 'rxjs';
 
 interface DocumentoCardViewModel {
@@ -41,6 +42,7 @@ interface DocumentoCardViewModel {
     CustomCardComponent,
     CustomSpinnerComponent,
     CustomTableComponent,
+    CustomTableColumnComponent,
     DocumentoMultipleUploadDialogComponent,
     DocumentoUploadDialogComponent,
     DocumentoViewerComponent
@@ -71,6 +73,7 @@ interface DocumentoCardViewModel {
           <ul>
             <li>Solo se permitirán cargar archivos en formato PDF (máximo 10MB).</li>
             <li>En caso de tener múltiples páginas o documentos relacionados, por favor únalo en un único archivo PDF antes de cargarlo.</li>
+            <li><strong>Título Universitario y Certificado Analítico:</strong> Ambos documentos deben combinarse en un solo archivo PDF para su carga. No se aceptarán por separado.</li>
           </ul>
         </div>
       </div>
@@ -128,6 +131,13 @@ interface DocumentoCardViewModel {
                 <div>
                   <h5>{{vm.tipo.nombre}}</h5>
                   <p *ngIf="vm.tipo.descripcion">{{vm.tipo.descripcion}}</p>
+                  <!-- Mensaje específico para Título Universitario y Certificado Analítico -->
+                  <div *ngIf="vm.tipo.code === 'TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO'" class="documento-info-especial">
+                    <i class="fas fa-info-circle text-info"></i>
+                    <small class="text-info">
+                      <strong>Importante:</strong> Combine ambos documentos en un solo archivo PDF antes de cargar.
+                    </small>
+                  </div>
                 </div>
                 <div class="documento-estado">
                   <span class="estado-texto {{vm.estado}}">
@@ -142,13 +152,6 @@ interface DocumentoCardViewModel {
                       icon="eye"
                       [tooltip]="'Ver documento'"
                       (buttonClick)="verDocumento(vm.documento)">
-                    </app-custom-button>
-                    <app-custom-button
-                      variant="icon"
-                      color="success"
-                      icon="sync-alt"
-                      [tooltip]="'Reemplazar documento'"
-                      (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
@@ -222,13 +225,6 @@ interface DocumentoCardViewModel {
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
-                      color="success"
-                      icon="sync-alt"
-                      [tooltip]="'Reemplazar documento'"
-                      (buttonClick)="reemplazarDocumento(vm.documento)">
-                    </app-custom-button>
-                    <app-custom-button
-                      variant="icon"
                       color="danger"
                       icon="trash"
                       [tooltip]="'Eliminar documento'"
@@ -238,9 +234,9 @@ interface DocumentoCardViewModel {
                   <ng-template #botonCargarOpcional>
                     <app-custom-button
                       variant="stroked"
-                      color="accent"
-                      icon="plus"
-                      label="Agregar"
+                      color="primary"
+                      icon="upload"
+                      label="Cargar"
                       (buttonClick)="cargarDocumentoTipo(vm.tipo.id)">
                     </app-custom-button>
                   </ng-template>
@@ -257,26 +253,16 @@ interface DocumentoCardViewModel {
           <p class="table-description">Mostrando solo la versión más reciente de cada tipo de documento</p>
           <app-custom-table
             [data]="documentosSummary"
-            [columns]="summaryTableColumns"
             [loading]="(documentManager.loading$ | async) ?? false"
-            [showActions]="true"
-            (actionClick)="onSummaryTableAction($event)">
+            (rowClick)="onSummaryRowClick($event)">
           </app-custom-table>
         </div>
 
-        <!-- Estado vacío -->
-        <div class="empty-state" *ngIf="documentosSummary.length === 0 && !(documentManager.loading$ | async)">
+        <!-- Estado vacío - Solo se muestra cuando no hay tipos de documento configurados -->
+        <div class="empty-state" *ngIf="documentosObligatorios.length === 0 && documentosOpcionales.length === 0 && !(documentManager.loading$ | async)">
           <i class="fas fa-folder-open" aria-hidden="true"></i>
-          <h4>No has cargado ningún documento aún</h4>
-          <p>Comienza cargando los documentos requeridos para completar tu perfil</p>
-          <div class="empty-state-actions">
-            <app-custom-button
-              color="success"
-              icon="upload"
-              label="Carga múltiple"
-              (buttonClick)="abrirDialogoCargaMultiple()">
-            </app-custom-button>
-          </div>
+          <h4>No hay tipos de documento configurados</h4>
+          <p>Contacta al administrador para configurar los tipos de documento requeridos</p>
         </div>
 
         <!-- Loading state -->
@@ -367,6 +353,32 @@ interface DocumentoCardViewModel {
       }
     }
 
+    .documento-info-especial {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background-color: rgba(33, 150, 243, 0.1);
+      border-radius: 6px;
+      border-left: 3px solid #2196f3;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      small {
+        margin: 0;
+        line-height: 1.4;
+        color: #90caf9;
+      }
+
+      i {
+        color: #2196f3;
+        font-size: 0.9rem;
+      }
+    }
+
+    .text-info {
+      color: #90caf9 !important;
+    }
+
     .documentacion-progress {
       background: rgba(55, 65, 81, 0.8);
       backdrop-filter: blur(12px);
@@ -420,7 +432,7 @@ interface DocumentoCardViewModel {
       }
 
       .progress-info {
-        color: #d1d5db;
+        color: #ffffff;
         font-size: 0.9rem;
 
         i {
@@ -449,7 +461,7 @@ interface DocumentoCardViewModel {
         background: rgba(59, 130, 246, 0.1);
         border: 1px solid rgba(59, 130, 246, 0.2);
         border-radius: 8px;
-        color: #93c5fd;
+        color: #ffffff;
         font-size: 0.9rem;
 
         i {
@@ -517,8 +529,8 @@ interface DocumentoCardViewModel {
       }
     }
 
-    // Badge de posicionamiento para esquina superior derecha
-    // Usando las clases globales existentes con solo ajustes de posición
+    /* Badge de posicionamiento para esquina superior derecha */
+    /* Forzar estilos específicos para máximo contraste */
     .badge-posicion {
       position: absolute !important;
       top: 12px !important;
@@ -528,6 +540,27 @@ interface DocumentoCardViewModel {
       padding: 0.25rem 0.5rem !important;
       border-radius: 12px !important;
       margin: 0 !important;
+
+      /* Estilos específicos para cada tipo */
+      &.estado-bloqueado {
+        background: #f44336 !important; /* Rojo sólido */
+        color: white !important;
+        border: 1px solid rgba(244, 67, 54, 0.3) !important;
+
+        span, i {
+          color: white !important;
+        }
+      }
+
+      &.estado-activo {
+        background: #4caf50 !important; /* Verde sólido */
+        color: white !important;
+        border: 1px solid rgba(76, 175, 80, 0.3) !important;
+
+        span, i {
+          color: white !important;
+        }
+      }
     }
 
     .documento-icon {
@@ -614,32 +647,32 @@ interface DocumentoCardViewModel {
         }
 
         &.aprobado {
-          background-color: rgba(76, 175, 80, 0.2);
-          color: #4caf50;
+          background-color: rgba(76, 175, 80, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         &.pendiente {
-          background-color: rgba(255, 152, 0, 0.2);
-          color: #ff9800;
+          background-color: rgba(255, 152, 0, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(255, 152, 0, 0.3);
         }
 
         &.rechazado {
-          background-color: rgba(244, 67, 54, 0.2);
-          color: #f44336;
+          background-color: rgba(244, 67, 54, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(244, 67, 54, 0.3);
         }
 
         &.faltante {
-          background-color: rgba(158, 158, 158, 0.2);
-          color: #9e9e9e;
+          background-color: rgba(158, 158, 158, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(158, 158, 158, 0.3);
         }
 
         &.opcional-pendiente {
-          background-color: rgba(59, 130, 246, 0.2);
-          color: #3b82f6;
+          background-color: rgba(59, 130, 246, 0.8);
+          color: #ffffff;
           border: 1px solid rgba(59, 130, 246, 0.3);
         }
       }
@@ -676,18 +709,18 @@ interface DocumentoCardViewModel {
       }
 
       &.aprobado {
-        background-color: rgba(76, 175, 80, 0.15);
-        color: #4caf50;
+        background-color: rgba(76, 175, 80, 0.8);
+        color: #ffffff;
       }
 
       &.pendiente {
-        background-color: rgba(255, 152, 0, 0.15);
-        color: #ff9800;
+        background-color: rgba(255, 152, 0, 0.8);
+        color: #ffffff;
       }
 
       &.rechazado {
-        background-color: rgba(244, 67, 54, 0.15);
-        color: #f44336;
+        background-color: rgba(244, 67, 54, 0.8);
+        color: #ffffff;
       }
     }
 
@@ -709,12 +742,12 @@ interface DocumentoCardViewModel {
         font-size: 1.2rem;
         font-weight: 500;
         margin: 0 0 0.5rem 0;
-        color: #f9fafb;
+        color: #ffffff;
       }
 
       p {
         margin: 0 0 1.5rem 0;
-        color: #d1d5db;
+        color: #ffffff;
       }
 
       .empty-state-actions {
@@ -747,7 +780,7 @@ interface DocumentoCardViewModel {
 
       p {
         margin-top: 1rem;
-        color: #f9fafb;
+        color: #ffffff;
       }
     }
 
@@ -785,112 +818,37 @@ interface DocumentoCardViewModel {
       }
 
       &.aprobado {
-        background-color: rgba(76, 175, 80, 0.2);
-        color: #4caf50;
+        background-color: rgba(76, 175, 80, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(76, 175, 80, 0.3);
       }
 
       &.pendiente {
-        background-color: rgba(255, 152, 0, 0.2);
-        color: #ff9800;
+        background-color: rgba(255, 152, 0, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(255, 152, 0, 0.3);
       }
 
       &.rechazado {
-        background-color: rgba(244, 67, 54, 0.2);
-        color: #f44336;
+        background-color: rgba(244, 67, 54, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(244, 67, 54, 0.3);
       }
 
       &.archivado {
-        background-color: rgba(158, 158, 158, 0.2);
-        color: #9e9e9e;
+        background-color: rgba(158, 158, 158, 0.8);
+        color: #ffffff;
         border: 1px solid rgba(158, 158, 158, 0.3);
       }
     }
   `]
 })
 export class DocumentacionTabComponent implements OnInit, OnDestroy {
-  
+
   documentosUsuario: DocumentoUsuario[] = [];
   documentosSummary: DocumentoSummary[] = []; // Resumen de documentos agrupados por tipo
   tiposDocumento: TipoDocumento[] = []; // This will hold all document types from the backend
-  documentosRequeridos: TipoDocumento[] = [
-    {
-      id: 'dni-frente',
-      code: 'dni-frente',
-      nombre: 'DNI (Frente)',
-      descripcion: 'Documento Nacional de Identidad - Lado frontal',
-      requerido: true,
-      orden: 1,
-      parentId: 'dni',
-      activo: true
-    },
-    {
-      id: 'dni-dorso',
-      code: 'dni-dorso',
-      nombre: 'DNI (Dorso)',
-      descripcion: 'Documento Nacional de Identidad - Lado posterior',
-      requerido: true,
-      orden: 2,
-      parentId: 'dni',
-      activo: true
-    },
-    {
-      id: 'cuil',
-      code: 'cuil',
-      nombre: 'Constancia de CUIL',
-      descripcion: 'Constancia de CUIL actualizada',
-      requerido: true,
-      orden: 3,
-      activo: true
-    },
-    {
-      id: 'titulo-universitario',
-      code: 'titulo-universitario',
-      nombre: 'Título Universitario',
-      descripcion: 'Título de grado universitario',
-      requerido: true,
-      orden: 4,
-      activo: true
-    },
-    {
-      id: 'antecedentes-penales',
-      code: 'antecedentes-penales',
-      nombre: 'Certificado de Antecedentes Penales',
-      descripcion: 'Certificado vigente con antigüedad no mayor a 90 días desde su emisión',
-      requerido: true,
-      orden: 5,
-      activo: true
-    },
-    {
-      id: 'certificado-profesional',
-      code: 'certificado-profesional',
-      nombre: 'Certificado de Ejercicio Profesional',
-      descripcion: 'Certificado expedido por la Oficina de Profesionales de la SCJ o Colegio de Abogados, o certificación de servicios del Poder Judicial. Antigüedad máxima: 6 meses',
-      requerido: true,
-      orden: 6,
-      activo: true
-    },
-    {
-      id: 'certificado-sanciones',
-      code: 'certificado-sanciones',
-      nombre: 'Certificado de Sanciones Disciplinarias',
-      descripcion: 'Certificado que acredite no registrar sanciones disciplinarias y/o en trámite. Antigüedad máxima: 6 meses',
-      requerido: true,
-      orden: 7,
-      activo: true
-    },
-    {
-      id: 'certificado-ley-micaela',
-      code: 'certificado-ley-micaela',
-      nombre: 'Certificado Ley Micaela',
-      descripcion: 'Certificado de capacitación en Ley Micaela (opcional)',
-      requerido: false,
-      orden: 8,
-      activo: true
-    }
-  ];
+  documentosRequeridos: TipoDocumento[] = []; // ✅ FIXED: Inicializar vacío, solo usar datos del backend
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
 
@@ -903,79 +861,21 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   // Table configuration for custom table component
   tableColumns: TableColumn[] = [
-    { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
-    {
-      key: 'nombreArchivo',
-      label: 'Nombre del archivo',
-      sortable: true,
-      type: 'custom',
-      render: (doc: DocumentoUsuario) => {
-        // Mostrar nombre basado en el tipo de documento en lugar del nombre original
-        const nombreTipoDocumento = doc.tipoDocumento?.nombre || 'Documento';
-        return `${nombreTipoDocumento}.pdf`;
-      }
-    },
-    { key: 'fechaCarga', label: 'Fecha de carga', sortable: true, type: 'date' },
-    {
-      key: 'estado',
-      label: 'Estado',
-      sortable: false,
-      type: 'custom',
-      render: (doc: DocumentoUsuario) => {
-        const vm = this.documentosViewModel.find(vm => vm.documento?.id === doc.id);
-        if (!vm) return '';
-        return `<span class="estado-badge-tabla ${vm.estado}">
-                  <i class="fas ${vm.estadoIcon}"></i> ${vm.estadoTexto}
-                </span>`;
-      }
-    },
-    { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
+    { property: 'tipoDocumento.nombre', header: 'Tipo de documento', sortable: true },
+    { property: 'nombreArchivo', header: 'Nombre del archivo', sortable: true },
+    { property: 'fechaCarga', header: 'Fecha de carga', sortable: true },
+    { property: 'estado', header: 'Estado', sortable: false },
+    { property: 'acciones', header: 'Acciones', sortable: false }
   ];
 
   // Nueva configuración de columnas para la tabla de resumen
   summaryTableColumns: TableColumn[] = [
-    { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
-    {
-      key: 'nombreArchivo',
-      label: 'Archivo actual',
-      sortable: true,
-      type: 'custom',
-      render: (summary: DocumentoSummary) => {
-        const nombreTipoDocumento = summary.tipoDocumento?.nombre || 'Documento';
-        return `${nombreTipoDocumento}.pdf`;
-      }
-    },
-    { key: 'fechaCarga', label: 'Fecha de carga', sortable: true, type: 'date' },
-    {
-      key: 'estadoDetallado',
-      label: 'Estado',
-      sortable: false,
-      type: 'custom',
-      render: (summary: DocumentoSummary) => {
-        const estadoClass = this.getEstadoClass(summary.estadoDetallado);
-        const estadoIcon = this.getEstadoIcon(summary.estadoDetallado);
-        return `<span class="estado-badge-tabla ${estadoClass}">
-                  <i class="fas ${estadoIcon}"></i> ${summary.estadoDetallado}
-                </span>`;
-      }
-    },
-    {
-      key: 'versiones',
-      label: 'Versiones',
-      sortable: false,
-      type: 'custom',
-      render: (summary: DocumentoSummary) => {
-        if (summary.tieneVersionesAnteriores) {
-          return `<span class="versiones-info">
-                    <i class="fas fa-history"></i> v${summary.versionActual} (${summary.totalVersiones - 1} anteriores)
-                  </span>`;
-        }
-        return `<span class="versiones-info">
-                  <i class="fas fa-file"></i> v${summary.versionActual}
-                </span>`;
-      }
-    },
-    { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
+    { property: 'tipoDocumento.nombre', header: 'Tipo de documento', sortable: true },
+    { property: 'nombreArchivo', header: 'Archivo actual', sortable: true },
+    { property: 'fechaCarga', header: 'Fecha de carga', sortable: true },
+    { property: 'estadoDetallado', header: 'Estado', sortable: false },
+    { property: 'versiones', header: 'Versiones', sortable: false },
+    { property: 'acciones', header: 'Acciones', sortable: false }
   ];
 
   private subscription = new Subscription();
@@ -993,7 +893,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('[DocumentacionTab] 🚀 Componente inicializado');
-    
+
     this.subscription.add(this.documentManager.documentos$.subscribe(documentos => {
       this.documentosUsuario = documentos;
       this.buildViewModel();
@@ -1099,13 +999,20 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
   }
 
-  
+
 
   buildViewModel(): void {
     console.log('[DocumentacionTab] 🏗️ Construyendo ViewModel...');
     console.log(`- Documentos requeridos: ${this.documentosRequeridos.length}`);
     console.log(`- Documentos del usuario: ${this.documentosUsuario.length}`);
     console.log('- Documentos del usuario IDs:', this.documentosUsuario.map(d => `${d.tipoDocumentoId} (${d.nombreArchivo})`));
+
+    // ✅ FIXED: No construir ViewModel si no hay tipos de documento del backend
+    if (this.documentosRequeridos.length === 0) {
+      console.log('[DocumentacionTab] ⏳ Esperando tipos de documento del backend...');
+      this.documentosViewModel = [];
+      return;
+    }
 
     const viewModel: DocumentoCardViewModel[] = [];
 
@@ -1348,43 +1255,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     });
   }
 
+  // FUNCIONALIDAD REMOVIDA: reemplazarDocumento
+  // El usuario debe eliminar el documento y cargar uno nuevo
   async reemplazarDocumento(documento: DocumentoUsuario | null): Promise<void> {
-    if (!documento || !documento.id || !documento.tipoDocumentoId) {
-      this.notification.error('No se pudo encontrar el documento para reemplazar');
-      return;
-    }
-
-    try {
-      const file = await this.selectFile();
-
-      const checkResp: any = await firstValueFrom(this.documentManager.checkReplaceDocumento(documento.id!, file, 'Reemplazo de documento'));
-
-      if (checkResp.warning && checkResp.impactedEntities && checkResp.impactedEntities.length > 0) {
-        const detalle = checkResp.impactedEntities.map((e: string) => `<li>${e}</li>`).join('');
-        const confirmado = await firstValueFrom(this.dialog.openConfirm({
-          title: 'Advertencia de reemplazo',
-          icon: 'warning',
-          message: `${checkResp.warning}<ul>${detalle}</ul><p>¿Deseas continuar y reemplazar el documento?</p>`,
-          confirmButtonText: 'Reemplazar',
-          cancelButtonText: 'Cancelar',
-          size: 'medium',
-        }).afterClosed());
-
-        if (confirmado) {
-          const resp2: any = await firstValueFrom(this.documentManager.replaceDocumento(documento.id!, file, 'Reemplazo de documento', true));
-          this.notification.success(resp2.message || 'Documento reemplazado exitosamente.');
-        }
-      } else {
-        const resp: any = await firstValueFrom(this.documentManager.replaceDocumento(documento.id!, file, 'Reemplazo de documento'));
-        this.notification.success(resp.message || 'Documento reemplazado exitosamente.');
-      }
-    } catch (error: any) {
-      if(error.message.includes('cancelada')){
-        this.notification.info('La operación de reemplazo fue cancelada.');
-      } else {
-        this.notification.error(error.message || 'Error al reemplazar el documento');
-      }
-    }
+    this.notification.info('Para reemplazar un documento, primero elimínelo y luego cargue el nuevo documento.');
   }
 
   eliminarDocumento(documento: DocumentoUsuario | null): void {
@@ -1403,7 +1277,28 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       )
       .subscribe((confirmed) => {
         if (confirmed) {
-          this.documentManager.eliminarDocumento(documento.id!)
+          console.log('[DocumentacionTab] 🗑️ Iniciando eliminación de documento:', documento.nombreArchivo);
+
+          // Suscribirse al evento de documento eliminado para mostrar mensaje de éxito
+          const eliminacionSubscription = this.documentManager.documentoEliminado$.pipe(
+            filter(documentoId => documentoId === documento.id),
+            take(1)
+          ).subscribe(() => {
+            console.log('[DocumentacionTab] ✅ Documento eliminado exitosamente, mostrando mensaje de éxito');
+            this.notification.success(`Documento "${documento.nombreArchivo}" eliminado exitosamente`);
+
+            // Forzar recarga inmediata para actualizar la interfaz
+            setTimeout(() => {
+              console.log('[DocumentacionTab] 🔄 Forzando recarga después de eliminación');
+              this.buildViewModel();
+            }, 500);
+          });
+
+          // Agregar la suscripción para limpiarla después
+          this.subscription.add(eliminacionSubscription);
+
+          // Ejecutar la eliminación
+          this.documentManager.eliminarDocumento(documento.id!);
         }
       });
   }
@@ -1415,15 +1310,33 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       case 'view':
         this.verDocumento(documento);
         break;
-      case 'replace':
-        this.reemplazarDocumento(documento);
-        break;
       case 'delete':
         this.eliminarDocumento(documento);
         break;
       default:
         console.warn(`Acción desconocida: ${event.action}`);
     }
+  }
+
+  /**
+   * Maneja el clic en una fila de la tabla de resumen
+   */
+  onSummaryRowClick(summary: DocumentoSummary): void {
+    // Crear un DocumentoUsuario temporal para compatibilidad
+    const documento: DocumentoUsuario = {
+      id: summary.id,
+      tipoDocumentoId: summary.tipoDocumentoId,
+      tipoDocumento: summary.tipoDocumento,
+      nombreArchivo: summary.nombreArchivo,
+      estado: summary.estado as any,
+      comentarios: summary.comentarios,
+      fechaCarga: summary.fechaCarga,
+      validadoPor: summary.validadoPor,
+      fechaValidacion: summary.fechaValidacion,
+      motivoRechazo: summary.motivoRechazo
+    };
+
+    this.verDocumento(documento);
   }
 
   /**
@@ -1449,9 +1362,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     switch (event.action) {
       case 'view':
         this.verDocumento(documento);
-        break;
-      case 'replace':
-        this.reemplazarDocumento(documento);
         break;
       case 'delete':
         this.eliminarDocumento(documento);
@@ -1525,7 +1435,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     return this.documentosViewModel.filter(vm => !vm.tipo.requerido);
   }
 
-  
+
 }
 
 

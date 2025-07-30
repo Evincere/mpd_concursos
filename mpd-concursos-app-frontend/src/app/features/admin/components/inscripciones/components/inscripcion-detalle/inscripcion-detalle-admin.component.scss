@@ -13,14 +13,80 @@ h2 {
   align-items: center;
 }
 
-.close-button {
-  margin-right: -8px;
+// Estilos para pestañas personalizadas
+.custom-tabs {
+  .tab-headers {
+    display: flex;
+    border-bottom: 1px solid $color-border;
+    background-color: $color-background;
+
+    .tab-header {
+      background: none;
+      border: none;
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      font-size: $font-size-md;
+      color: $color-text-secondary;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &:hover {
+        background-color: rgba($color-primary, 0.05);
+        color: $color-text-primary;
+      }
+
+      &.active {
+        color: $color-primary;
+        border-bottom-color: $color-primary;
+        background-color: rgba($color-primary, 0.05);
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .tab-panel {
+    padding: 0;
+  }
 }
 
-mat-dialog-content {
+.dialog-content {
   position: relative;
   padding: 0;
   max-height: 80vh;
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid $color-border;
+  background-color: $color-background;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: $color-text-secondary;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba($color-danger, 0.1);
+    color: $color-danger;
+  }
 }
 
 // Indicador de carga
@@ -30,7 +96,7 @@ mat-dialog-content {
   align-items: center;
   justify-content: center;
   padding: 3rem 0;
-  
+
   p {
     margin-top: 1rem;
     color: $color-text-secondary;
@@ -47,42 +113,42 @@ mat-dialog-content {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  
+
   .inscription-info {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    
+
     .inscription-id {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      
+
       .label {
         font-weight: 500;
       }
-      
+
       .value {
         font-family: monospace;
         font-size: $font-size-sm;
       }
     }
   }
-  
+
   .inscription-dates {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    
+
     .date-item {
       display: flex;
       flex-direction: column;
-      
+
       .label {
         font-size: $font-size-xs;
         color: $color-text-secondary;
       }
-      
+
       .value {
         font-size: $font-size-sm;
       }
@@ -98,34 +164,34 @@ mat-dialog-content {
 // Secciones de información
 .info-section {
   margin-bottom: 2rem;
-  
+
   h3 {
     font-size: $font-size-md;
     font-weight: 500;
     margin: 0 0 1rem;
     color: $color-text-primary;
   }
-  
+
   .info-card {
     background-color: $color-surface;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     padding: 1.5rem;
-    
+
     .info-row {
       display: flex;
       margin-bottom: 0.75rem;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
-      
+
       .label {
         width: 120px;
         font-weight: 500;
         color: $color-text-primary;
       }
-      
+
       .value {
         flex: 1;
         color: $color-text-secondary;
@@ -140,23 +206,77 @@ mat-dialog-content {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
-  
+
   .form-row {
     margin-bottom: 1rem;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
   }
-  
+
   .full-width {
     width: 100%;
   }
-  
+
   .form-actions {
     display: flex;
     justify-content: flex-end;
     margin-top: 1rem;
+  }
+
+  // Estilos para elementos de formulario personalizados
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-size: $font-size-sm;
+      font-weight: 500;
+      color: $color-text-primary;
+      margin-bottom: 0.25rem;
+    }
+
+    .form-control {
+      padding: 0.75rem;
+      border: 1px solid $color-border;
+      border-radius: 4px;
+      font-size: $font-size-md;
+      background-color: $color-background;
+      color: $color-text-primary;
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+        box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+      }
+
+      &:disabled {
+        background-color: $color-surface;
+        color: $color-text-secondary;
+        cursor: not-allowed;
+      }
+    }
+
+    select.form-control {
+      cursor: pointer;
+
+      option {
+        background-color: $color-background;
+        color: $color-text-primary;
+      }
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    &.full-width {
+      width: 100%;
+    }
   }
 }
 
@@ -168,18 +288,18 @@ mat-dialog-content {
     margin: 0 0 1rem;
     color: $color-text-primary;
   }
-  
+
   .documents-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    
+
     .document-item {
       background-color: $color-surface;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       overflow: hidden;
-      
+
       .document-header {
         display: flex;
         justify-content: space-between;
@@ -187,58 +307,58 @@ mat-dialog-content {
         padding: 1rem 1.5rem;
         background-color: rgba($color-primary, 0.05);
         border-bottom: 1px solid $color-border;
-        
+
         .document-info {
           display: flex;
           flex-direction: column;
-          
+
           .document-name {
             font-weight: 500;
             margin-bottom: 0.25rem;
           }
-          
+
           .document-type {
             font-size: $font-size-xs;
             color: $color-text-secondary;
           }
         }
       }
-      
+
       .document-content {
         padding: 1.5rem;
-        
+
         .document-details {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
           gap: 1rem;
           margin-bottom: 1rem;
-          
+
           .detail-item {
             display: flex;
             flex-direction: column;
-            
+
             .label {
               font-size: $font-size-xs;
               color: $color-text-secondary;
               margin-bottom: 0.25rem;
             }
-            
+
             .value {
               font-size: $font-size-sm;
             }
           }
         }
-        
+
         .document-observations {
           margin-bottom: 1rem;
-          
+
           .label {
             font-size: $font-size-xs;
             color: $color-text-secondary;
             margin-bottom: 0.25rem;
             display: block;
           }
-          
+
           .value {
             font-size: $font-size-sm;
             margin: 0;
@@ -247,7 +367,7 @@ mat-dialog-content {
             border-radius: 4px;
           }
         }
-        
+
         .document-actions {
           display: flex;
           gap: 0.75rem;
@@ -256,7 +376,7 @@ mat-dialog-content {
       }
     }
   }
-  
+
   .empty-documents {
     display: flex;
     flex-direction: column;
@@ -265,7 +385,7 @@ mat-dialog-content {
     padding: 3rem 1rem;
     background-color: $color-surface;
     border-radius: 8px;
-    
+
     mat-icon {
       font-size: 3rem;
       width: 3rem;
@@ -273,7 +393,7 @@ mat-dialog-content {
       margin-bottom: 1rem;
       color: $color-text-tertiary;
     }
-    
+
     p {
       margin: 0;
       color: $color-text-secondary;
@@ -289,72 +409,72 @@ mat-dialog-content {
     margin: 0 0 1rem;
     color: $color-text-primary;
   }
-  
+
   .history-list {
     background-color: $color-surface;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    
+
     mat-list {
       padding: 0;
     }
-    
+
     .history-item {
       display: flex;
       padding: 1rem 0;
-      
+
       .history-icon {
         margin-right: 1rem;
-        
+
         mat-icon {
           color: $color-primary;
         }
       }
-      
+
       .history-content {
         flex: 1;
-        
+
         .history-header {
           display: flex;
           justify-content: space-between;
           margin-bottom: 0.5rem;
-          
+
           .history-action {
             font-weight: 500;
           }
-          
+
           .history-date {
             font-size: $font-size-xs;
             color: $color-text-secondary;
           }
         }
-        
+
         .history-details {
           display: flex;
           justify-content: space-between;
           margin-bottom: 0.5rem;
-          
+
           .history-user {
             font-size: $font-size-sm;
             color: $color-text-secondary;
           }
-          
+
           .state-change {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             font-size: $font-size-xs;
-            
+
             .previous-state {
               color: $color-text-secondary;
             }
-            
+
             .new-state {
               font-weight: 500;
               color: $color-primary;
             }
-            
+
             mat-icon {
               font-size: 16px;
               width: 16px;
@@ -363,7 +483,7 @@ mat-dialog-content {
             }
           }
         }
-        
+
         .history-details-text {
           margin: 0;
           font-size: $font-size-sm;
@@ -375,7 +495,7 @@ mat-dialog-content {
       }
     }
   }
-  
+
   .empty-history {
     display: flex;
     flex-direction: column;
@@ -384,7 +504,7 @@ mat-dialog-content {
     padding: 3rem 1rem;
     background-color: $color-surface;
     border-radius: 8px;
-    
+
     mat-icon {
       font-size: 3rem;
       width: 3rem;
@@ -392,7 +512,7 @@ mat-dialog-content {
       margin-bottom: 1rem;
       color: $color-text-tertiary;
     }
-    
+
     p {
       margin: 0;
       color: $color-text-secondary;
@@ -408,27 +528,27 @@ mat-dialog-content {
   font-size: $font-size-xs;
   font-weight: 500;
   text-align: center;
-  
+
   &.status-pending {
     background-color: rgba($color-warning, 0.15);
     color: $color-warning;
   }
-  
+
   &.status-approved {
     background-color: rgba($color-success, 0.15);
     color: $color-success;
   }
-  
+
   &.status-rejected {
     background-color: rgba($color-error, 0.15);
     color: $color-error;
   }
-  
+
   &.status-cancelled {
     background-color: rgba($color-text-tertiary, 0.15);
     color: $color-text-tertiary;
   }
-  
+
   &.status-in-process {
     background-color: rgba($color-info, 0.15);
     color: $color-info;
@@ -449,11 +569,11 @@ mat-dialog-content {
       color: $color-text-secondary-dark;
     }
   }
-  
+
   .inscription-header {
     background-color: rgba($color-primary-dark, 0.1);
     border-bottom-color: $color-border-dark;
-    
+
     .inscription-dates {
       .date-item {
         .label {
@@ -462,54 +582,54 @@ mat-dialog-content {
       }
     }
   }
-  
+
   .info-section {
     h3 {
       color: $color-text-primary-dark;
     }
-    
+
     .info-card {
       background-color: $color-surface-dark;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      
+
       .info-row {
         .label {
           color: $color-text-primary-dark;
         }
-        
+
         .value {
           color: $color-text-secondary-dark;
         }
       }
     }
   }
-  
+
   .status-form {
     background-color: $color-surface-dark;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   .documents-section {
     h3 {
       color: $color-text-primary-dark;
     }
-    
+
     .documents-list {
       .document-item {
         background-color: $color-surface-dark;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        
+
         .document-header {
           background-color: rgba($color-primary-dark, 0.1);
           border-bottom-color: $color-border-dark;
-          
+
           .document-info {
             .document-type {
               color: $color-text-secondary-dark;
             }
           }
         }
-        
+
         .document-content {
           .document-details {
             .detail-item {
@@ -518,12 +638,12 @@ mat-dialog-content {
               }
             }
           }
-          
+
           .document-observations {
             .label {
               color: $color-text-secondary-dark;
             }
-            
+
             .value {
               background-color: rgba($color-border-dark, 0.2);
             }
@@ -531,63 +651,63 @@ mat-dialog-content {
         }
       }
     }
-    
+
     .empty-documents {
       background-color: $color-surface-dark;
-      
+
       mat-icon {
         color: $color-text-tertiary-dark;
       }
-      
+
       p {
         color: $color-text-secondary-dark;
       }
     }
   }
-  
+
   .history-section {
     h3 {
       color: $color-text-primary-dark;
     }
-    
+
     .history-list {
       background-color: $color-surface-dark;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      
+
       .history-item {
         .history-icon {
           mat-icon {
             color: $color-primary-dark;
           }
         }
-        
+
         .history-content {
           .history-header {
             .history-date {
               color: $color-text-secondary-dark;
             }
           }
-          
+
           .history-details {
             .history-user {
               color: $color-text-secondary-dark;
             }
-            
+
             .state-change {
               .previous-state {
                 color: $color-text-secondary-dark;
               }
-              
+
               .new-state {
                 color: $color-primary-dark;
               }
-              
+
               mat-icon {
                 color: $color-text-tertiary-dark;
               }
             }
           }
-          
+
           .history-details-text {
             color: $color-text-secondary-dark;
             background-color: rgba($color-border-dark, 0.2);
@@ -595,16 +715,125 @@ mat-dialog-content {
         }
       }
     }
-    
+
     .empty-history {
       background-color: $color-surface-dark;
-      
+
       mat-icon {
         color: $color-text-tertiary-dark;
       }
-      
+
       p {
         color: $color-text-secondary-dark;
+      }
+    }
+  }
+}
+
+// Estilos para acciones del diálogo
+.dialog-actions {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $color-border;
+  background-color: $color-background;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+// Estilos para iconos vacíos
+.empty-icon {
+  font-size: 3rem;
+  color: $color-text-secondary;
+  margin-bottom: 1rem;
+}
+
+// Estilos para divisores de historial
+.history-divider {
+  border: none;
+  border-top: 1px solid $color-border;
+  margin: 1rem 0;
+  opacity: 0.5;
+}
+
+// Estilos para elementos de historial personalizados
+.history-items {
+  .history-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid $color-border;
+    }
+
+    .history-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba($color-primary, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-primary;
+    }
+
+    .history-content {
+      flex: 1;
+
+      .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+
+        .history-action {
+          font-weight: 500;
+          color: $color-text-primary;
+        }
+
+        .history-date {
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+        }
+      }
+
+      .history-details {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+
+        .history-user {
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+        }
+
+        .state-change {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: $font-size-sm;
+
+          .previous-state {
+            color: $color-warning;
+          }
+
+          .new-state {
+            color: $color-success;
+          }
+
+          i {
+            color: $color-text-secondary;
+          }
+        }
+      }
+
+      .history-details-text {
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+        margin: 0;
+        font-style: italic;
       }
     }
   }
