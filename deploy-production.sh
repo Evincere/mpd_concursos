@@ -167,42 +167,96 @@ backup_database() {
     fi
 }
 
+# Función para configurar backups automáticos
+setup_automatic_backups() {
+    log_info "Configurando backups automáticos cada 6 horas..."
+
+    local backup_script="./scripts/setup-backup-cron.sh"
+
+    # Verificar que el script de configuración de backups existe
+    if [[ ! -f "$backup_script" ]]; then
+        log_warning "Script de configuración de backups no encontrado: $backup_script"
+        log_info "Los backups automáticos deben configurarse manualmente después del deployment"
+        return 0
+    fi
+
+    # Remover configuraciones de backup existentes
+    log_info "Removiendo configuraciones de backup previas..."
+    "$backup_script" -r 2>/dev/null || true
+
+    # Configurar backups cada 6 horas: 00:00, 06:00, 12:00, 18:00
+    local backup_times=("00:00" "06:00" "12:00" "18:00")
+    local success_count=0
+
+    for time in "${backup_times[@]}"; do
+        log_info "Configurando backup a las $time..."
+        if "$backup_script" -f daily -t "$time" 2>/dev/null; then
+            ((success_count++))
+        else
+            log_warning "Error al configurar backup a las $time"
+        fi
+    done
+
+    if [[ $success_count -eq 4 ]]; then
+        log_success "Backups automáticos configurados exitosamente"
+        log_info "Configuración: Backups cada 6 horas (00:00, 06:00, 12:00, 18:00)"
+        log_info "RPO (Recovery Point Objective): Máximo 6 horas de pérdida de datos"
+        log_info "Logs de backup: /app/logs/cron-backup.log"
+        log_info "Para ver el estado: $backup_script -s"
+    elif [[ $success_count -gt 0 ]]; then
+        log_warning "Backups parcialmente configurados ($success_count/4 horarios)"
+        log_info "Algunos backups se configuraron correctamente"
+    else
+        log_warning "Error al configurar backups automáticos"
+        log_info "Puedes configurarlos manualmente ejecutando:"
+        echo "  $backup_script -f daily -t 00:00"
+        echo "  $backup_script -f daily -t 06:00"
+        echo "  $backup_script -f daily -t 12:00"
+        echo "  $backup_script -f daily -t 18:00"
+    fi
+}
+
 # Función principal de deployment
 deploy() {
     log_info "Iniciando deployment..."
-    
+
     # Detener servicios existentes
     log_info "Deteniendo servicios existentes..."
     docker-compose -f docker-compose.prod.yml down --remove-orphans || true
-    
+
     # Limpiar imágenes antiguas
     log_info "Limpiando imágenes Docker antiguas..."
     docker system prune -f || true
-    
+
     # Construir y levantar servicios
     log_info "Construyendo y levantando servicios..."
     docker-compose -f docker-compose.prod.yml up --build -d
-    
+
     # Esperar a que los servicios estén listos
     log_info "Esperando a que los servicios estén listos..."
     sleep 30
-    
+
     # Verificar estado de los servicios
     log_info "Verificando estado de los servicios..."
     docker-compose -f docker-compose.prod.yml ps
-    
+
+    # Configurar backups automáticos
+    setup_automatic_backups
+
     # Verificar logs por errores críticos
     log_info "Verificando logs por errores..."
     if docker-compose -f docker-compose.prod.yml logs backend | grep -i "error\|exception\|failed" | head -5; then
         log_warning "Se encontraron algunos errores en los logs. Revisa los logs completos con:"
         echo "docker-compose -f docker-compose.prod.yml logs backend"
     fi
-    
+
     log_success "Deployment completado!"
     log_info "Servicios disponibles en:"
     echo "  - Frontend: http://$SERVER_HOST:${SERVER_PORT_FRONTEND:-8000}"
     echo "  - Backend:  http://$SERVER_HOST:${SERVER_PORT_BACKEND:-8080}"
     echo "  - API:      http://$SERVER_HOST:${SERVER_PORT_BACKEND:-8080}/api"
+    echo ""
+    log_info "Backups automáticos: Configurados cada 6 horas (00:00, 06:00, 12:00, 18:00)"
 }
 
 # Función para mostrar ayuda
@@ -216,6 +270,14 @@ show_help() {
     echo "  logs      Mostrar logs de los servicios"
     echo "  status    Mostrar estado de los servicios"
     echo "  help      Mostrar esta ayuda"
+    echo ""
+    echo "Backups Automáticos:"
+    echo "  El deployment configura automáticamente backups cada 6 horas"
+    echo "  Horarios: 00:00, 06:00, 12:00, 18:00 (RPO: máximo 6 horas)"
+    echo "  Para gestionar backups manualmente:"
+    echo "    ./scripts/setup-backup-cron.sh -s    # Ver estado actual"
+    echo "    ./scripts/setup-backup-cron.sh -r    # Remover configuración"
+    echo "    ./scripts/restore-system.sh -l       # Listar backups disponibles"
     echo ""
 }
 
