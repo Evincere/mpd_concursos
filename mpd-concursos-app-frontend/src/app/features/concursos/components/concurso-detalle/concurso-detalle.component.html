@@ -54,40 +54,61 @@
 
     <ng-template #documentacionTemplate>
       <div class="tab-content">
-        <div class="documentos-grid">
-          <div class="documento-item">
+        <!-- Loading de documentos -->
+        <div class="documents-loading" *ngIf="loadingDocumentAvailability">
+          <div class="loading-message">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Verificando disponibilidad de documentos...</span>
+          </div>
+        </div>
+
+        <!-- Documentos disponibles -->
+        <div class="documentos-grid" *ngIf="!loadingDocumentAvailability && hasAvailableDocuments">
+          <!-- Bases y Condiciones -->
+          <div class="documento-item" *ngIf="contestDocumentAvailability?.basesAvailable">
             <i class="fas fa-file-alt" aria-hidden="true"></i>
             <div class="documento-info">
               <h4>Bases y Condiciones</h4>
+              <p class="documento-description">Bases oficiales del concurso de antecedentes y oposición</p>
               <app-custom-button
                 variant="download"
                 size="small"
                 icon="download"
                 label="Descargar PDF"
-                [href]="concurso.basesUrl || ''"
-                target="_blank"
+                (buttonClick)="downloadContestBases()"
                 ariaLabel="Descargar bases y condiciones en PDF">
               </app-custom-button>
             </div>
           </div>
-          <div class="documento-item">
+
+          <!-- Descripción del Puesto -->
+          <div class="documento-item" *ngIf="contestDocumentAvailability?.descriptionAvailable">
             <i class="fas fa-briefcase" aria-hidden="true"></i>
             <div class="documento-info">
               <h4>Descripción del Puesto</h4>
+              <p class="documento-description">Descripción detallada del cargo y funciones</p>
               <app-custom-button
                 variant="download"
                 size="small"
                 icon="download"
                 label="Descargar PDF"
-                [href]="concurso.descriptionUrl || ''"
-                target="_blank"
+                (buttonClick)="downloadContestDescription()"
                 ariaLabel="Descargar descripción del puesto en PDF">
               </app-custom-button>
             </div>
           </div>
         </div>
 
-
+        <!-- Mensaje cuando no hay documentos disponibles -->
+        <div class="documents-not-available" *ngIf="!loadingDocumentAvailability && !hasAvailableDocuments">
+          <div class="info-message">
+            <i class="fas fa-info-circle"></i>
+            <div class="message-content">
+              <h4>Documentos no disponibles</h4>
+              <p>{{ documentsNotAvailableMessage }}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </ng-template>
 

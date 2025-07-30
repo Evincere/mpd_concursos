@@ -69,6 +69,62 @@
               </div>
             </div>
 
+            <!-- Sección de documentos disponibles -->
+            <div class="documents-section" *ngIf="!loadingDocumentAvailability">
+              <!-- Documentos disponibles -->
+              <div class="available-documents" *ngIf="hasAvailableDocuments">
+                <h5 class="documents-title">
+                  <i class="fas fa-file-pdf"></i>
+                  Documentos Disponibles
+                </h5>
+                <p class="documents-description">
+                  Puede consultar los siguientes documentos antes de confirmar su aceptación:
+                </p>
+
+                <div class="document-buttons">
+                  <!-- Botón para ver bases -->
+                  <button
+                    type="button"
+                    class="document-button bases-button"
+                    *ngIf="contestDocumentAvailability?.basesAvailable"
+                    (click)="viewContestBases()"
+                    title="Ver bases del concurso en nueva pestaña">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Ver Bases del Concurso</span>
+                    <i class="fas fa-external-link-alt"></i>
+                  </button>
+
+                  <!-- Botón para ver descripción -->
+                  <button
+                    type="button"
+                    class="document-button description-button"
+                    *ngIf="contestDocumentAvailability?.descriptionAvailable"
+                    (click)="viewContestDescription()"
+                    title="Ver descripción del puesto en nueva pestaña">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Ver Descripción del Puesto</span>
+                    <i class="fas fa-external-link-alt"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Mensaje cuando no hay documentos disponibles -->
+              <div class="documents-not-available" *ngIf="!hasAvailableDocuments">
+                <div class="info-message">
+                  <i class="fas fa-info-circle"></i>
+                  <span>{{ documentsNotAvailableMessage }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loading de documentos -->
+            <div class="documents-loading" *ngIf="loadingDocumentAvailability">
+              <div class="loading-message">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Verificando disponibilidad de documentos...</span>
+              </div>
+            </div>
+
             <div class="response-options">
               <div class="radio-group">
                 <div class="radio-option">

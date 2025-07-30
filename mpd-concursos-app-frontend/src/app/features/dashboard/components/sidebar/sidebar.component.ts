@@ -6,6 +6,7 @@ import { SidebarService } from '@core/services/sidebar/sidebar.service';
 import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { LoggingService } from '@core/services/logging/logging.service';
+import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -58,6 +59,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   /**
    * ✅ SOLUCIÓN PROBLEMA 23: Validación de navegación desde sidebar
    * Previene navegación accidental durante proceso de inscripción
+   * 🔧 CORRECCIÓN: Solo mostrar confirmación cuando realmente hay inscripción activa
    */
   async onNavigationClick(event: Event, route: string): Promise<void> {
     event.preventDefault();
@@ -67,16 +69,43 @@ export class SidebarComponent implements OnInit, OnDestroy {
       currentUrl: this.router.url
     }, 'SidebarComponent');
 
-    // Verificar si hay inscripción en progreso
-    const incompleteInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
+    // ✅ CORRECCIÓN: Solo verificar si estamos actualmente en una página de inscripción
+    const isCurrentlyInInscriptionProcess = this.router.url.includes('/dashboard/inscripcion');
 
-    if (incompleteInscriptions.length > 0) {
-      this.loggingService.info('[Sidebar] Inscripción en progreso detectada - solicitando confirmación', {
-        incompleteCount: incompleteInscriptions.length,
-        targetRoute: route
+    if (!isCurrentlyInInscriptionProcess) {
+      this.loggingService.debug('[Sidebar] No hay proceso de inscripción activo - navegación directa', {
+        targetRoute: route,
+        currentUrl: this.router.url
       }, 'SidebarComponent');
 
-      const message = `Tiene ${incompleteInscriptions.length} inscripción(es) en progreso. Si navega ahora, su progreso se guardará automáticamente.`;
+      // Proceder directamente con la navegación
+      this.router.navigate([route]);
+      return;
+    }
+
+    // ✅ Solo si estamos en proceso de inscripción, verificar inscripciones incompletas
+    const incompleteInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
+
+    // ✅ CORRECCIÓN: Filtrar solo inscripciones realmente activas (con pasos > 1)
+    const activeInscriptions = incompleteInscriptions.filter(inscription =>
+      inscription.currentStep &&
+      inscription.currentStep !== InscriptionStep.INITIAL &&
+      inscription.inscriptionId &&
+      inscription.inscriptionId.trim() !== ''
+    );
+
+    if (activeInscriptions.length > 0) {
+      this.loggingService.info('[Sidebar] Inscripción activa detectada - solicitando confirmación', {
+        activeCount: activeInscriptions.length,
+        targetRoute: route,
+        inscriptions: activeInscriptions.map(i => ({
+          id: i.inscriptionId,
+          step: i.currentStep,
+          contestId: i.contestId
+        }))
+      }, 'SidebarComponent');
+
+      const message = `Tiene ${activeInscriptions.length} inscripción(es) en progreso. Si navega ahora, su progreso se guardará automáticamente.`;
 
       const confirmed = await this.confirmationService.warning(
         '¿Salir del proceso de inscripción?',
@@ -95,6 +124,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
       this.loggingService.info('[Sidebar] Usuario confirmó navegación - procediendo', {
         targetRoute: route
+      }, 'SidebarComponent');
+    } else {
+      this.loggingService.debug('[Sidebar] No hay inscripciones activas reales - navegación directa', {
+        targetRoute: route,
+        incompleteCount: incompleteInscriptions.length,
+        activeCount: activeInscriptions.length
       }, 'SidebarComponent');
     }
 

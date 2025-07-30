@@ -27,6 +27,8 @@ import { InscriptionStateService } from '@core/services/inscripcion/inscription-
 import { ProfileService, UserProfile } from '@core/services/profile/profile.service';
 import { ConcursosService } from '@core/services/concursos/concursos.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
+import { ContestDocumentService } from '@core/services/contest-document/contest-document.service';
+import { ContestDocumentAvailability, ContestDocumentType } from '@shared/interfaces/concurso/contest-document.interface';
 
 import { AuthService } from '@core/services/auth/auth.service';
 import { Contest } from '@shared/interfaces/concurso/concurso.interface';
@@ -41,6 +43,7 @@ import { RequiredDocument } from '@core/services/documentos/documento-validation
 import { DocumentoUsuario, TipoDocumento } from '@core/models/documento.model'; // Import TipoDocumento
 import { LoggingService } from '@core/services/logging/logging.service';
 import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
+import { CanComponentDeactivate } from '../../guards/inscription-deactivate.guard';
 import {
   DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION,
   CIRCUNSCRIPCIONES_JUDICIALES,
@@ -87,7 +90,7 @@ import {
     ])
   ]
 })
-export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
+export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   // Pasos de inscripción
   steps = [
     { label: 'Términos' },
@@ -145,6 +148,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // ✅ CORRECCIÓN: Agregar propiedad para documentos del usuario
   documentosUsuario: DocumentoUsuario[] = [];
+
+  // Disponibilidad de documentos del concurso
+  contestDocumentAvailability: ContestDocumentAvailability | null = null;
+  loadingDocumentAvailability = false;
 
   // Propiedades para manejo de circunscripciones con departamentos
   departamentosSegundaCircunscripcion = DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION;
@@ -215,7 +222,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private loggingService: LoggingService,
     private inscriptionDocumentationService: InscriptionDocumentationService,
-    private postulacionesService: PostulacionesService // Inyectar servicio de postulaciones para refrescar cache
+    private postulacionesService: PostulacionesService, // Inyectar servicio de postulaciones para refrescar cache
+    private contestDocumentService: ContestDocumentService // Servicio para documentos de concurso
   ) {
     // Inicializar formulario reactivo
     this.inscriptionForm = this.fb.group({
@@ -1212,6 +1220,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       tap(contest => {
         if (contest) {
           this.contest = contest;
+          // Cargar disponibilidad de documentos del concurso
+          this.loadContestDocumentAvailability();
         } else {
           this.notificationService.error('Concurso no encontrado.');
           this.router.navigate(['/dashboard/concursos']);
@@ -2452,5 +2462,110 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     }
 
     return cuitWithoutVerifier + verifier.toString();
+  }
+
+  /**
+   * ✅ SOLUCIÓN PROBLEMA 17: Implementación del método requerido por CanComponentDeactivate
+   * Este método es llamado por el InscriptionDeactivateGuard para determinar si se puede navegar
+   * @returns boolean | Promise<boolean> | Observable<boolean>
+   */
+  canDeactivate(): boolean | Promise<boolean> | Observable<boolean> {
+    this.loggingService.debug('[InscripcionProcess] canDeactivate called', {
+      inscriptionId: this.inscriptionId,
+      currentStep: this.currentStep,
+      inscriptionCompleted: this.inscriptionCompleted,
+      isInternalNavigation: this.isInternalNavigation
+    }, 'InscripcionProcessPage');
+
+    // ✅ El guard maneja toda la lógica de confirmación
+    // Este método solo necesita existir para cumplir con la interface
+    // La lógica real está en InscriptionDeactivateGuard.canDeactivate()
+    return true;
+  }
+
+  // ==========================================
+  // MÉTODOS PARA DOCUMENTOS DE CONCURSO
+  // ==========================================
+
+  /**
+   * Carga la disponibilidad de documentos del concurso
+   */
+  private loadContestDocumentAvailability(): void {
+    if (!this.contestId) return;
+
+    this.loadingDocumentAvailability = true;
+
+    this.contestDocumentService.getDocumentAvailability(this.contestId).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.loadingDocumentAvailability = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (availability: ContestDocumentAvailability) => {
+        this.contestDocumentAvailability = availability;
+        this.loggingService.debug('[InscripcionProcess] Disponibilidad de documentos cargada:', availability, 'InscripcionProcessPage');
+      },
+      error: (error) => {
+        console.error('[InscripcionProcess] Error al cargar disponibilidad de documentos:', error);
+        // No mostrar error al usuario, simplemente no mostrar los botones
+        this.contestDocumentAvailability = {
+          contestId: this.contestId!,
+          basesAvailable: false,
+          descriptionAvailable: false,
+          message: 'Error al verificar disponibilidad'
+        };
+      }
+    });
+  }
+
+  /**
+   * Abre las bases del concurso en una nueva pestaña
+   */
+  viewContestBases(): void {
+    if (!this.contestId || !this.contestDocumentAvailability?.basesAvailable) {
+      this.notificationService.warning('Las bases del concurso no están disponibles en este momento.');
+      return;
+    }
+
+    this.contestDocumentService.openDocumentInNewTab(this.contestId, ContestDocumentType.BASES);
+    this.loggingService.debug('[InscripcionProcess] Abriendo bases del concurso', { contestId: this.contestId }, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Abre la descripción del puesto en una nueva pestaña
+   */
+  viewContestDescription(): void {
+    if (!this.contestId || !this.contestDocumentAvailability?.descriptionAvailable) {
+      this.notificationService.warning('La descripción del puesto no está disponible en este momento.');
+      return;
+    }
+
+    this.contestDocumentService.openDocumentInNewTab(this.contestId, ContestDocumentType.DESCRIPTION);
+    this.loggingService.debug('[InscripcionProcess] Abriendo descripción del puesto', { contestId: this.contestId }, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Verifica si hay documentos disponibles para mostrar
+   */
+  get hasAvailableDocuments(): boolean {
+    return this.contestDocumentAvailability?.basesAvailable ||
+           this.contestDocumentAvailability?.descriptionAvailable ||
+           false;
+  }
+
+  /**
+   * Obtiene el mensaje a mostrar cuando no hay documentos disponibles
+   */
+  get documentsNotAvailableMessage(): string {
+    if (this.loadingDocumentAvailability) {
+      return 'Verificando disponibilidad de documentos...';
+    }
+
+    if (!this.contestDocumentAvailability) {
+      return 'No se pudo verificar la disponibilidad de los documentos.';
+    }
+
+    return 'Las bases y condiciones aún no se han publicado. Serán publicadas próximamente.';
   }
 }

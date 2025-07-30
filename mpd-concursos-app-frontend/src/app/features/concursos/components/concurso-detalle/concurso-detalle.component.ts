@@ -16,6 +16,8 @@ import { CustomButtonComponent } from '@shared/components/custom-button/custom-b
 import { NotificationService } from '@core/services/notification/notification.service';
 import { translateContestStatus } from '@shared/utils/state-translations.util';
 import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
+import { ContestDocumentService } from '@core/services/contest-document/contest-document.service';
+import { ContestDocumentAvailability, ContestDocumentType } from '@shared/interfaces/concurso/contest-document.interface';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -53,10 +55,15 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   tabItems: TabItem[] = [];
   activeTabIndex = 0;
 
+  // Contest document availability
+  contestDocumentAvailability: ContestDocumentAvailability | null = null;
+  loadingDocumentAvailability = false;
+
   constructor(
     private notificationService: NotificationService,
     private inscriptionService: InscriptionService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private contestDocumentService: ContestDocumentService
   ) {}
 
   ngOnInit(): void {
@@ -67,15 +74,8 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
       // ✅ CRITICAL FIX: Actualizar estado basado en userPostulation recibida
       this.actualizarEstadoInscripcion();
 
-      // Initialize temporary URLs for documents if they don't exist
-      if (!this.concurso.basesUrl) {
-        this.concurso.basesUrl = '#'; // Temporary URL
-        this.loggingService.debug('[ConcursoDetalleComponent] basesUrl no definida. Estableciendo URL temporal.', undefined, 'ConcursoDetalle');
-      }
-      if (!this.concurso.descriptionUrl) {
-        this.concurso.descriptionUrl = '#'; // Temporary URL
-        this.loggingService.debug('[ConcursoDetalleComponent] descriptionUrl no definida. Estableciendo URL temporal.', undefined, 'ConcursoDetalle');
-      }
+      // Load contest document availability
+      this.loadContestDocumentAvailability();
 
       // Initialize dates if they don't exist
       if (!this.concurso.dates || this.concurso.dates.length === 0) {
@@ -238,5 +238,105 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
         type: 'results'
       }
     ];
+  }
+
+  // ==========================================
+  // MÉTODOS PARA DOCUMENTOS DE CONCURSO
+  // ==========================================
+
+  /**
+   * Carga la disponibilidad de documentos del concurso
+   */
+  private loadContestDocumentAvailability(): void {
+    if (!this.concurso?.id) {
+      console.log('[ConcursoDetalle] No hay ID de concurso disponible');
+      return;
+    }
+
+    const contestId = typeof this.concurso.id === 'string' ? parseInt(this.concurso.id) : this.concurso.id;
+    console.log('[ConcursoDetalle] Cargando disponibilidad de documentos para concurso ID:', contestId);
+
+    this.loadingDocumentAvailability = true;
+
+    this.contestDocumentService.getDocumentAvailability(contestId).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.loadingDocumentAvailability = false;
+      })
+    ).subscribe({
+      next: (availability: ContestDocumentAvailability) => {
+        console.log('[ConcursoDetalle] Disponibilidad de documentos recibida:', availability);
+        this.contestDocumentAvailability = availability;
+        this.loggingService.debug('[ConcursoDetalle] Disponibilidad de documentos cargada:', availability, 'ConcursoDetalle');
+      },
+      error: (error) => {
+        console.error('[ConcursoDetalle] Error al cargar disponibilidad de documentos:', error);
+        console.error('[ConcursoDetalle] Detalles del error:', {
+          status: error.status,
+          message: error.message,
+          url: error.url
+        });
+
+        // No mostrar error al usuario, simplemente no mostrar los botones
+        this.contestDocumentAvailability = {
+          contestId: contestId,
+          basesAvailable: false,
+          descriptionAvailable: false,
+          message: 'Error al verificar disponibilidad'
+        };
+      }
+    });
+  }
+
+  /**
+   * Descarga las bases del concurso
+   */
+  downloadContestBases(): void {
+    if (!this.concurso?.id || !this.contestDocumentAvailability?.basesAvailable) {
+      this.notificationService.showWarning('Las bases del concurso no están disponibles para descarga.');
+      return;
+    }
+
+    const contestId = typeof this.concurso.id === 'string' ? parseInt(this.concurso.id) : this.concurso.id;
+    this.contestDocumentService.downloadDocument(contestId, ContestDocumentType.BASES);
+    this.loggingService.debug('[ConcursoDetalle] Descargando bases del concurso', { contestId }, 'ConcursoDetalle');
+  }
+
+  /**
+   * Descarga la descripción del puesto
+   */
+  downloadContestDescription(): void {
+    if (!this.concurso?.id || !this.contestDocumentAvailability?.descriptionAvailable) {
+      this.notificationService.showWarning('La descripción del puesto no está disponible para descarga.');
+      return;
+    }
+
+    const contestId = typeof this.concurso.id === 'string' ? parseInt(this.concurso.id) : this.concurso.id;
+    this.contestDocumentService.downloadDocument(contestId, ContestDocumentType.DESCRIPTION);
+    this.loggingService.debug('[ConcursoDetalle] Descargando descripción del puesto', { contestId }, 'ConcursoDetalle');
+  }
+
+  /**
+   * Verifica si hay documentos disponibles para mostrar
+   */
+  get hasAvailableDocuments(): boolean {
+    return this.contestDocumentAvailability?.basesAvailable ||
+           this.contestDocumentAvailability?.descriptionAvailable ||
+           false;
+  }
+
+  /**
+   * Obtiene el mensaje a mostrar cuando no hay documentos disponibles
+   */
+  get documentsNotAvailableMessage(): string {
+    if (this.loadingDocumentAvailability) {
+      return 'Verificando disponibilidad de documentos...';
+    }
+
+    if (!this.contestDocumentAvailability) {
+      return 'No se pudo verificar la disponibilidad de los documentos.';
+    }
+
+    return 'Los documentos del concurso aún no se han publicado.';
   }
 }
