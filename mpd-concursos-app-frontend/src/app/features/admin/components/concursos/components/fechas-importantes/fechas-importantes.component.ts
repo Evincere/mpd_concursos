@@ -97,7 +97,8 @@ interface ImportantDate {
               <div class="date-details">
                 <div class="date-value">
                   <i class="fas fa-calendar-alt"></i>
-                  <span>{{ date.date | date:'dd/MM/yyyy' }}</span>
+                  <span *ngIf="date?.title?.includes('A definir')">A definir</span>
+                  <span *ngIf="!date?.title?.includes('A definir')">{{ date.date | date:'dd/MM/yyyy' }}</span>
                 </div>
 
                 <div class="date-type">

@@ -17,9 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Servicio para inicialización automática de concursos de prueba
- * Se ejecuta al inicio de la aplicación para garantizar que existan concursos de prueba
- * para que los usuarios puedan interactuar con la plataforma
+ * Servicio para inicialización automática del concurso oficial de producción
+ * Se ejecuta al inicio de la aplicación para crear el concurso oficial según las bases
+ * del documento "CONCURSO DE ANTECEDENTES Y OPOSICIÓN PARA CUBRIR CARGOS DE MULTIFUERO"
  */
 @Service
 @RequiredArgsConstructor
@@ -32,136 +32,80 @@ public class ContestDataInitializationService implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        log.info("🚀 [ContestDataInitialization] Iniciando verificación de concursos de prueba");
+        log.info("🚀 [ContestDataInitialization] Iniciando verificación del concurso oficial");
 
         try {
-            initializeTestContests();
-            log.info("✅ [ContestDataInitialization] Inicialización de concursos completada exitosamente");
+            initializeOfficialContest();
+            log.info("✅ [ContestDataInitialization] Inicialización del concurso oficial completada exitosamente");
         } catch (Exception e) {
-            log.error("❌ [ContestDataInitialization] Error durante la inicialización de concursos", e);
+            log.error("❌ [ContestDataInitialization] Error durante la inicialización del concurso oficial", e);
             // No lanzamos la excepción para no impedir el inicio de la aplicación
         }
     }
 
     /**
-     * Inicializa concursos de prueba si no existen
+     * Inicializa el concurso oficial, recreándolo siempre para asegurar datos actualizados
      */
-    private void initializeTestContests() {
+    private void initializeOfficialContest() {
         List<ContestEntity> existingContests = contestRepository.findAll();
-        
-        if (existingContests.isEmpty()) {
-            log.warn("⚠️ [ContestDataInitialization] No se encontraron concursos existentes. Creando concursos de prueba...");
-            createTestContests();
-        } else {
-            log.info("📋 [ContestDataInitialization] Se encontraron {} concursos existentes", existingContests.size());
+
+        if (!existingContests.isEmpty()) {
+            log.warn("⚠️ [ContestDataInitialization] Eliminando {} concursos existentes para recrear con datos actualizados...", existingContests.size());
+            contestRepository.deleteAll();
         }
+
+        log.info("📝 [ContestDataInitialization] Creando concurso oficial con datos actualizados...");
+        createOfficialContest();
     }
 
     /**
-     * Crea concursos de prueba basados en el documento "CONCURSO CLASE 3 MULTIFUERO"
-     * Para 1ra, 2da, 3ra y 4ta Circunscripciones Judiciales de Mendoza
+     * Crea el concurso oficial basado en las bases del documento oficial
+     * "CONCURSO DE ANTECEDENTES Y OPOSICIÓN PARA CUBRIR CARGOS DE MULTIFUERO"
      */
-    private void createTestContests() {
-        log.info("📝 [ContestDataInitialization] Creando concursos de prueba...");
+    private void createOfficialContest() {
+        log.info("📝 [ContestDataInitialization] Creando concurso oficial...");
 
-        // Fechas base para los concursos
-        LocalDate today = LocalDate.now();
-        LocalDate contestEndDate = today.plusDays(60);
+        // Fechas específicas del concurso oficial
+        LocalDate inscriptionStartDate = LocalDate.of(2025, 7, 30); // 30/07/2025
+        LocalDate inscriptionEndDate = LocalDate.of(2025, 8, 8);    // 8/8/2025
 
-        // Concurso 1: Co-Defensor Penal y Penal Juvenil - Clase 3 Multifuero (ACTIVO para testing)
-        ContestEntity contest1 = createActiveTestContest(
-            "Co-Defensor Penal y Penal Juvenil - Clase 03 Multifuero",
-            "FUNCIONARIOS Y PERSONAL JERARQUICO",
+        // Crear el concurso oficial
+        ContestEntity officialContest = createOfficialContestEntity(
+            "MULTIFUERO",
+            "FUNCIONARIOS Y PERSONAL JERÁRQUICO",
             "03",
-            "Defensa legal en causas penales y penales juveniles. Garantizar derechos fundamentales y debido proceso.",
-            "DEFENSORIAS PENALES",
-            "Co-Defensor/a Penal y Penal Juvenil - Clase 03",
-            today,
-            contestEndDate,
-            "/api/files/contest-bases/concurso_codefensor_penal_clase03.pdf",
-            "/api/files/contest-descriptions/codefensor_penal_clase03_descripcion.pdf"
+            "Co-Defensor en lo Penal, Penal Juvenil y en lo Civil y Co-Asesor de Niños, Niñas, Adolescentes y Personas con Capacidad Restringida a desempeñarse en la 1ra o 2da, o 3ra o 4ta Circunscripcion Judicial",
+            "MULTIFUERO",
+            "Co-Defensor/Co-Asesor Multifuero - Clase 03",
+            inscriptionStartDate,
+            inscriptionEndDate,
+            "/api/files/contest-bases/bases_concurso_1.pdf",
+            "/api/files/contest-descriptions/descripcion_concurso_1.pdf"
         );
 
-        // Concurso 2: Co-Defensor Civil - Clase 3 Multifuero (ACTIVO para testing)
-        ContestEntity contest2 = createActiveTestContest(
-            "Co-Defensor Civil - Clase 03 Multifuero",
-            "FUNCIONARIOS Y PERSONAL JERARQUICO",
-            "03",
-            "Asesoramiento y representación legal en materias Civil, Comercial, Paz, Familia, Consumidor, Tributario y Concursal.",
-            "DEFENSORIAS CIVILES",
-            "Co-Defensor/a Civil - Clase 03",
-            today,
-            contestEndDate,
-            "/api/files/contest-bases/concurso_codefensor_civil_clase03.pdf",
-            "/api/files/contest-descriptions/codefensor_civil_clase03_descripcion.pdf"
-        );
-
-        // Concurso 3: Co-Asesor de NNAyPCR - Clase 3 Multifuero
-        ContestEntity contest3 = createTestContest(
-            "Co-Asesor/a de NNAyPCR - Clase 03 Multifuero",
-            "FUNCIONARIOS Y PERSONAL JERARQUICO",
-            "03",
-            "Defensa y protección de derechos de niños, niñas, adolescentes y personas con capacidad restringida.",
-            "ASESORIAS DE NIÑOS, NIÑAS, ADOLESCENTES Y PERSONAS CON CAPACIDAD RESTRINGIDA",
-            "Co-Asesor/a de NNAyPCR - Clase 03",
-            today,
-            contestEndDate,
-            "/api/files/contest-bases/concurso_coasesor_nnapcr_clase03.pdf",
-            "/api/files/contest-descriptions/coasesor_nnapcr_clase03_descripcion.pdf"
-        );
-
-        // Concurso 4: CONCURSO DE PRUEBA - Período de Inscripción Cerrado (Para testing de seguridad)
-        ContestEntity contest4 = createTestContestWithClosedInscription(
-            "CONCURSO DE PRUEBA - Secretario/a Judicial Clase 02 (PERÍODO CERRADO)",
-            "FUNCIONARIOS Y PERSONAL JERARQUICO",
-            "02",
-            "CONCURSO DE PRUEBA para validar restricciones de período de inscripción. Las inscripciones están CERRADAS para probar la corrección de seguridad del punto 12.",
-            "SECRETARIAS JUDICIALES",
-            "Secretario/a Judicial - Clase 02",
-            today.minusDays(60), // Concurso que comenzó hace 60 días
-            today.minusDays(10), // Y terminó hace 10 días
-            "/api/files/contest-bases/concurso_secretario_clase02_prueba.pdf",
-            "/api/files/contest-descriptions/secretario_clase02_prueba_descripcion.pdf"
-        );
-
-        // Guardar concursos
+        // Guardar concurso oficial
         try {
-            ContestEntity savedContest1 = contestRepository.save(contest1);
-            log.info("✅ [ContestDataInitialization] Concurso creado: {} (ID: {})", 
-                savedContest1.getTitle(), savedContest1.getId());
+            ContestEntity savedContest = contestRepository.save(officialContest);
+            log.info("✅ [ContestDataInitialization] Concurso oficial creado: {} (ID: {})",
+                savedContest.getTitle(), savedContest.getId());
 
-            ContestEntity savedContest2 = contestRepository.save(contest2);
-            log.info("✅ [ContestDataInitialization] Concurso creado: {} (ID: {})", 
-                savedContest2.getTitle(), savedContest2.getId());
-
-            ContestEntity savedContest3 = contestRepository.save(contest3);
-            log.info("✅ [ContestDataInitialization] Concurso creado: {} (ID: {})",
-                savedContest3.getTitle(), savedContest3.getId());
-
-            ContestEntity savedContest4 = contestRepository.save(contest4);
-            log.info("✅ [ContestDataInitialization] Concurso de prueba creado: {} (ID: {})",
-                savedContest4.getTitle(), savedContest4.getId());
-
-            // Crear fechas importantes para cada concurso
-            createContestDates(savedContest1);
-            createContestDates(savedContest2);
-            createContestDates(savedContest3);
-            createClosedInscriptionDates(savedContest4); // Fechas especiales para el concurso de prueba
+            // Crear fechas importantes para el concurso oficial
+            createOfficialContestDates(savedContest);
 
         } catch (Exception e) {
-            log.error("❌ [ContestDataInitialization] Error creando concursos de prueba", e);
+            log.error("❌ [ContestDataInitialization] Error creando concurso oficial", e);
         }
 
-        log.info("📊 [ContestDataInitialization] Creación de concursos de prueba completada");
+        log.info("📊 [ContestDataInitialization] Creación del concurso oficial completada");
     }
 
     /**
-     * Crea un concurso de prueba con los datos especificados
+     * Crea el concurso oficial con los datos especificados
      */
-    private ContestEntity createTestContest(String title, String category, String class_,
-                                          String functions, String department, String position,
-                                          LocalDate startDate, LocalDate endDate,
-                                          String basesUrl, String descriptionUrl) {
+    private ContestEntity createOfficialContestEntity(String title, String category, String class_,
+                                                     String functions, String department, String position,
+                                                     LocalDate startDate, LocalDate endDate,
+                                                     String basesUrl, String descriptionUrl) {
         // Configurar fechas de inscripción: desde las 00:00 del día de inicio hasta las 23:59 del día final
         LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
         LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
@@ -171,7 +115,7 @@ public class ContestDataInitializationService implements CommandLineRunner {
             .category(category)
             .class_(class_)
             .functions(functions)
-            .status(ContestStatus.SCHEDULED) // Estado programado que se activa automáticamente
+            .status(ContestStatus.ACTIVE) // Estado ACTIVO para permitir inscripciones
             .department(department)
             .position(position)
             .startDate(startDate)
@@ -185,191 +129,69 @@ public class ContestDataInitializationService implements CommandLineRunner {
     }
 
     /**
-     * Crea un concurso de prueba ACTIVO (permite inscripciones inmediatamente)
-     * TESTING: Para probar la hipótesis de estados vs fechas
+     * Crea fechas importantes para el concurso oficial
      */
-    private ContestEntity createActiveTestContest(String title, String category, String class_,
-                                                String functions, String department, String position,
-                                                LocalDate startDate, LocalDate endDate,
-                                                String basesUrl, String descriptionUrl) {
-        // Configurar fechas de inscripción: desde las 00:00 del día de inicio hasta las 23:59 del día final
-        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
-        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
-
-        return ContestEntity.builder()
-            .title(title)
-            .category(category)
-            .class_(class_)
-            .functions(functions)
-            .status(ContestStatus.ACTIVE) // ✅ Estado ACTIVO que permite inscripciones
-            .department(department)
-            .position(position)
-            .startDate(startDate)
-            .endDate(endDate)
-            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
-            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
-            .basesUrl(basesUrl)
-            .descriptionUrl(descriptionUrl)
-            .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después
-            .build();
-    }
-
-    /**
-     * Crea un concurso de prueba con período de inscripción cerrado
-     * SECURITY TEST: Para validar la corrección del punto 12 de la auditoría
-     */
-    private ContestEntity createTestContestWithClosedInscription(String title, String category, String class_,
-                                                               String functions, String department, String position,
-                                                               LocalDate startDate, LocalDate endDate,
-                                                               String basesUrl, String descriptionUrl) {
-        // Para concursos cerrados, las fechas de inscripción ya pasaron
-        LocalDateTime inscriptionStart = startDate.atStartOfDay(); // 00:00:00 del día de inicio
-        LocalDateTime inscriptionEnd = endDate.atTime(23, 59, 59); // 23:59:59 del día final
-
-        return ContestEntity.builder()
-            .title(title)
-            .category(category)
-            .class_(class_)
-            .functions(functions)
-            .status(ContestStatus.CLOSED) // Estado que NO permite inscripciones
-            .department(department)
-            .position(position)
-            .startDate(startDate)
-            .endDate(endDate)
-            .inscriptionStartDate(inscriptionStart) // Fecha específica de inicio de inscripciones
-            .inscriptionEndDate(inscriptionEnd)     // Fecha específica de fin de inscripciones
-            .basesUrl(basesUrl)
-            .descriptionUrl(descriptionUrl)
-            .dates(new ArrayList<>()) // Se inicializa vacía, se llenan después
-            .build();
-    }
-
-    /**
-     * Crea fechas importantes para un concurso
-     */
-    private void createContestDates(ContestEntity contest) {
-        LocalDate today = LocalDate.now();
-
+    private void createOfficialContestDates(ContestEntity contest) {
         List<ContestDateEntity> dates = new ArrayList<>();
 
-        // Fecha de inscripción (30 días desde hoy)
+        // Fechas específicas del concurso oficial
+        LocalDate inscriptionStart = LocalDate.of(2025, 7, 30); // 30/07/2025
+        LocalDate inscriptionEnd = LocalDate.of(2025, 8, 8);    // 8/8/2025
+
+        // Fecha de inscripción (30/07/2025 - 8/8/2025)
         ContestDateEntity inscriptionDate = ContestDateEntity.builder()
             .contest(contest)
             .label("Período de Inscripción")
             .type("inscription")
-            .startDate(today)
-            .endDate(today.plusDays(30))
+            .startDate(inscriptionStart)
+            .endDate(inscriptionEnd)
             .build();
         dates.add(inscriptionDate);
 
-        // Fecha de evaluación de antecedentes (35-40 días desde hoy)
+        // Fecha de evaluación de antecedentes (A definir)
         ContestDateEntity evaluationDate = ContestDateEntity.builder()
             .contest(contest)
-            .label("Evaluación de Antecedentes")
+            .label("Evaluación de Antecedentes - A definir")
             .type("evaluation")
-            .startDate(today.plusDays(35))
-            .endDate(today.plusDays(40))
+            .startDate(inscriptionEnd.plusDays(1))  // Fecha temporal
+            .endDate(inscriptionEnd.plusDays(1))    // Fecha temporal
             .build();
         dates.add(evaluationDate);
 
-        // Fecha de examen escrito (45 días desde hoy)
+        // Fecha de examen escrito (A definir)
         ContestDateEntity examDate = ContestDateEntity.builder()
             .contest(contest)
-            .label("Examen Escrito")
+            .label("Examen Escrito - A definir")
             .type("written_exam")
-            .startDate(today.plusDays(45))
-            .endDate(today.plusDays(45))
+            .startDate(inscriptionEnd.plusDays(1)) // Fecha temporal
+            .endDate(inscriptionEnd.plusDays(1))   // Fecha temporal
             .build();
         dates.add(examDate);
 
-        // Fecha de entrevista personal (50 días desde hoy)
+        // Fecha de entrevista personal (A definir)
         ContestDateEntity interviewDate = ContestDateEntity.builder()
             .contest(contest)
-            .label("Entrevista Personal")
+            .label("Entrevista Personal - A definir")
             .type("interview")
-            .startDate(today.plusDays(50))
-            .endDate(today.plusDays(50))
+            .startDate(inscriptionEnd.plusDays(1)) // Fecha temporal
+            .endDate(inscriptionEnd.plusDays(1))   // Fecha temporal
             .build();
         dates.add(interviewDate);
 
-        // Fecha de publicación de resultados (55 días desde hoy)
+        // Fecha de publicación de resultados (A definir)
         ContestDateEntity resultsDate = ContestDateEntity.builder()
             .contest(contest)
-            .label("Publicación de Resultados")
+            .label("Publicación de Resultados - A definir")
             .type("results")
-            .startDate(today.plusDays(55))
-            .endDate(today.plusDays(55))
+            .startDate(inscriptionEnd.plusDays(1)) // Fecha temporal
+            .endDate(inscriptionEnd.plusDays(1))   // Fecha temporal
             .build();
         dates.add(resultsDate);
 
         // Asignar las fechas al concurso
         contest.setDates(dates);
 
-        log.info("📅 [ContestDataInitialization] Fechas creadas para concurso: {}", contest.getTitle());
+        log.info("📅 [ContestDataInitialization] Fechas oficiales creadas para concurso: {}", contest.getTitle());
     }
 
-    /**
-     * Crea fechas para un concurso con período de inscripción cerrado
-     * SECURITY TEST: Para validar la corrección del punto 12 de la auditoría
-     */
-    private void createClosedInscriptionDates(ContestEntity contest) {
-        LocalDate today = LocalDate.now();
-
-        List<ContestDateEntity> dates = new ArrayList<>();
-
-        // Fecha de inscripción CERRADA (período pasado)
-        ContestDateEntity inscriptionDate = ContestDateEntity.builder()
-            .contest(contest)
-            .label("Período de Inscripción (CERRADO)")
-            .type("inscription")
-            .startDate(today.minusDays(45)) // Comenzó hace 45 días
-            .endDate(today.minusDays(15))   // Terminó hace 15 días
-            .build();
-        dates.add(inscriptionDate);
-
-        // Fecha de evaluación de antecedentes (ya pasó)
-        ContestDateEntity evaluationDate = ContestDateEntity.builder()
-            .contest(contest)
-            .label("Evaluación de Antecedentes (FINALIZADA)")
-            .type("evaluation")
-            .startDate(today.minusDays(10))
-            .endDate(today.minusDays(5))
-            .build();
-        dates.add(evaluationDate);
-
-        // Fecha de examen escrito (ya pasó)
-        ContestDateEntity examDate = ContestDateEntity.builder()
-            .contest(contest)
-            .label("Examen Escrito (FINALIZADO)")
-            .type("written_exam")
-            .startDate(today.minusDays(3))
-            .endDate(today.minusDays(3))
-            .build();
-        dates.add(examDate);
-
-        // Fecha de entrevista personal (próximamente)
-        ContestDateEntity interviewDate = ContestDateEntity.builder()
-            .contest(contest)
-            .label("Entrevista Personal (PRÓXIMAMENTE)")
-            .type("interview")
-            .startDate(today.plusDays(5))
-            .endDate(today.plusDays(5))
-            .build();
-        dates.add(interviewDate);
-
-        // Fecha de publicación de resultados (futuro)
-        ContestDateEntity resultsDate = ContestDateEntity.builder()
-            .contest(contest)
-            .label("Publicación de Resultados (PENDIENTE)")
-            .type("results")
-            .startDate(today.plusDays(10))
-            .endDate(today.plusDays(10))
-            .build();
-        dates.add(resultsDate);
-
-        // Asignar las fechas al concurso
-        contest.setDates(dates);
-
-        log.info("🧪 [ContestDataInitialization] Fechas de prueba (período cerrado) creadas para concurso: {}", contest.getTitle());
-    }
 }

@@ -125,7 +125,8 @@
           <div class="fechas-list">
             <div *ngFor="let fecha of fechas" class="fecha-item">
               <span class="fecha-title">{{fecha.title}}</span>
-              <span class="fecha-date">{{fecha.date ? formatDate(fecha.date) : 'Sin fecha'}}</span>
+              <span class="fecha-date" *ngIf="fecha?.title?.includes('A definir')">A definir</span>
+              <span class="fecha-date" *ngIf="!fecha?.title?.includes('A definir')">{{fecha.date ? formatDate(fecha.date) : 'Sin fecha'}}</span>
             </div>
           </div>
           <p *ngIf="fechas.length === 0" class="empty-text">No hay fechas configuradas</p>
