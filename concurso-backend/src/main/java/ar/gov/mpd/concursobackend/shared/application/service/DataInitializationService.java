@@ -115,15 +115,14 @@ public class DataInitializationService {
         User createdUser = userService.createUser(user);
         logger.info("✅ [DataInitializationService] Super admin '{}' creado con ID: {}", username, createdUser.getId().value());
 
-        // Asignar rol ROLE_ADMIN de forma segura después de la creación
-        try {
-            logger.info("🔑 [DataInitializationService] Asignando rol ROLE_ADMIN a '{}'...", username);
-            assignAdminRoleSafely(username);
-            logger.info("✅ [DataInitializationService] Rol ROLE_ADMIN asignado a '{}'", username);
-        } catch (Exception e) {
-            logger.error("❌ [DataInitializationService] Error al asignar rol ROLE_ADMIN a '{}': {}", username, e.getMessage());
-            logger.info("⚠️ [DataInitializationService] Usuario admin creado solo con ROLE_USER. Asignar ROLE_ADMIN manualmente si es necesario.");
-        }
+        // TEMPORALMENTE DESHABILITADO: La asignación de ROLE_ADMIN causa conflictos de concurrencia optimista
+        // El usuario admin se crea con ROLE_USER por defecto, el rol ROLE_ADMIN se puede asignar manualmente después
+        logger.info("⚠️ [DataInitializationService] NOTA: Usuario admin creado solo con ROLE_USER. Asignar ROLE_ADMIN manualmente si es necesario.");
+
+        // TODO: Implementar asignación de roles sin conflictos de concurrencia
+        // logger.info("🔑 [DataInitializationService] Asignando rol ROLE_ADMIN a '{}'...", username);
+        // rolService.assignRoleToUser(username, RoleEnum.ROLE_ADMIN);
+        // logger.info("✅ [DataInitializationService] Rol ROLE_ADMIN asignado a '{}'", username);
     }
 
     private void initializeDocumentTypes() {
@@ -254,47 +253,6 @@ public class DataInitializationService {
             logger.info("✅ [DataInitializationService] Campos 'required' corregidos exitosamente");
         } else {
             logger.info("✅ [DataInitializationService] Todos los campos 'required' están correctos");
-        }
-    }
-
-    /**
-     * Asigna el rol ROLE_ADMIN al usuario de forma segura, manejando conflictos de concurrencia
-     */
-    private void assignAdminRoleSafely(String username) {
-        int maxRetries = 3;
-        int retryCount = 0;
-
-        while (retryCount < maxRetries) {
-            try {
-                // Esperar un poco antes de intentar asignar el rol para evitar conflictos
-                if (retryCount > 0) {
-                    Thread.sleep(500 * retryCount); // Backoff exponencial
-                }
-
-                rolService.assignRoleToUser(username, RoleEnum.ROLE_ADMIN);
-                logger.info("✅ [DataInitializationService] Rol ROLE_ADMIN asignado exitosamente a '{}' en intento {}",
-                           username, retryCount + 1);
-                return; // Éxito, salir del método
-
-            } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
-                retryCount++;
-                logger.warn("⚠️ [DataInitializationService] Error de concurrencia optimista al asignar rol a '{}' (intento {}): {}",
-                           username, retryCount, e.getMessage());
-
-                if (retryCount >= maxRetries) {
-                    logger.error("❌ [DataInitializationService] Falló la asignación de rol después de {} intentos", maxRetries);
-                    throw new RuntimeException("No se pudo asignar el rol ROLE_ADMIN después de " + maxRetries + " intentos", e);
-                }
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Proceso interrumpido durante la asignación de rol", e);
-
-            } catch (Exception e) {
-                logger.error("❌ [DataInitializationService] Error inesperado al asignar rol ROLE_ADMIN a '{}': {}",
-                           username, e.getMessage(), e);
-                throw e;
-            }
         }
     }
 }

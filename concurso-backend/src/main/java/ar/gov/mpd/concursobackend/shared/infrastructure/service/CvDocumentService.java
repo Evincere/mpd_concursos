@@ -1,7 +1,5 @@
 package ar.gov.mpd.concursobackend.shared.infrastructure.service;
 
-import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,27 +20,28 @@ import java.util.UUID;
 
 /**
  * Servicio para gestión de documentos del CV
- *
- * Actualizado para usar el sistema de almacenamiento unificado
- * a través de StorageConfig.
- *
- * @author MPD Development Team
- * @version 2.0
- * @since 2025-07
+ * 
+ * @description Maneja el almacenamiento organizado de documentos probatorios
+ * @author Augment Agent
+ * @date 2025-06-22
+ * @version 1.0.0
  */
 @Service
-@RequiredArgsConstructor
 public class CvDocumentService {
 
     private static final Logger logger = LoggerFactory.getLogger(CvDocumentService.class);
 
-    private final StorageConfig storageConfig;
+    @Value("${app.cv.document.storage.location:uploads/cv-documents}")
+    private String cvDocumentPath;
 
     @Value("${app.cv.document.max-size:10MB}")
     private String maxFileSize;
 
     @Value("${app.cv.document.allowed-types:application/pdf,image/jpeg,image/png,image/jpg}")
     private String allowedTypes;
+
+    @Value("${app.cv.document.temp-dir:uploads/cv-documents/temp}")
+    private String tempDir;
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
             ".pdf", ".jpg", ".jpeg", ".png");
@@ -139,52 +138,21 @@ public class CvDocumentService {
         validateFilename(filename);
 
         try {
-            // Verificar que el directorio base existe
-            Path baseDir = storageConfig.getCvDocumentsPath();
-            if (!Files.exists(baseDir)) {
-                logger.info("Creating base CV document directory: {}", baseDir);
-                Files.createDirectories(baseDir);
-            }
-
             Path userEducationPath = createUserEducationDirectory(userId);
             String fileName = generateFileName(educationId, "education", filename);
             Path targetPath = userEducationPath.resolve(fileName);
 
-            // Verificar que el InputStream no esté vacío
-            if (inputStream.available() == 0) {
-                logger.error("InputStream is empty for education document");
-                throw new RuntimeException("El archivo está vacío");
-            }
-
             Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            // Verificar que el archivo se creó correctamente
-            if (!Files.exists(targetPath)) {
-                logger.error("File was not created at: {}", targetPath);
-                throw new RuntimeException("No se pudo crear el archivo");
-            }
-
-            long fileSize = Files.size(targetPath);
-            if (fileSize == 0) {
-                logger.error("File was created but is empty at: {}", targetPath);
-                throw new RuntimeException("El archivo se creó pero está vacío");
-            }
-
             String relativePath = getRelativePath(targetPath);
-            logger.info("Education document stored successfully at: {} (size: {} bytes)", relativePath, fileSize);
+            logger.info("Education document stored successfully at: {}", relativePath);
 
             return relativePath;
 
         } catch (IOException e) {
-            logger.error("IOException storing education document from stream for user: {} and education: {}", userId,
+            logger.error("Error storing education document from stream for user: {} and education: {}", userId,
                     educationId, e);
-            logger.error("Error details: {}", e.getMessage());
-            throw new RuntimeException("Error de E/S al almacenar documento de educación: " + e.getMessage(), e);
-        } catch (Exception e) {
-            logger.error("Unexpected error storing education document from stream for user: {} and education: {}", userId,
-                    educationId, e);
-            logger.error("Error details: {}", e.getMessage());
-            throw new RuntimeException("Error inesperado al almacenar documento de educación: " + e.getMessage(), e);
+            throw new RuntimeException("Error al almacenar documento de educación: " + e.getMessage(), e);
         }
     }
 
@@ -256,7 +224,7 @@ public class CvDocumentService {
         }
 
         // Si es relativa, combinarla con el directorio base
-        return storageConfig.getCvDocumentsPath().resolve(relativePath);
+        return Paths.get(cvDocumentPath).resolve(relativePath);
     }
 
     /**
@@ -264,7 +232,7 @@ public class CvDocumentService {
      */
     public void cleanupTempFiles() {
         try {
-            Path tempPath = storageConfig.getTempPath();
+            Path tempPath = Paths.get(tempDir);
             if (!Files.exists(tempPath)) {
                 return;
             }
@@ -351,7 +319,7 @@ public class CvDocumentService {
      * Crea el directorio de experiencias del usuario
      */
     private Path createUserExperienceDirectory(UUID userId) throws IOException {
-        Path userPath = storageConfig.getCvDocumentsPath().resolve(userId.toString()).resolve("experiences");
+        Path userPath = Paths.get(cvDocumentPath, userId.toString(), "experiences");
         Files.createDirectories(userPath);
         return userPath;
     }
@@ -360,33 +328,9 @@ public class CvDocumentService {
      * Crea el directorio de educación del usuario
      */
     private Path createUserEducationDirectory(UUID userId) throws IOException {
-        Path userPath = storageConfig.getCvDocumentsPath().resolve(userId.toString()).resolve("education");
-
-        logger.debug("Creating user education directory: {}", userPath);
-
-        try {
-            Files.createDirectories(userPath);
-
-            // Verificar que el directorio se creó correctamente
-            if (!Files.exists(userPath)) {
-                throw new IOException("No se pudo crear el directorio: " + userPath);
-            }
-
-            if (!Files.isDirectory(userPath)) {
-                throw new IOException("La ruta existe pero no es un directorio: " + userPath);
-            }
-
-            if (!Files.isWritable(userPath)) {
-                throw new IOException("El directorio no tiene permisos de escritura: " + userPath);
-            }
-
-            logger.debug("User education directory created successfully: {}", userPath);
-            return userPath;
-
-        } catch (IOException e) {
-            logger.error("Error creating user education directory: {}", userPath, e);
-            throw new IOException("Error al crear directorio de educación para usuario " + userId + ": " + e.getMessage(), e);
-        }
+        Path userPath = Paths.get(cvDocumentPath, userId.toString(), "education");
+        Files.createDirectories(userPath);
+        return userPath;
     }
 
     /**
@@ -410,7 +354,7 @@ public class CvDocumentService {
      * Obtiene la ruta relativa del archivo desde el directorio base de CV documents
      */
     private String getRelativePath(Path fullPath) {
-        Path basePath = storageConfig.getCvDocumentsPath();
+        Path basePath = Paths.get(cvDocumentPath);
         return basePath.relativize(fullPath).toString().replace("\\", "/");
     }
 
@@ -419,7 +363,7 @@ public class CvDocumentService {
      */
     public CvDocumentStats getUserDocumentStats(UUID userId) {
         try {
-            Path userPath = storageConfig.getCvDocumentsPath().resolve(userId.toString());
+            Path userPath = Paths.get(cvDocumentPath, userId.toString());
             if (!Files.exists(userPath)) {
                 return new CvDocumentStats(0, 0, 0L);
             }

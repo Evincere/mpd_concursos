@@ -1,17 +1,13 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.controller;
 
-import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.inscription.application.AdminInscriptionService;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.AdminInscriptionDTO;
-import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionDocumentDTO;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionNoteDTO;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionReportRequestDTO;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionStateChangeDTO;
-import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.DocumentStatusUpdateRequestDTO;
-import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.mapper.InscriptionDocumentMapper;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.mapper.AdminInscriptionMapper;
 import ar.gov.mpd.concursobackend.shared.infrastructure.controller.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +38,6 @@ public class AdminInscriptionController {
 
     private final AdminInscriptionService adminInscriptionService;
     private final AdminInscriptionMapper adminInscriptionMapper;
-    private final InscriptionDocumentMapper inscriptionDocumentMapper;
 
     @GetMapping
     @Operation(summary = "Obtiene todas las inscripciones con filtros y paginación")
@@ -196,46 +191,5 @@ public class AdminInscriptionController {
             reportRequest.getSortDirection()
         );
         return ResponseEntity.ok(reportData);
-    }
-
-    /**
-     * Actualiza el estado de un documento específico dentro de una inscripción
-     * ENDPOINT CRÍTICO: Implementa la funcionalidad faltante identificada en la auditoría
-     */
-    @PatchMapping("/{inscriptionId}/documents/{documentId}/status")
-    @Operation(summary = "Actualiza el estado de un documento específico en una inscripción")
-    public ResponseEntity<InscriptionDocumentDTO> updateDocumentStatus(
-            @PathVariable String inscriptionId,
-            @PathVariable String documentId,
-            @RequestBody DocumentStatusUpdateRequestDTO request
-    ) {
-        try {
-            // Validar que el request tenga los datos necesarios
-            if (request.getStatus() == null ||
-                (!request.getStatus().equals("APPROVED") && !request.getStatus().equals("REJECTED"))) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            // Actualizar el estado del documento usando el servicio
-            Document updatedDocument = adminInscriptionService.updateDocumentStatus(
-                    inscriptionId,
-                    documentId,
-                    request.getStatus(),
-                    request.getObservations()
-            );
-
-            // Convertir a DTO y retornar
-            InscriptionDocumentDTO responseDTO = inscriptionDocumentMapper.toInscriptionDocumentDTO(
-                    updatedDocument,
-                    inscriptionId
-            );
-
-            return ResponseEntity.ok(responseDTO);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 }

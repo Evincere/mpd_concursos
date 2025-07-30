@@ -13,5 +13,3 @@ public class InscriptionStateChangeDTO {
     private InscriptionState newState;
     private String note;
 }
-
-

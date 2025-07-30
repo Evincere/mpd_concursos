@@ -57,13 +57,5 @@ public class AdminInscriptionDTO {
         private String type;
         private String status;
         private LocalDateTime uploadDate;
-        private String observations;
-        private String reviewedBy;
-        private LocalDateTime reviewDate;
-        private String fileName;
-        private String documentType;
-        private String documentTypeId;
-        private Long fileSize;
-        private String downloadUrl;
     }
 }

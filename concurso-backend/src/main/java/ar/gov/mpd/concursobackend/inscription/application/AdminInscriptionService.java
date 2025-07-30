@@ -2,9 +2,6 @@ package ar.gov.mpd.concursobackend.inscription.application;
 
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
-import ar.gov.mpd.concursobackend.document.domain.model.Document;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
@@ -18,7 +15,6 @@ import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import ar.gov.mpd.concursobackend.shared.domain.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,14 +28,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AdminInscriptionService {
 
     private final InscriptionRepository inscriptionRepository;
@@ -52,7 +45,6 @@ public class AdminInscriptionService {
 
     /**
      * Obtiene todas las inscripciones con filtros y paginación
-     * INCLUYE CARGA DE ENTIDADES RELACIONADAS (User y Contest)
      */
     public Page<Inscription> getAllInscriptions(
             Long contestId,
@@ -63,23 +55,8 @@ public class AdminInscriptionService {
             String search,
             Pageable pageable
     ) {
-        log.debug("🔍 [AdminInscriptionService] Obteniendo inscripciones con filtros - contestId: {}, userId: {}, state: {}",
-                  contestId, userId, state);
-
         var specification = createSpecification(contestId, userId, state, startDate, endDate, search);
-        Page<Inscription> inscriptionsPage = inscriptionRepository.findAll(specification, (PageRequest) pageable);
-
-        log.debug("🔍 [AdminInscriptionService] Se encontraron {} inscripciones", inscriptionsPage.getTotalElements());
-
-        // Cargar entidades relacionadas para cada inscripción
-        inscriptionsPage.getContent().forEach(inscription -> {
-            log.debug("🔄 [AdminInscriptionService] Cargando entidades relacionadas para inscripción: {}", inscription.getId());
-            loadRelatedEntities(inscription);
-        });
-
-        log.debug("✅ [AdminInscriptionService] Entidades relacionadas cargadas para todas las inscripciones");
-
-        return inscriptionsPage;
+        return inscriptionRepository.findAll(specification, (PageRequest) pageable);
     }
 
     private Specification<Inscription> createSpecification(
@@ -341,108 +318,6 @@ public class AdminInscriptionService {
      */
     public boolean isFinalState(InscriptionState state) {
         return stateMachine.isFinalState(state);
-    }
-
-    /**
-     * Actualiza el estado de un documento específico dentro de una inscripción
-     * y evalúa si la inscripción debe cambiar automáticamente a APPROVED
-     */
-    @Transactional
-    public Document updateDocumentStatus(String inscriptionId, String documentId, String status, String observations) {
-        log.debug("Actualizando estado de documento {} en inscripción {} a estado: {}", documentId, inscriptionId, status);
-
-        // Verificar que la inscripción existe
-        Inscription inscription = getInscriptionById(inscriptionId);
-
-        // Verificar que el documento pertenece a la inscripción
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new IllegalArgumentException("Documento no encontrado"));
-
-        if (!document.getUserId().equals(inscription.getUserId().getValue())) {
-            throw new IllegalArgumentException("El documento no pertenece a esta inscripción");
-        }
-
-        // Actualizar el estado del documento usando el servicio existente
-        DocumentStatus documentStatus = DocumentStatus.valueOf(status.toUpperCase());
-        document.setStatus(documentStatus);
-
-        // Agregar observaciones si se proporcionaron
-        if (observations != null && !observations.trim().isEmpty()) {
-            document.setRejectionReason(observations);
-        }
-
-        // Marcar como validado
-        document.setValidatedAt(LocalDateTime.now());
-        // TODO: Obtener el ID del admin actual desde el contexto de seguridad
-        // document.setValidatedBy(getCurrentAdminId());
-
-        Document updatedDocument = documentRepository.save(document);
-
-        // Evaluar si todos los documentos requeridos están aprobados
-        evaluateInscriptionCompleteness(inscription);
-
-        log.info("Documento {} actualizado a estado {} en inscripción {}", documentId, status, inscriptionId);
-        return updatedDocument;
-    }
-
-    /**
-     * Evalúa si una inscripción tiene todos los documentos requeridos aprobados
-     * y cambia automáticamente el estado a APPROVED si corresponde
-     */
-    private void evaluateInscriptionCompleteness(Inscription inscription) {
-        // Solo evaluar si la inscripción está en estado PENDING
-        if (inscription.getState() != InscriptionState.PENDING) {
-            return;
-        }
-
-        // Obtener todos los documentos de la inscripción
-        List<Document> documents = documentRepository.findByUserId(inscription.getUserId().getValue());
-
-        // Filtrar solo documentos activos (no archivados)
-        List<Document> activeDocuments = documents.stream()
-                .filter(Document::isActive)
-                .collect(Collectors.toList());
-
-        // Verificar si todos los documentos requeridos están aprobados
-        // TODO: Implementar lógica para obtener tipos de documentos requeridos dinámicamente
-        Set<String> requiredDocumentTypes = getRequiredDocumentTypes();
-
-        boolean allRequiredDocumentsApproved = requiredDocumentTypes.stream()
-                .allMatch(requiredType ->
-                    activeDocuments.stream()
-                        .anyMatch(doc ->
-                            doc.getDocumentType().getCode().equals(requiredType) &&
-                            doc.getStatus() == DocumentStatus.APPROVED
-                        )
-                );
-
-        if (allRequiredDocumentsApproved) {
-            log.info("Todos los documentos requeridos están aprobados para inscripción {}. Cambiando estado a APPROVED.",
-                    inscription.getId());
-
-            // Cambiar estado automáticamente a APPROVED
-            inscription.setState(InscriptionState.APPROVED);
-            inscription.setLastUpdated(LocalDateTime.now());
-            inscriptionRepository.save(inscription);
-
-            // Enviar notificación al usuario
-            sendStateChangeNotification(inscription);
-        }
-    }
-
-    /**
-     * Obtiene los tipos de documentos requeridos
-     * TODO: Implementar lógica dinámica basada en el concurso
-     */
-    private Set<String> getRequiredDocumentTypes() {
-        // Por ahora retornamos los tipos básicos requeridos para MPD
-        return Set.of(
-            "dni-frontal",
-            "dni-dorso",
-            "cuil",
-            "antecedentes-penales",
-            "certificado-profesional"
-        );
     }
 
     /**

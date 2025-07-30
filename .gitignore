@@ -15,18 +15,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# =============================================================================
-# SISTEMA DE ALMACENAMIENTO UNIFICADO
-# =============================================================================
-# Nueva estructura unificada
-storage/
-!storage/.gitkeep
-
-# Carpetas legacy (mantener hasta migración completa)
+# storage
 document-storage/
 document-storage-dev/
-concurso-backend/uploads/
-concurso-backend/document-storage/
 
 # Angular
 .angular/
