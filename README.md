@@ -27,6 +27,8 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
   - Backup automático de base de datos
   - Configuración de variables de entorno segura
   - Monitoreo y logging mejorado
+  - **🔧 Mapeo de volúmenes corregido**: Almacenamiento de documentos optimizado
+  - **📁 Gestión de directorios**: Creación automática de directorios necesarios
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -372,8 +374,8 @@ Los siguientes archivos están listos para futuras implementaciones:
 
 1. **Clonar el repositorio en el servidor:**
    ```bash
-   git clone https://github.com/tu-usuario/concursos-mpd.git
-   cd concursos-mpd
+   git clone https://github.com/Evincere/mpd_concursos.git
+   cd mpd_concursos
    ```
 
 2. **Configurar variables de entorno:**
@@ -383,22 +385,19 @@ Los siguientes archivos están listos para futuras implementaciones:
    nano .env.production
    ```
 
-3. **Ejecutar deployment con validaciones:**
+3. **Ejecutar deployment:**
    ```bash
    # Deployment completo con validaciones automáticas
-   ./deploy-production.sh deploy
-
-   # Solo validar configuración
-   ./deploy-production.sh validate
-
-   # Ver estado de servicios
-   ./deploy-production.sh status
+   ./scripts/deploy-production.sh
    ```
 
-4. **Monitorear el deployment:**
+4. **Verificar deployment:**
    ```bash
+   # Ver estado de servicios
+   docker-compose -f docker-compose.prod.yml ps
+
    # Ver logs en tiempo real
-   ./deploy-production.sh logs
+   docker-compose -f docker-compose.prod.yml logs -f
    ```
 
 ### Características del Nuevo Sistema de Deployment
@@ -409,6 +408,9 @@ Los siguientes archivos están listos para futuras implementaciones:
 - ✅ **Logging detallado** con colores y estados claros
 - ✅ **Rollback fácil** en caso de problemas
 - ✅ **Monitoreo integrado** de recursos y estado
+- ✅ **🔧 Mapeo de volúmenes corregido** para almacenamiento de documentos
+- ✅ **📁 Creación automática** de directorios necesarios
+- ✅ **🏥 Health checks** integrados para verificar estado de servicios
 
 ### URLs de Acceso en Producción
 - **Frontend**: http://149.50.132.23:8000

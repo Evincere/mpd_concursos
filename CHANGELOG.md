@@ -5,6 +5,35 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-07-31] - Corrección de Upload de Documentos y Mapeo de Volúmenes
+
+### 🔧 Correcciones Críticas
+- **Mapeo de volúmenes corregido**: Solucionado problema de timeout en upload de documentos
+  - Corregido mapeo de `storage_data_prod:/app/storage` a `storage_data_prod:/app/document-storage`
+  - Alineado con configuración del backend `app.document.storage.location=document-storage`
+- **Validación backend temporal**: Deshabilitada validación previa por timeout en producción
+  - Implementada validación local básica (tamaño y tipo de archivo)
+  - Mantiene funcionalidad mientras se investiga problema del endpoint `/api/documentos/validate`
+
+### 🚀 Mejoras en Deployment
+- **Script de deployment mejorado**: Nuevo `scripts/deploy-production.sh` con:
+  - Creación automática de directorios necesarios (`logs`, `scripts`, `storage`)
+  - Verificación de espacio en disco
+  - Health checks integrados
+  - Configuración automática de backups
+  - Logging detallado con colores
+- **Documentación actualizada**: README.md actualizado con nuevos procedimientos
+
+### 🐛 Problemas Solucionados
+- **Timeout en upload de archivos**: Solucionado problema de timeout de 5 minutos en uploads
+- **JWT token inválido**: Corregido problema de tokens invalidados después de reinicio del backend
+- **Directorio de almacenamiento**: Solucionado problema de directorio no encontrado para documentos
+
+### 📁 Estructura de Archivos
+- **Nuevo directorio**: `./storage/` correctamente mapeado a `/app/document-storage` en contenedor
+- **Scripts organizados**: Movidos a `./scripts/` para mejor organización
+- **Logs centralizados**: Directorio `./logs/` para logs del backend
+
 ## [2025-07-29] - Sistema de Almacenamiento Unificado y Backups Completos
 
 ### ✨ Nuevas Funcionalidades
