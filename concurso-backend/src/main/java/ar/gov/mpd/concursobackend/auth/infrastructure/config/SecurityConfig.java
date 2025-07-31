@@ -42,6 +42,12 @@ public class SecurityConfig {
     @Value("${app.cors.max-age:3600}")
     private Long maxAge;
 
+    @Value("${app.cors.allowed-headers:Authorization,Content-Type,Accept,Origin,X-Requested-With}")
+    private String[] allowedHeaders;
+
+    @Value("${app.cors.exposed-headers:Content-Disposition,X-Total-Count}")
+    private String[] exposedHeaders;
+
     public SecurityConfig(
             UserDetailsServiceImpl userDetailsService,
             JwtEntryPoint jwtEntryPoint,
@@ -139,32 +145,16 @@ public class SecurityConfig {
         // Métodos HTTP permitidos (configurables por entorno)
         configuration.setAllowedMethods(Arrays.asList(allowedMethods));
 
-        // Headers específicos que la aplicación necesita (principio de menor privilegio)
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization",           // Token JWT
-            "Content-Type",           // Tipo de contenido
-            "Accept",                 // Tipos de respuesta aceptados
-            "X-Requested-With",       // Identificador de peticiones AJAX
-            "X-Request-ID",           // ID único de petición
-            "X-Timestamp",            // Timestamp de la petición
-            "X-Client-Version",       // Versión del cliente
-            "X-User-Agent",           // User agent del cliente
-            "X-CV-API",               // Header específico del CV API
-            "X-CV-Version",           // Versión del CV API
-            "Accept-Encoding",        // Compresión
-            "Cache-Control"           // Control de cache
-        ));
+        // Headers específicos que la aplicación necesita (configurables por entorno)
+        // Para desarrollo, permitimos todos los headers para facilitar uploads
+        if (allowedHeaders.length == 1 && "*".equals(allowedHeaders[0])) {
+            configuration.setAllowedHeaders(Arrays.asList("*"));
+        } else {
+            configuration.setAllowedHeaders(Arrays.asList(allowedHeaders));
+        }
 
-        // Headers que el cliente puede leer de la respuesta (específicos)
-        configuration.setExposedHeaders(Arrays.asList(
-            "Content-Disposition",    // Para descargas de archivos
-            "Content-Length",         // Tamaño del contenido
-            "X-Total-Count",          // Total de elementos en paginación
-            "X-Page-Number",          // Número de página actual
-            "X-Page-Size",            // Tamaño de página
-            "X-Request-ID",           // ID de petición para trazabilidad
-            "Location"                // URL de recursos creados
-        ));
+        // Headers que el cliente puede leer de la respuesta (configurables por entorno)
+        configuration.setExposedHeaders(Arrays.asList(exposedHeaders));
 
         // Permitir credenciales (necesario para JWT en headers)
         configuration.setAllowCredentials(true);

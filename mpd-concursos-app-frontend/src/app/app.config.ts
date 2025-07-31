@@ -17,6 +17,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
 import { concurrencyConflictInterceptor } from './core/interceptors/concurrency-conflict.interceptor';
+import { PerformanceInterceptor } from './core/interceptors/performance.interceptor';
 // CV Mock interceptor removed - CV functionality will be reimplemented
 import { urlTransformInterceptor } from './core/interceptors/url-transform.interceptor';
 import { environment } from '../environments/environment';
@@ -93,6 +94,7 @@ function getInterceptors() {
   return [
     AuthInterceptor,
     concurrencyConflictInterceptor,
+    PerformanceInterceptor,
     ErrorInterceptor,
     debugInterceptor,
     urlTransformInterceptor
