@@ -1612,6 +1612,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     this.loggingService.debug('[InscripcionProcess] Dirección seleccionada:', addressData, 'InscripcionProcessPage');
     this.centroDeVidaControl.setValue(addressData.formattedAddress);
     this.addressData = addressData; // Store full address data if needed
+
+    // MEJORA: Actualizar el perfil inmediatamente cuando se selecciona una dirección
+    // Esto asegura que el centro de vida se guarde incluso si el usuario no completa la inscripción
+    this.actualizarPerfilConCentroDeVida();
   }
 
   // Manejar el cambio de respuesta en los términos

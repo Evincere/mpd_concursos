@@ -180,17 +180,17 @@
           <h3>Centro de Vida</h3>
           <p class="section-description">
             Indique su domicilio actual, el cual será considerado como su centro de vida.
-            Esta información se utilizará para determinar las circunscripciones judiciales disponibles.
+            Consulte en las bases y condiciones las implicaciones del establecimiento de este domicilio.
           </p>
 
           <div class="address-selector-wrapper">
             <app-custom-address-autocomplete
               [label]="'Domicilio'"
-              [placeholder]="'Ingrese su domicilio completo (ej: Emilio Civit 256, Ciudad, Mendoza)'"
+              [placeholder]="'Ingrese su domicilio completo y presione Enter (ej: Emilio Civit 256, Ciudad, Mendoza)'"
               [required]="true"
               [initialValue]="centroDeVidaControl.value"
               [errorMessage]="'Por favor ingrese una dirección válida'"
-              [hint]="'Este domicilio se guardará en su perfil como su centro de vida'"
+              [hint]="'💡 Tip: Escriba su dirección completa y presione Enter para confirmar. Este domicilio se guardará en su perfil como su centro de vida.'"
               [province]="'Mendoza'"
               (addressSelected)="onAddressSelected($event)"
             ></app-custom-address-autocomplete>

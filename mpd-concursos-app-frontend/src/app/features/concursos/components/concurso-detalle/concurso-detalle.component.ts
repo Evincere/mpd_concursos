@@ -218,11 +218,13 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
    */
   private getDefaultDates(): ContestDate[] {
     // Usar fechas específicas del concurso MULTIFUERO
-    const inscriptionStart = new Date('2025-07-30');
-    const inscriptionEnd = new Date('2025-08-08');
+    // IMPORTANTE: Usar constructor numérico para evitar problemas de zona horaria
+    // Los meses van de 0-11, por lo que julio=6, agosto=7
+    const inscriptionStart = new Date(2025, 6, 30); // 30 de julio de 2025
+    const inscriptionEnd = new Date(2025, 7, 8);    // 8 de agosto de 2025
 
-    const resultsStart = new Date('2025-08-24');
-    const resultsEnd = new Date('2025-08-29');
+    const resultsStart = new Date(2025, 7, 24);     // 24 de agosto de 2025
+    const resultsEnd = new Date(2025, 7, 29);       // 29 de agosto de 2025
 
     return [
       {

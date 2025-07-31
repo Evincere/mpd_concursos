@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CustomButtonComponent } from '../custom-button/custom-button.component';
 import { Router } from '@angular/router';
@@ -63,9 +63,28 @@ export interface DesarrolloConfig {
           <div class="contacto-info">
             <h3 class="contacto-titulo">¿Necesitas asistencia?</h3>
             <p class="contacto-descripcion">Contáctanos para cualquier consulta o soporte técnico</p>
-            <a [href]="'mailto:' + config.emailContacto" class="contacto-email">
-              {{ config.emailContacto }}
-            </a>
+            <div class="email-container">
+              <a [href]="'mailto:' + config.emailContacto" class="contacto-email">
+                {{ config.emailContacto }}
+              </a>
+              <button
+                class="copy-email-btn"
+                (click)="copyEmailToClipboard()"
+                [title]="emailCopied ? '¡Copiado!' : 'Copiar email al portapapeles'"
+                [attr.aria-label]="'Copiar email ' + config.emailContacto + ' al portapapeles'">
+                <i
+                  class="fas"
+                  [class.fa-copy]="!emailCopied"
+                  [class.fa-check]="emailCopied"
+                  [class.copied]="emailCopied"
+                  aria-hidden="true">
+                </i>
+              </button>
+            </div>
+            <div class="copy-feedback" [class.visible]="emailCopied">
+              <i class="fas fa-check-circle" aria-hidden="true"></i>
+              <span>¡Email copiado al portapapeles!</span>
+            </div>
           </div>
         </div>
       </div>
@@ -114,12 +133,82 @@ export interface DesarrolloConfig {
   `,
   styleUrls: ['./en-desarrollo.component.scss']
 })
-export class EnDesarrolloComponent {
+export class EnDesarrolloComponent implements OnDestroy {
   @Input() config!: DesarrolloConfig;
+
+  // Estado para el feedback de copiado
+  emailCopied = false;
+  private copyTimeout?: number;
 
   constructor(private router: Router) {}
 
   volverDashboard(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  /**
+   * Copia el email al portapapeles
+   */
+  async copyEmailToClipboard(): Promise<void> {
+    if (!this.config.emailContacto) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(this.config.emailContacto);
+      this.showCopyFeedback();
+    } catch (error) {
+      // Fallback para navegadores que no soportan clipboard API
+      this.fallbackCopyToClipboard(this.config.emailContacto);
+    }
+  }
+
+  /**
+   * Muestra feedback visual de copiado exitoso
+   */
+  private showCopyFeedback(): void {
+    this.emailCopied = true;
+
+    // Limpiar timeout anterior si existe
+    if (this.copyTimeout) {
+      clearTimeout(this.copyTimeout);
+    }
+
+    // Ocultar feedback después de 2 segundos
+    this.copyTimeout = window.setTimeout(() => {
+      this.emailCopied = false;
+    }, 2000);
+  }
+
+  /**
+   * Método fallback para copiar al portapapeles en navegadores antiguos
+   */
+  private fallbackCopyToClipboard(text: string): void {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      document.execCommand('copy');
+      this.showCopyFeedback();
+    } catch (error) {
+      console.error('Error al copiar al portapapeles:', error);
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }
+
+  /**
+   * Limpia el timeout al destruir el componente
+   */
+  ngOnDestroy(): void {
+    if (this.copyTimeout) {
+      clearTimeout(this.copyTimeout);
+    }
   }
 }

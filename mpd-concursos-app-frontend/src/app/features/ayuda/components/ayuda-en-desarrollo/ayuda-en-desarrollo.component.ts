@@ -18,6 +18,6 @@ export class AyudaEnDesarrolloComponent {
     mensajeHumor: '',
     colorTema: '#f59e0b',
     iconoPrincipal: 'fa-life-ring',
-    emailContacto: 'destecmpd@gmail.com'
+    emailContacto: 'concursos_mdp_rrhh@jus.mendoza.gov.ar'
   };
 }

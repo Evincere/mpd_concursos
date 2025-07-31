@@ -41,7 +41,7 @@
   color: var(--color-tema);
   margin-bottom: 1rem;
   animation: bounce 2s infinite;
-  
+
   @include mobile {
     font-size: 3rem;
   }
@@ -53,7 +53,7 @@
   color: #f9fafb;
   margin-bottom: 0.5rem;
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  
+
   @include mobile {
     font-size: 2rem;
   }
@@ -64,7 +64,7 @@
   color: #d1d5db;
   margin: 0;
   opacity: 0.9;
-  
+
   @include mobile {
     font-size: 1rem;
   }
@@ -87,11 +87,11 @@
   padding: 1rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-5px) scale(1.02);
   }
-  
+
   @include mobile {
     width: 250px;
     height: 250px;
@@ -141,7 +141,7 @@
   max-width: 600px;
   text-align: center;
   position: relative;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -154,7 +154,7 @@
     border-right: 10px solid transparent;
     border-top: 10px solid rgba(59, 130, 246, 0.15);
   }
-  
+
   @include mobile {
     padding: 1rem 1.5rem;
     max-width: 90%;
@@ -174,7 +174,7 @@
   margin: 0;
   font-style: italic;
   line-height: 1.6;
-  
+
   @include mobile {
     font-size: 1rem;
   }
@@ -193,7 +193,7 @@
   color: #d1d5db;
   line-height: 1.7;
   margin: 0;
-  
+
   @include mobile {
     font-size: 1rem;
   }
@@ -268,6 +268,19 @@
   }
 }
 
+.email-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  @include mobile {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
 .contacto-email {
   font-size: 1.125rem;
   color: var(--color-tema);
@@ -293,6 +306,82 @@
   }
 }
 
+.copy-email-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem;
+  color: #d1d5db;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--color-tema);
+    color: var(--color-tema);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  i {
+    font-size: 1rem;
+    transition: all 0.3s ease;
+
+    &.copied {
+      color: #10b981;
+      animation: checkmark 0.5s ease;
+    }
+  }
+}
+
+.copy-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 /* Características Futuras */
 .caracteristicas-section {
   z-index: 2;
@@ -310,11 +399,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  
+
   i {
     color: var(--color-tema);
   }
-  
+
   @include mobile {
     font-size: 1.25rem;
   }
@@ -324,7 +413,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
-  
+
   @include mobile {
     grid-template-columns: 1fr;
   }
@@ -340,7 +429,7 @@
   align-items: center;
   gap: 1rem;
   transition: all 0.3s ease;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateY(-2px);
@@ -399,25 +488,25 @@
   color: rgba(255, 255, 255, 0.1);
   animation: float 6s ease-in-out infinite;
   will-change: transform; /* GPU acceleration */
-  
+
   &.elemento-1 {
     top: 10%;
     left: 10%;
     animation-delay: 0s;
   }
-  
+
   &.elemento-2 {
     top: 20%;
     right: 15%;
     animation-delay: 1.5s;
   }
-  
+
   &.elemento-3 {
     bottom: 20%;
     left: 15%;
     animation-delay: 3s;
   }
-  
+
   &.elemento-4 {
     bottom: 10%;
     right: 10%;

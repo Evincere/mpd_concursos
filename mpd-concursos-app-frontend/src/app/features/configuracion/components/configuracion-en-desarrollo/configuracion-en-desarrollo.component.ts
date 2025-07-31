@@ -19,6 +19,6 @@ export class ConfiguracionEnDesarrolloComponent {
     descripcion: 'Esta sección está siendo desarrollada para brindar opciones de configuración avanzadas.',
     colorTema: '#f59e0b',
     iconoPrincipal: 'fa-cogs',
-    emailContacto: 'destecmpd@gmail.com'
+    emailContacto: 'concursos_mdp_rrhh@jus.mendoza.gov.ar'
   };
 }

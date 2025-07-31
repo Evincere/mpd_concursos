@@ -176,10 +176,8 @@ export class WelcomeModalComponent implements OnInit, OnDestroy {
     private welcomeModalService: WelcomeModalService,
     private authService: AuthService,
     private loggingService: LoggingService
-  ) {}
-
-  ngOnInit(): void {
-    // Usar effect para reaccionar a cambios en el signal
+  ) {
+    // Usar effect con allowSignalWrites para poder escribir a signals
     effect(() => {
       const show = this.welcomeModalService.showModal();
       this.isVisibleSignal.set(show);
@@ -188,7 +186,13 @@ export class WelcomeModalComponent implements OnInit, OnDestroy {
         this.loadUserName();
         this.onModalOpened();
       }
-    });
+    }, { allowSignalWrites: true });
+  }
+
+  ngOnInit(): void {
+    // El effect ya está configurado en el constructor
+    // Aquí solo inicializamos si es necesario
+    this.loggingService.debug('[WelcomeModalComponent] Componente inicializado', undefined, 'WelcomeModal');
   }
 
   ngOnDestroy(): void {
