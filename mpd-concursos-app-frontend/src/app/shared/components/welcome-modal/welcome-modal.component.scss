@@ -1,0 +1,391 @@
+/* ===== WELCOME MODAL GLASSMORPHISM DESIGN ===== */
+@import '../../../../styles/unified-glassmorphism-mixins';
+@import '../../../../styles/unified-glassmorphism-variables';
+
+/* ===== MODAL BACKDROP ===== */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* ===== MODAL CONTAINER ===== */
+.modal-container {
+  @include glassmorphism-modal;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  
+  // Glassmorphism específico para el modal
+  background: linear-gradient(135deg,
+    rgba(55, 65, 81, 0.95) 0%,
+    rgba(75, 85, 99, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* ===== MODAL HEADER ===== */
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+  }
+
+  .welcome-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    i {
+      font-size: 1.5rem;
+      color: white;
+      animation: wave 2s ease-in-out infinite;
+    }
+  }
+
+  .header-text {
+    flex: 1;
+    
+    .modal-title {
+      margin: 0 0 0.25rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f9fafb;
+      line-height: 1.2;
+    }
+
+    .modal-subtitle {
+      margin: 0;
+      font-size: 0.875rem;
+      color: #d1d5db;
+      font-weight: 500;
+    }
+  }
+}
+
+/* ===== MODAL BODY ===== */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+  
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+.welcome-content {
+  .intro-text {
+    margin: 0 0 1.5rem;
+    font-size: 1rem;
+    color: #e5e7eb;
+    line-height: 1.6;
+  }
+}
+
+/* ===== RECOMMENDATIONS LIST ===== */
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.recommendation-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &.important {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    
+    &:hover {
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    .recommendation-icon {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+  }
+
+  .recommendation-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    i {
+      font-size: 1.125rem;
+      color: white;
+    }
+  }
+
+  .recommendation-content {
+    flex: 1;
+    
+    h4 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f9fafb;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: #d1d5db;
+      line-height: 1.5;
+    }
+  }
+}
+
+/* ===== MODAL FOOTER ===== */
+.modal-footer {
+  padding: 1.5rem 2rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  
+  .footer-options {
+    margin-bottom: 1.5rem;
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+}
+
+/* ===== CUSTOM CHECKBOX ===== */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  
+  .checkbox-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .checkbox-custom {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+    
+    &::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: #3b82f6;
+      border-radius: 2px;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.2s ease;
+    }
+  }
+
+  .checkbox-label {
+    font-size: 0.875rem;
+    color: #d1d5db;
+    font-weight: 500;
+  }
+
+  &:hover .checkbox-custom {
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .checkbox-input:checked + .checkbox-custom {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+    
+    &::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .checkbox-input:focus + .checkbox-custom {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .modal-backdrop {
+    padding: 0.5rem;
+  }
+
+  .modal-container {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 1.5rem 1.5rem 1rem;
+    
+    .header-content {
+      gap: 0.75rem;
+    }
+
+    .welcome-icon {
+      width: 40px;
+      height: 40px;
+      
+      i {
+        font-size: 1.25rem;
+      }
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+    }
+  }
+
+  .modal-body {
+    padding: 1rem 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    
+    .footer-actions {
+      flex-direction: column-reverse;
+      
+      app-custom-button {
+        width: 100%;
+      }
+    }
+  }
+
+  .recommendation-item {
+    padding: 1rem;
+    gap: 0.75rem;
+    
+    .recommendation-icon {
+      width: 36px;
+      height: 36px;
+      
+      i {
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header {
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .welcome-icon {
+      align-self: center;
+    }
+
+    .header-text {
+      text-align: center;
+      width: 100%;
+    }
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  .modal-container,
+  .recommendation-item,
+  .checkbox-custom,
+  .welcome-icon i {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ===== BODY MODAL OPEN STATE ===== */
+:global(body.modal-open) {
+  overflow: hidden;
+}
