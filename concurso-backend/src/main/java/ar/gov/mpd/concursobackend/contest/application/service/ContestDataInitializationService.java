@@ -20,6 +20,9 @@ import java.util.List;
  * Servicio para inicialización automática del concurso oficial de producción
  * Se ejecuta al inicio de la aplicación para crear el concurso oficial según las bases
  * del documento "CONCURSO DE ANTECEDENTES Y OPOSICIÓN PARA CUBRIR CARGOS DE MULTIFUERO"
+ *
+ * IMPORTANTE: Preserva los concursos existentes y sus IDs. Solo crea el concurso oficial
+ * si no existe uno con el título "MULTIFUERO".
  */
 @Service
 @RequiredArgsConstructor
@@ -44,17 +47,30 @@ public class ContestDataInitializationService implements CommandLineRunner {
     }
 
     /**
-     * Inicializa el concurso oficial, recreándolo siempre para asegurar datos actualizados
+     * Inicializa el concurso oficial, preservando el ID existente si ya existe
      */
     private void initializeOfficialContest() {
         List<ContestEntity> existingContests = contestRepository.findAll();
 
         if (!existingContests.isEmpty()) {
-            log.warn("⚠️ [ContestDataInitialization] Eliminando {} concursos existentes para recrear con datos actualizados...", existingContests.size());
-            contestRepository.deleteAll();
+            log.info("📋 [ContestDataInitialization] Se encontraron {} concursos existentes. Verificando si necesitan actualización...", existingContests.size());
+
+            // Buscar el concurso oficial existente (por título "MULTIFUERO")
+            ContestEntity existingOfficialContest = existingContests.stream()
+                .filter(contest -> "MULTIFUERO".equals(contest.getTitle()))
+                .findFirst()
+                .orElse(null);
+
+            if (existingOfficialContest != null) {
+                log.info("✅ [ContestDataInitialization] Concurso oficial ya existe (ID: {}). Manteniendo datos existentes.", existingOfficialContest.getId());
+                return; // No hacer nada, mantener el concurso existente
+            } else {
+                log.info("📝 [ContestDataInitialization] No se encontró concurso oficial 'MULTIFUERO'. Creando...");
+            }
+        } else {
+            log.info("📝 [ContestDataInitialization] No hay concursos existentes. Creando concurso oficial...");
         }
 
-        log.info("📝 [ContestDataInitialization] Creando concurso oficial con datos actualizados...");
         createOfficialContest();
     }
 

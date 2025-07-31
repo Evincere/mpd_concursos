@@ -208,46 +208,138 @@ export class DocumentosService {
       return throwError(() => new Error('No se ha proporcionado un archivo para subir'));
     }
 
-    console.log('🔄 [DocumentosService] Iniciando carga de documento');
+    // DIAGNOSTIC: Log información detallada del archivo
+    const file = formData.get('file') as File;
+    const tipoDocumentoId = formData.get('tipoDocumentoId') as string;
+    const comentarios = formData.get('comentarios') as string;
+
+    console.log('🔄 [DocumentosService] Iniciando carga de documento - DIAGNÓSTICO DETALLADO:', {
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileSizeFormatted: file ? this.formatBytes(file.size) : 'N/A',
+      fileType: file?.type,
+      tipoDocumentoId,
+      comentarios: comentarios?.length || 0,
+      timestamp: new Date().toISOString()
+    });
+
+    // DIAGNOSTIC: Validar archivo antes del upload
+    if (file) {
+      if (file.size > 20 * 1024 * 1024) { // 20MB
+        console.error('❌ [DocumentosService] Archivo excede 20MB:', file.size);
+        return throwError(() => new Error(`El archivo excede el tamaño máximo de 20MB. Tamaño actual: ${this.formatBytes(file.size)}`));
+      }
+
+      if (file.type !== 'application/pdf') {
+        console.error('❌ [DocumentosService] Tipo de archivo no válido:', file.type);
+        return throwError(() => new Error(`Tipo de archivo no permitido: ${file.type}. Solo se permiten archivos PDF.`));
+      }
+    }
 
     // CRITICAL FIX: Establecer operación en progreso para prevenir condiciones de carrera
     this.setOperationInProgress(true);
 
+    // ENHANCEMENT: Configurar timeout específico para uploads (5 minutos)
+    const uploadTimeout = 5 * 60 * 1000; // 5 minutos
+
     // No configuramos el Content-Type porque el navegador lo establecerá automáticamente
     // con el boundary correcto para multipart/form-data
-    return this.http.post<DocumentoResponse>(`${this.apiUrl}/upload`, formData).pipe(
+    return this.http.post<DocumentoResponse>(`${this.apiUrl}/upload`, formData, {
+      // ENHANCEMENT: Configurar timeout específico para uploads
+      headers: new HttpHeaders({
+        'X-Upload-Timeout': uploadTimeout.toString()
+      })
+    }).pipe(
       tap(response => {
-        console.log('✅ [DocumentosService] Carga de documento exitosa');
+        console.log('✅ [DocumentosService] Carga de documento exitosa - DIAGNÓSTICO:', {
+          documentId: response.id,
+          mensaje: response.mensaje,
+          timestamp: new Date().toISOString(),
+          fileName: file?.name,
+          fileSize: file?.size
+        });
         this.notificarDocumentoActualizado(); // Notify listeners on success
       }),
       catchError(error => {
-        console.error('[DocumentosService] ❌ Error al subir documento:', error);
+        // DIAGNOSTIC: Log detallado del error
+        console.error('❌ [DocumentosService] Error al subir documento - DIAGNÓSTICO COMPLETO:', {
+          status: error.status,
+          statusText: error.statusText,
+          url: error.url,
+          message: error.message,
+          error: error.error,
+          fileName: file?.name,
+          fileSize: file?.size,
+          timestamp: new Date().toISOString(),
+          headers: error.headers,
+          name: error.name,
+          stack: error.stack
+        });
+
+        // ENHANCEMENT: Detectar si es un error de red/CORS/timeout
+        const isNetworkError = error.status === 0 || error.status === undefined;
+        const isTimeoutError = error.name === 'TimeoutError' || error.message?.includes('timeout');
+        const isCorsError = error.message?.includes('CORS') || error.message?.includes('Access-Control');
 
         // CRITICAL FIX: Manejo mejorado de errores específicos
         let errorMessage = 'Error al subir el documento';
+        let diagnosticInfo = '';
 
-        if (error.status === 400) {
+        if (isTimeoutError) {
+          errorMessage = 'La carga del documento tardó demasiado tiempo (más de 5 minutos). Intente con un archivo más pequeño o verifique su conexión.';
+          diagnosticInfo = 'Timeout durante el upload';
+        } else if (isCorsError) {
+          errorMessage = 'Error de configuración del servidor (CORS). Contacte al administrador del sistema.';
+          diagnosticInfo = 'Error de CORS';
+        } else if (isNetworkError) {
+          errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet o intente nuevamente.';
+          diagnosticInfo = 'Error de red/conexión';
+        } else if (error.status === 400) {
           // Error de validación del documento
           if (error.error && error.error.mensaje) {
             errorMessage = error.error.mensaje;
           } else {
             errorMessage = 'El documento no cumple con los requisitos de validación';
           }
+          diagnosticInfo = 'Error de validación del documento';
         } else if (error.status === 401) {
           errorMessage = 'Su sesión ha expirado. Por favor, inicie sesión nuevamente';
+          diagnosticInfo = 'Error de autenticación';
         } else if (error.status === 413) {
-          errorMessage = 'El archivo es demasiado grande. El tamaño máximo permitido es 10MB';
+          errorMessage = `El archivo es demasiado grande. El tamaño máximo permitido es 20MB. Su archivo: ${file ? this.formatBytes(file.size) : 'desconocido'}`;
+          diagnosticInfo = 'Archivo demasiado grande';
         } else if (error.status === 415) {
-          errorMessage = 'Tipo de archivo no permitido. Solo se permiten archivos PDF';
+          errorMessage = `Tipo de archivo no permitido: ${file?.type || 'desconocido'}. Solo se permiten archivos PDF`;
+          diagnosticInfo = 'Tipo de archivo no válido';
         } else if (error.status === 500) {
           if (error.error && error.error.mensaje) {
             errorMessage = error.error.mensaje;
           } else {
             errorMessage = 'Error interno del servidor. Por favor, intente nuevamente más tarde';
           }
+          diagnosticInfo = 'Error interno del servidor';
+        } else if (error.status === 502 || error.status === 503 || error.status === 504) {
+          errorMessage = 'El servidor está temporalmente no disponible. Por favor, intente nuevamente en unos minutos.';
+          diagnosticInfo = 'Servidor no disponible';
         } else if (error.message) {
           errorMessage = error.message;
+          diagnosticInfo = 'Error personalizado';
         }
+
+        // DIAGNOSTIC: Log información adicional para debugging
+        console.error(`🔍 [DocumentosService] Diagnóstico del error: ${diagnosticInfo}`, {
+          originalError: error,
+          processedMessage: errorMessage,
+          isNetworkError,
+          isTimeoutError,
+          isCorsError,
+          fileInfo: file ? {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: new Date(file.lastModified).toISOString()
+          } : null
+        });
 
         return throwError(() => new Error(errorMessage));
       }),
@@ -1034,5 +1126,56 @@ export class DocumentosService {
     this.documentosCache = [];
     this.ultimaActualizacion = 0;
     this.notificarDocumentoActualizado();
+  }
+
+  /**
+   * DIAGNOSTIC: Formatea bytes en formato legible
+   */
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  /**
+   * DIAGNOSTIC: Método para probar la conectividad con el backend
+   */
+  public testBackendConnectivity(): Observable<boolean> {
+    console.log('🔍 [DocumentosService] Probando conectividad con el backend...');
+
+    return this.http.get(`${this.apiUrl}/health`, {
+      headers: new HttpHeaders({ 'X-Test-Request': 'true' })
+    }).pipe(
+      map(() => {
+        console.log('✅ [DocumentosService] Backend accesible');
+        return true;
+      }),
+      catchError(error => {
+        console.error('❌ [DocumentosService] Backend no accesible:', error);
+        return of(false);
+      })
+    );
+  }
+
+  /**
+   * DIAGNOSTIC: Método para obtener información del sistema
+   */
+  public getSystemInfo(): Observable<any> {
+    console.log('🔍 [DocumentosService] Obteniendo información del sistema...');
+
+    return this.http.get(`${this.apiUrl}/system-info`).pipe(
+      tap(info => {
+        console.log('📊 [DocumentosService] Información del sistema:', info);
+      }),
+      catchError(error => {
+        console.error('❌ [DocumentosService] Error obteniendo información del sistema:', error);
+        return of({
+          error: 'No se pudo obtener información del sistema',
+          timestamp: new Date().toISOString()
+        });
+      })
+    );
   }
 }

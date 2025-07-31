@@ -14,6 +14,7 @@ import { DocumentoValidationService, DocumentoValidationError } from '@core/serv
 import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 import { DocumentManagerService } from '@core/services/documentos/document-manager.service';
 import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
+import { DocumentDiagnosticDialogComponent } from '../document-diagnostic-dialog/document-diagnostic-dialog.component';
 
 // RxJS
 import { finalize, switchMap, catchError } from 'rxjs/operators';
@@ -132,6 +133,13 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
             label="Cancelar"
             [disabled]="operationInProgress"
             (buttonClick)="cancelar()">
+          </app-custom-button>
+          <app-custom-button
+            variant="stroked"
+            icon="bug_report"
+            label="Diagnóstico"
+            [disabled]="operationInProgress"
+            (buttonClick)="openDiagnostic()">
           </app-custom-button>
           <app-custom-button
             variant="primary"
@@ -544,6 +552,9 @@ export class DocumentoUploadDialogComponent implements OnInit {
   operationInProgress = false;
   private operationStartTime: number | null = null;
 
+  // Progress notification reference
+  private progressNotificationRef: any = null;
+
   constructor(
     private fb: FormBuilder,
     private documentosService: DocumentosService,
@@ -734,6 +745,7 @@ export class DocumentoUploadDialogComponent implements OnInit {
   /**
    * Uploads the selected document to the server.
    * ✅ CRITICAL FIX: Esperar a que termine la carga antes de cerrar el modal
+   * ✅ ENHANCEMENT: Diagnóstico mejorado y manejo de errores
    */
   uploadDocument(): void {
     if (this.operationInProgress) {
@@ -746,6 +758,33 @@ export class DocumentoUploadDialogComponent implements OnInit {
       return;
     }
 
+    // DIAGNOSTIC: Log información detallada antes del upload
+    this.loggingService.debug('[DocumentoUploadDialog] 🔄 Iniciando upload - DIAGNÓSTICO:', {
+      fileName: this.selectedFile.name,
+      fileSize: this.selectedFile.size,
+      fileSizeFormatted: this.formatBytes(this.selectedFile.size),
+      fileType: this.selectedFile.type,
+      tipoDocumentoId: this.data.tipoDocumentoId,
+      timestamp: new Date().toISOString()
+    }, 'DocumentoUploadDialog');
+
+    // ENHANCEMENT: Validación adicional antes del upload
+    if (this.selectedFile.size > 20 * 1024 * 1024) { // 20MB
+      this.notificationService.error(
+        `El archivo es demasiado grande (${this.formatBytes(this.selectedFile.size)}). El tamaño máximo permitido es 20MB.`,
+        'Archivo Demasiado Grande'
+      );
+      return;
+    }
+
+    if (this.selectedFile.type !== 'application/pdf') {
+      this.notificationService.error(
+        `Tipo de archivo no permitido: ${this.selectedFile.type}. Solo se permiten archivos PDF.`,
+        'Tipo de Archivo No Válido'
+      );
+      return;
+    }
+
     this.operationInProgress = true;
 
     const formData = new FormData();
@@ -754,20 +793,90 @@ export class DocumentoUploadDialogComponent implements OnInit {
     const comentarios = this.uploadForm.get('comentarios')?.value || '';
     formData.append('comentarios', comentarios);
 
+    // ENHANCEMENT: Mostrar indicador de progreso y guardar referencia
+    this.progressNotificationRef = this.notificationService.info(
+      `Subiendo archivo: ${this.selectedFile.name} (${this.formatBytes(this.selectedFile.size)})...`,
+      'Upload en Progreso',
+      { duration: 0 } // No auto-dismiss
+    );
+
     // ✅ CRITICAL FIX: Usar el servicio directamente y suscribirse al resultado
     this.documentosService.uploadDocumento(formData).subscribe({
       next: (response) => {
         this.loggingService.debug('[DocumentoUploadDialog] ✅ Documento subido exitosamente', response, 'DocumentoUploadDialog');
-        this.notificationService.success('Documento subido exitosamente', 'Éxito');
+
+        // ✅ CRITICAL FIX: Cerrar notificación de progreso
+        if (this.progressNotificationRef) {
+          this.progressNotificationRef.instance.dismiss();
+          this.progressNotificationRef = null;
+        }
+
+        this.notificationService.success(
+          `Documento "${this.selectedFile?.name}" subido exitosamente`,
+          'Éxito'
+        );
         this.operationInProgress = false;
         this.dialogRef.close(response); // ✅ Cerrar con el resultado exitoso
       },
       error: (error) => {
-        this.loggingService.error('[DocumentoUploadDialog] ❌ Error al subir documento', error, 'DocumentoUploadDialog');
-        this.notificationService.error('Error al subir el documento. Intente nuevamente.', 'Error de Subida');
+        this.loggingService.error('[DocumentoUploadDialog] ❌ Error al subir documento - DIAGNÓSTICO:', {
+          error: error,
+          fileName: this.selectedFile?.name,
+          fileSize: this.selectedFile?.size,
+          timestamp: new Date().toISOString()
+        }, 'DocumentoUploadDialog');
+
+        // ✅ CRITICAL FIX: Cerrar notificación de progreso también en caso de error
+        if (this.progressNotificationRef) {
+          this.progressNotificationRef.instance.dismiss();
+          this.progressNotificationRef = null;
+        }
+
+        // ENHANCEMENT: Mensaje de error más informativo
+        let errorMessage = error.message || 'Error desconocido al subir el documento';
+        let errorTitle = 'Error de Subida';
+
+        // Personalizar mensaje según el tipo de error
+        if (error.message?.includes('conexión') || error.message?.includes('timeout')) {
+          errorTitle = 'Error de Conexión';
+          errorMessage += '\n\nSugerencias:\n• Verifique su conexión a internet\n• Intente con un archivo más pequeño\n• Intente nuevamente en unos minutos';
+        } else if (error.message?.includes('demasiado grande')) {
+          errorTitle = 'Archivo Demasiado Grande';
+          errorMessage += `\n\nArchivo actual: ${this.selectedFile ? this.formatBytes(this.selectedFile.size) : 'desconocido'}`;
+        } else if (error.message?.includes('tipo de archivo')) {
+          errorTitle = 'Tipo de Archivo No Válido';
+          errorMessage += `\n\nTipo detectado: ${this.selectedFile?.type || 'desconocido'}`;
+        }
+
+        this.notificationService.error(errorMessage, errorTitle, { duration: 10000 });
         this.operationInProgress = false;
         // ✅ NO cerrar el modal en caso de error para que el usuario pueda reintentar
       }
+    });
+  }
+
+  /**
+   * DIAGNOSTIC: Formatea bytes en formato legible
+   */
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  /**
+   * ENHANCEMENT: Abre el diálogo de diagnóstico del sistema
+   */
+  openDiagnostic(): void {
+    this.loggingService.debug('[DocumentoUploadDialog] 🔍 Abriendo diagnóstico del sistema', undefined, 'DocumentoUploadDialog');
+
+    this.unifiedDialogService.open(DocumentDiagnosticDialogComponent, {
+      disableClose: false,
+      data: {}
+    }).afterClosed().subscribe(result => {
+      this.loggingService.debug('[DocumentoUploadDialog] Diagnóstico cerrado', result, 'DocumentoUploadDialog');
     });
   }
 
