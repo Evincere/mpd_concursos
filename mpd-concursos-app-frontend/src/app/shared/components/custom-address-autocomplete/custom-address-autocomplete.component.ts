@@ -38,7 +38,7 @@ export interface AddressResult {
           (input)="onInput($event)"
         >
         <span class="icon-container">
-          <mat-icon>location_on</mat-icon>
+          <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
         </span>
       </div>
       <div class="error-message" *ngIf="addressControl.invalid && addressControl.touched">
@@ -46,7 +46,7 @@ export interface AddressResult {
       </div>
       <div class="hint-text" *ngIf="hint">{{ hint }}</div>
       <div class="format-info">
-        <mat-icon class="info-icon">info</mat-icon>
+        <i class="fas fa-info-circle info-icon" aria-hidden="true"></i>
         <span>Formato esperado: Calle Número, Ciudad, Provincia, Argentina</span>
       </div>
       <div class="format-info" *ngIf="province">
@@ -72,9 +72,9 @@ export interface AddressResult {
             (mouseover)="activeIndex = i"
           >
             <div class="option-content">
-              <mat-icon class="option-icon" *ngIf="option.type === 'province'">location_city</mat-icon>
-              <mat-icon class="option-icon" *ngIf="option.type === 'city'">apartment</mat-icon>
-              <mat-icon class="option-icon" *ngIf="option.type === 'address'">home</mat-icon>
+              <i class="fas fa-city option-icon" *ngIf="option.type === 'province'" aria-hidden="true"></i>
+              <i class="fas fa-building option-icon" *ngIf="option.type === 'city'" aria-hidden="true"></i>
+              <i class="fas fa-home option-icon" *ngIf="option.type === 'address'" aria-hidden="true"></i>
               <span [ngClass]="{'province': option.type === 'province', 'city': option.type === 'city', 'address': option.type === 'address'}">
                 {{ option.fullAddress }}
               </span>
@@ -84,16 +84,20 @@ export interface AddressResult {
 
         <div class="no-results" *ngIf="!isLoading && filteredOptions.length === 0 && addressControl.value">
           <div class="option-content">
-            <mat-icon class="option-icon">info</mat-icon>
+            <i class="fas fa-info-circle option-icon" aria-hidden="true"></i>
             <span>No se encontraron resultados para "{{ addressControl.value }}"</span>
           </div>
           <div class="use-manual-option" (mousedown)="useManualAddress()">
-            <mat-icon>edit</mat-icon>
+            <i class="fas fa-edit" aria-hidden="true"></i>
             <span>Usar dirección ingresada manualmente</span>
           </div>
           <div class="suggestion-tip">
-            <mat-icon class="option-icon" style="color: #FFC107;">lightbulb</mat-icon>
+            <i class="fas fa-lightbulb option-icon" style="color: #FFC107;" aria-hidden="true"></i>
             <span>Sugerencia: Asegúrate de incluir el número de la dirección. Prueba con un formato como "Calle 123" o "Avenida Principal 456, Ciudad"</span>
+          </div>
+          <div class="enter-hint">
+            <i class="fas fa-keyboard option-icon" style="color: #4CAF50;" aria-hidden="true"></i>
+            <span><strong>Presiona Enter</strong> para usar la dirección ingresada</span>
           </div>
         </div>
       </div>
@@ -266,6 +270,24 @@ export interface AddressResult {
       color: rgba(255, 255, 255, 0.7);
       font-size: 12px;
       font-style: italic;
+    }
+
+    .enter-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid rgba(76, 175, 80, 0.3);
+      background: rgba(76, 175, 80, 0.1);
+      color: #4CAF50;
+      font-size: 13px;
+      font-weight: 500;
+      animation: pulse-hint 2s infinite;
+    }
+
+    @keyframes pulse-hint {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
   `]
 })

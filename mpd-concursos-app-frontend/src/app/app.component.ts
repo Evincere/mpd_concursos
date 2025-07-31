@@ -11,11 +11,13 @@ import { PageTransitionComponent } from './shared/components/page-transition/pag
 
 // Importación condicional para el componente de depuración
 import { ResponsiveDebugComponent } from './shared/components/responsive-debug/responsive-debug.component';
+import { WelcomeModalComponent } from './shared/components/welcome-modal/welcome-modal.component';
+import { WelcomeModalService } from './core/services/welcome-modal.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ResponsiveDebugComponent, PageTransitionComponent],
+  imports: [RouterOutlet, ResponsiveDebugComponent, PageTransitionComponent, WelcomeModalComponent],
   templateUrl: './app.component.html',
   animations: [
     trigger('fadeAnimation', [
@@ -36,7 +38,8 @@ export class AppComponent implements OnInit {
     private responsiveTestRunner: ResponsiveTestRunnerService,
     private accessibilityPreferences: AccessibilityPreferencesService,
     private fontLoader: FontLoaderService,
-    private iconConverter: IconConverterService
+    private iconConverter: IconConverterService,
+    private welcomeModalService: WelcomeModalService
   ) {}
 
   ngOnInit(): void {
@@ -50,5 +53,8 @@ export class AppComponent implements OnInit {
     // Inicializar carga de fuentes y conversión de iconos
     // Los servicios FontLoaderService e IconConverterService se auto-inicializan
     // y detectan/solucionan automáticamente problemas de fuentes e iconos
+
+    // Exponer métodos de testing para el modal de bienvenida
+    this.welcomeModalService.exposeForTesting();
   }
 }

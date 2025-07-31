@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { LoginUser } from '../../models/login-user.model';
 import { TokenService } from './token.service';
@@ -30,7 +30,8 @@ export class AuthService {
   constructor(
     private loginService: LoginService,
     private tokenService: TokenService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private injector: Injector
   ) {
     // Limpiar imagen legacy al inicializar (migración)
     this.cleanupLegacyProfileImage();
@@ -64,6 +65,11 @@ export class AuthService {
             this.loadUserInfo();
             // ✅ SEGURIDAD: Log exitoso sin exponer token
             this.loggingService.info('[AuthService] Login exitoso', { username: loginUser.username }, 'AuthService');
+
+            // Activar verificación del modal de bienvenida después de un breve delay
+            setTimeout(() => {
+              this.checkWelcomeModal();
+            }, 1000);
           } else {
             // ✅ SEGURIDAD: Error sin exponer información del token
             this.loggingService.error('[AuthService] No se pudo decodificar el token de autenticación', undefined, 'AuthService');
@@ -248,5 +254,28 @@ export class AuthService {
     .catch(error => {
       console.warn('[AuthService] No se pudo cargar la imagen de perfil desde el servidor:', error);
     });
+  }
+
+  /**
+   * Verifica si se debe mostrar el modal de bienvenida
+   * Se llama después del login exitoso
+   */
+  private checkWelcomeModal(): void {
+    try {
+      this.loggingService.debug('[AuthService] Iniciando verificación de modal de bienvenida', undefined, 'AuthService');
+
+      // Importación dinámica para evitar dependencias circulares
+      import('../welcome-modal.service').then(({ WelcomeModalService }) => {
+        this.loggingService.debug('[AuthService] WelcomeModalService cargado exitosamente', undefined, 'AuthService');
+
+        // Crear instancia del servicio usando el injector
+        const welcomeService = this.injector.get(WelcomeModalService);
+        welcomeService.checkShouldShowWelcomeModal();
+      }).catch(error => {
+        this.loggingService.error('[AuthService] Error al cargar WelcomeModalService:', error, 'AuthService');
+      });
+    } catch (error) {
+      this.loggingService.error('[AuthService] Error al verificar modal de bienvenida:', error, 'AuthService');
+    }
   }
 }

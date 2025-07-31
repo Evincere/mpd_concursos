@@ -46,8 +46,8 @@
             <div class="header-container">
               <div class="titulo-container">
                 <h3>{{ postulacion.concurso?.title || 'Sin título' }}</h3>
-                <span class="categoria" *ngIf="postulacion.concurso?.category">
-                  {{ postulacion.concurso?.category }}
+                <span class="categoria">
+                  Funcionario y personal Jerárquico
                 </span>
               </div>
               <div class="header-actions">
@@ -122,14 +122,14 @@
               <div class="detalle-item cargo">
                 <i class="fas fa-briefcase" aria-hidden="true"></i>
                 <div class="detalle-content">
-                  <span class="label">Cargo</span>
+                  <span class="label">Cargo:</span>
                   <span class="value">{{ postulacion.concurso?.position || 'No especificado' }}</span>
                 </div>
               </div>
               <div class="detalle-item dependencia">
                 <i class="fas fa-building" aria-hidden="true"></i>
                 <div class="detalle-content">
-                  <span class="label">Dependencia</span>
+                  <span class="label">Dependencia:</span>
                   <span class="value">{{ postulacion.concurso?.department || 'No especificada' }}</span>
                 </div>
               </div>

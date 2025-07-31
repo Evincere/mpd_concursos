@@ -240,6 +240,37 @@
   margin-bottom: var(--spacing-sm);
 }
 
+/* === MEJORAS ESPECÍFICAS PARA CAMPOS CARGO Y DEPENDENCIA === */
+.detalle-item {
+  &.cargo, &.dependencia {
+    .detalle-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+
+      .label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: normal;
+        margin-bottom: 0;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .value {
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-left: 0;
+        flex: 1;
+      }
+    }
+  }
+}
+
 .detalle-item {
   @include glassmorphism-card;
   @extend .glass-flex;
@@ -300,20 +331,21 @@
 
     .label {
       font-size: 0.75rem;
-      color: #ffffff;
+      color: rgba(255, 255, 255, 0.7);
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-weight: 600;
-      margin-bottom: 4px;
-      opacity: 0.8;
+      margin-bottom: 6px;
+      opacity: 0.9;
     }
 
     .value {
       color: #ffffff;
       font-size: 0.95rem;
-      font-weight: 700;
+      font-weight: 500;
       word-wrap: break-word;
-      line-height: 1.3;
+      line-height: 1.4;
+      margin-left: 4px;
     }
   }
 }
