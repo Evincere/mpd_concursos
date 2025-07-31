@@ -673,6 +673,32 @@ export class DocumentosService {
     if (!file) {
       return throwError(() => new Error('No se ha proporcionado un archivo para validar.'));
     }
+
+    // 🔧 TEMPORAL: Deshabilitar validación backend por problemas de timeout en producción
+    // TODO: Reactivar cuando se solucione el endpoint /api/documentos/validate
+    console.log('[DocumentosService] ⚠️ Validación backend deshabilitada temporalmente - usando validación local');
+
+    // Validación básica local
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    const allowedTypes = ['application/pdf'];
+
+    if (file.size > maxSize) {
+      return throwError(() => new Error(`Archivo demasiado grande. Máximo permitido: ${Math.round(maxSize / (1024 * 1024))}MB`));
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      return throwError(() => new Error(`Tipo de archivo no permitido. Solo se permiten archivos PDF.`));
+    }
+
+    // Retornar validación exitosa
+    return of({
+      valid: true,
+      errors: [],
+      message: 'Validación local exitosa',
+      skipBackendValidation: true
+    });
+
+    /* CÓDIGO ORIGINAL COMENTADO TEMPORALMENTE:
     const formData = new FormData();
     formData.append('file', file);
 
@@ -685,6 +711,7 @@ export class DocumentosService {
         return throwError(() => new Error('Error al validar el documento'));
       })
     );
+    */
   }
 
   /**
