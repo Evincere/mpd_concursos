@@ -28,6 +28,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - **Timeout en upload de archivos**: Solucionado problema de timeout de 5 minutos en uploads
 - **JWT token inválido**: Corregido problema de tokens invalidados después de reinicio del backend
 - **Directorio de almacenamiento**: Solucionado problema de directorio no encontrado para documentos
+- **Límites de archivos multipart**: Agregadas configuraciones faltantes de Spring Boot para archivos grandes
+  - `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 20MB`
+  - `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 25MB`
+  - `SERVER_TOMCAT_CONNECTION_TIMEOUT: 300000`
+  - `SPRING_MVC_ASYNC_REQUEST_TIMEOUT: 300000`
 
 ### 📁 Estructura de Archivos
 - **Nuevo directorio**: `./storage/` correctamente mapeado a `/app/document-storage` en contenedor
