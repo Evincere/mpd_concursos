@@ -1,7 +1,7 @@
 /* ===== WELCOME MODAL STYLES ===== */
 /* Glassmorphism design with modern animations */
 
-.welcome-modal-overlay {
+.modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
@@ -16,143 +16,169 @@
   animation: fadeIn 0.3s ease-out;
 }
 
-.welcome-modal {
-  background: rgba(255, 255, 255, 0.1);
+.modal-container {
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
-  padding: 2rem;
-  max-width: 500px;
+  padding: 0;
+  max-width: 600px;
   width: 90%;
   max-height: 80vh;
-  overflow-y: auto;
+  overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   animation: slideInUp 0.4s ease-out;
   position: relative;
 }
 
 .modal-header {
-  text-align: center;
-  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
 }
 
 .welcome-icon {
-  font-size: 3rem;
+  font-size: 2.5rem;
   color: #4CAF50;
-  margin-bottom: 1rem;
   animation: bounce 2s infinite;
 }
+
+.header-text {
+  text-align: left;
+}
+
+
 
 .modal-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #333;
   margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin-top: 0;
 }
 
 .modal-subtitle {
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: #666;
   margin: 0;
 }
 
-.modal-content {
-  margin-bottom: 2rem;
+.modal-body {
+  padding: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
-.welcome-message {
-  color: rgba(255, 255, 255, 0.9);
+.welcome-content {
+  color: #333;
+}
+
+.intro-text {
+  font-size: 1rem;
   line-height: 1.6;
   margin-bottom: 1.5rem;
-  text-align: center;
+  color: #555;
 }
 
-.features-list {
-  list-style: none;
-  padding: 0;
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(76, 175, 80, 0.05);
+  border-radius: 10px;
+  border-left: 4px solid #4CAF50;
+}
+
+.recommendation-item.important {
+  background: rgba(255, 152, 0, 0.05);
+  border-left-color: #FF9800;
+}
+
+.recommendation-item.important .recommendation-icon {
+  color: #FF9800;
+}
+
+.recommendation-icon {
+  color: #4CAF50;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.recommendation-content h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.recommendation-content p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #555;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(248, 249, 250, 0.8);
+}
+
+.footer-options {
+  margin-bottom: 1rem;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.checkbox-input {
   margin: 0;
 }
 
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 0;
-  color: rgba(255, 255, 255, 0.9);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ddd;
+  border-radius: 3px;
+  display: inline-block;
+  position: relative;
 }
 
-.feature-item:last-child {
-  border-bottom: none;
+.checkbox-label {
+  user-select: none;
 }
 
-.feature-icon {
-  color: #4CAF50;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-.modal-actions {
+.footer-actions {
   display: flex;
   gap: 1rem;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #4CAF50, #45a049);
-  color: white;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.close-button {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.close-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  transform: scale(1.1);
-}
+/* Los estilos de botones se manejan por los componentes custom-button */
 
 /* Animations */
 @keyframes fadeIn {
@@ -189,34 +215,61 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .welcome-modal {
-    padding: 1.5rem;
+  .modal-container {
     margin: 1rem;
     max-width: none;
     width: calc(100% - 2rem);
   }
-  
+
   .modal-title {
     font-size: 1.5rem;
   }
-  
+
   .welcome-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
-  
-  .modal-actions {
+
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .footer-actions {
     flex-direction: column;
   }
-  
-  .btn {
-    width: 100%;
+
+  .recommendation-item {
+    flex-direction: column;
+    text-align: center;
   }
 }
 
 /* Dark theme support */
 @media (prefers-color-scheme: dark) {
-  .welcome-modal {
-    background: rgba(30, 30, 30, 0.9);
+  .modal-container {
+    background: rgba(30, 30, 30, 0.95);
     border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-title {
+    color: #fff;
+  }
+
+  .modal-subtitle,
+  .intro-text,
+  .recommendation-content h4,
+  .recommendation-content p,
+  .checkbox-label {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-footer {
+    background: rgba(20, 20, 20, 0.8);
   }
 }
