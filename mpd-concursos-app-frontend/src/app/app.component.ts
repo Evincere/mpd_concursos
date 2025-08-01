@@ -13,6 +13,7 @@ import { PageTransitionComponent } from './shared/components/page-transition/pag
 import { ResponsiveDebugComponent } from './shared/components/responsive-debug/responsive-debug.component';
 import { WelcomeModalComponent } from './shared/components/welcome-modal/welcome-modal.component';
 import { WelcomeModalService } from './core/services/welcome-modal.service';
+import { AuthService } from './core/services/auth/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -39,7 +40,8 @@ export class AppComponent implements OnInit {
     private accessibilityPreferences: AccessibilityPreferencesService,
     private fontLoader: FontLoaderService,
     private iconConverter: IconConverterService,
-    private welcomeModalService: WelcomeModalService
+    private welcomeModalService: WelcomeModalService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -56,5 +58,23 @@ export class AppComponent implements OnInit {
 
     // Exponer métodos de testing para el modal de bienvenida
     this.welcomeModalService.exposeForTesting();
+
+    // Verificar si se debe mostrar el modal de bienvenida para usuarios ya autenticados
+    this.checkWelcomeModalForExistingSession();
+  }
+
+  /**
+   * Verifica si se debe mostrar el modal de bienvenida para sesiones existentes
+   * Se ejecuta al inicializar la aplicación para usuarios ya autenticados
+   */
+  private checkWelcomeModalForExistingSession(): void {
+    // Esperar un momento para que los servicios se inicialicen completamente
+    setTimeout(() => {
+      // Solo verificar si el usuario ya está autenticado (sesión existente)
+      if (this.authService.isAuthenticated()) {
+        console.log('[AppComponent] Usuario ya autenticado detectado, verificando modal de bienvenida');
+        this.welcomeModalService.checkShouldShowWelcomeModal();
+      }
+    }, 1500); // Delay ligeramente mayor que el del login para evitar conflictos
   }
 }

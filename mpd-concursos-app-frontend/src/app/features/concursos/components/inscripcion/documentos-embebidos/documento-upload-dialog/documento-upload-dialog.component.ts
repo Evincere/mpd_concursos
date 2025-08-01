@@ -14,7 +14,7 @@ import { DocumentoValidationService, DocumentoValidationError } from '@core/serv
 import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 import { DocumentManagerService } from '@core/services/documentos/document-manager.service';
 import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
-import { DocumentDiagnosticDialogComponent } from '../document-diagnostic-dialog/document-diagnostic-dialog.component';
+
 
 // RxJS
 import { finalize, switchMap, catchError } from 'rxjs/operators';
@@ -134,13 +134,7 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
             [disabled]="operationInProgress"
             (buttonClick)="cancelar()">
           </app-custom-button>
-          <app-custom-button
-            variant="stroked"
-            icon="bug_report"
-            label="Diagnóstico"
-            [disabled]="operationInProgress"
-            (buttonClick)="openDiagnostic()">
-          </app-custom-button>
+
           <app-custom-button
             variant="primary"
             icon="cloud-upload-alt"
@@ -745,7 +739,7 @@ export class DocumentoUploadDialogComponent implements OnInit {
   /**
    * Uploads the selected document to the server.
    * ✅ CRITICAL FIX: Esperar a que termine la carga antes de cerrar el modal
-   * ✅ ENHANCEMENT: Diagnóstico mejorado y manejo de errores
+   * ✅ ENHANCEMENT: Manejo de errores mejorado
    */
   uploadDocument(): void {
     if (this.operationInProgress) {
@@ -758,12 +752,10 @@ export class DocumentoUploadDialogComponent implements OnInit {
       return;
     }
 
-    // DIAGNOSTIC: Log información detallada antes del upload
-    this.loggingService.debug('[DocumentoUploadDialog] 🔄 Iniciando upload - DIAGNÓSTICO:', {
+    // Log información del upload
+    this.loggingService.debug('[DocumentoUploadDialog] 🔄 Iniciando upload:', {
       fileName: this.selectedFile.name,
       fileSize: this.selectedFile.size,
-      fileSizeFormatted: this.formatBytes(this.selectedFile.size),
-      fileType: this.selectedFile.type,
       tipoDocumentoId: this.data.tipoDocumentoId,
       timestamp: new Date().toISOString()
     }, 'DocumentoUploadDialog');
@@ -819,7 +811,7 @@ export class DocumentoUploadDialogComponent implements OnInit {
         this.dialogRef.close(response); // ✅ Cerrar con el resultado exitoso
       },
       error: (error) => {
-        this.loggingService.error('[DocumentoUploadDialog] ❌ Error al subir documento - DIAGNÓSTICO:', {
+        this.loggingService.error('[DocumentoUploadDialog] ❌ Error al subir documento:', {
           error: error,
           fileName: this.selectedFile?.name,
           fileSize: this.selectedFile?.size,
@@ -856,7 +848,7 @@ export class DocumentoUploadDialogComponent implements OnInit {
   }
 
   /**
-   * DIAGNOSTIC: Formatea bytes en formato legible
+   * Formatea bytes en formato legible
    */
   private formatBytes(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
@@ -866,19 +858,7 @@ export class DocumentoUploadDialogComponent implements OnInit {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  /**
-   * ENHANCEMENT: Abre el diálogo de diagnóstico del sistema
-   */
-  openDiagnostic(): void {
-    this.loggingService.debug('[DocumentoUploadDialog] 🔍 Abriendo diagnóstico del sistema', undefined, 'DocumentoUploadDialog');
 
-    this.unifiedDialogService.open(DocumentDiagnosticDialogComponent, {
-      disableClose: false,
-      data: {}
-    }).afterClosed().subscribe(result => {
-      this.loggingService.debug('[DocumentoUploadDialog] Diagnóstico cerrado', result, 'DocumentoUploadDialog');
-    });
-  }
 
   /**
    * Closes the dialog, indicating cancellation.

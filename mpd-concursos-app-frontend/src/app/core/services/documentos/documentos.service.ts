@@ -208,22 +208,18 @@ export class DocumentosService {
       return throwError(() => new Error('No se ha proporcionado un archivo para subir'));
     }
 
-    // DIAGNOSTIC: Log información detallada del archivo
+    // Log información del archivo
     const file = formData.get('file') as File;
     const tipoDocumentoId = formData.get('tipoDocumentoId') as string;
     const comentarios = formData.get('comentarios') as string;
 
-    console.log('🔄 [DocumentosService] Iniciando carga de documento - DIAGNÓSTICO DETALLADO:', {
+    console.log('🔄 [DocumentosService] Iniciando carga de documento:', {
       fileName: file?.name,
       fileSize: file?.size,
-      fileSizeFormatted: file ? this.formatBytes(file.size) : 'N/A',
-      fileType: file?.type,
-      tipoDocumentoId,
-      comentarios: comentarios?.length || 0,
-      timestamp: new Date().toISOString()
+      tipoDocumentoId
     });
 
-    // DIAGNOSTIC: Validar archivo antes del upload
+    // Validar archivo antes del upload
     if (file) {
       if (file.size > 20 * 1024 * 1024) { // 20MB
         console.error('❌ [DocumentosService] Archivo excede 20MB:', file.size);
@@ -251,18 +247,15 @@ export class DocumentosService {
       })
     }).pipe(
       tap(response => {
-        console.log('✅ [DocumentosService] Carga de documento exitosa - DIAGNÓSTICO:', {
+        console.log('✅ [DocumentosService] Carga de documento exitosa:', {
           documentId: response.id,
-          mensaje: response.mensaje,
-          timestamp: new Date().toISOString(),
-          fileName: file?.name,
-          fileSize: file?.size
+          mensaje: response.mensaje
         });
         this.notificarDocumentoActualizado(); // Notify listeners on success
       }),
       catchError(error => {
-        // DIAGNOSTIC: Log detallado del error
-        console.error('❌ [DocumentosService] Error al subir documento - DIAGNÓSTICO COMPLETO:', {
+        // Log del error
+        console.error('❌ [DocumentosService] Error al subir documento:', {
           status: error.status,
           statusText: error.statusText,
           url: error.url,
@@ -326,8 +319,8 @@ export class DocumentosService {
           diagnosticInfo = 'Error personalizado';
         }
 
-        // DIAGNOSTIC: Log información adicional para debugging
-        console.error(`🔍 [DocumentosService] Diagnóstico del error: ${diagnosticInfo}`, {
+        // Log información adicional del error
+        console.error(`🔍 [DocumentosService] Información del error: ${diagnosticInfo}`, {
           originalError: error,
           processedMessage: errorMessage,
           isNetworkError,
@@ -1156,7 +1149,7 @@ export class DocumentosService {
   }
 
   /**
-   * DIAGNOSTIC: Formatea bytes en formato legible
+   * Formatea bytes en formato legible
    */
   private formatBytes(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
@@ -1166,43 +1159,5 @@ export class DocumentosService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  /**
-   * DIAGNOSTIC: Método para probar la conectividad con el backend
-   */
-  public testBackendConnectivity(): Observable<boolean> {
-    console.log('🔍 [DocumentosService] Probando conectividad con el backend...');
 
-    return this.http.get(`${this.apiUrl}/health`, {
-      headers: new HttpHeaders({ 'X-Test-Request': 'true' })
-    }).pipe(
-      map(() => {
-        console.log('✅ [DocumentosService] Backend accesible');
-        return true;
-      }),
-      catchError(error => {
-        console.error('❌ [DocumentosService] Backend no accesible:', error);
-        return of(false);
-      })
-    );
-  }
-
-  /**
-   * DIAGNOSTIC: Método para obtener información del sistema
-   */
-  public getSystemInfo(): Observable<any> {
-    console.log('🔍 [DocumentosService] Obteniendo información del sistema...');
-
-    return this.http.get(`${this.apiUrl}/system-info`).pipe(
-      tap(info => {
-        console.log('📊 [DocumentosService] Información del sistema:', info);
-      }),
-      catchError(error => {
-        console.error('❌ [DocumentosService] Error obteniendo información del sistema:', error);
-        return of({
-          error: 'No se pudo obtener información del sistema',
-          timestamp: new Date().toISOString()
-        });
-      })
-    );
-  }
 }
