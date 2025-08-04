@@ -31,8 +31,8 @@ error() {
 }
 
 # Verificar que estamos en el directorio correcto
-if [ ! -f "docker-compose.prod.yml" ]; then
-    error "docker-compose.prod.yml no encontrado. Ejecuta este script desde el directorio raíz del proyecto."
+if [ ! -f "docker compose.prod.yml" ]; then
+    error "docker compose.prod.yml no encontrado. Ejecuta este script desde el directorio raíz del proyecto."
     exit 1
 fi
 
@@ -62,7 +62,7 @@ fi
 
 # 4. Parar servicios existentes
 log "🛑 Parando servicios existentes..."
-docker-compose -f docker-compose.prod.yml down --remove-orphans || true
+docker compose -f docker compose.prod.yml down --remove-orphans || true
 
 # 5. Limpiar recursos Docker no utilizados
 log "🧹 Limpiando recursos Docker no utilizados..."
@@ -70,7 +70,7 @@ docker system prune -f
 
 # 6. Construir e iniciar servicios
 log "🔨 Construyendo e iniciando servicios..."
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker compose.prod.yml up -d --build
 
 # 7. Esperar a que los servicios estén listos
 log "⏳ Esperando a que los servicios estén listos..."
@@ -78,28 +78,28 @@ sleep 30
 
 # 8. Verificar estado de los servicios
 log "🔍 Verificando estado de los servicios..."
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker compose.prod.yml ps
 
 # 9. Verificar health checks
 log "🏥 Verificando health checks..."
 sleep 10
 
 # Verificar MySQL
-if docker-compose -f docker-compose.prod.yml ps mysql | grep -q "Up (healthy)"; then
+if docker compose -f docker compose.prod.yml ps mysql | grep -q "Up (healthy)"; then
     success "MySQL está funcionando correctamente"
 else
     warning "MySQL no está completamente listo"
 fi
 
 # Verificar Backend
-if docker-compose -f docker-compose.prod.yml ps backend | grep -q "Up (healthy)"; then
+if docker compose -f docker compose.prod.yml ps backend | grep -q "Up (healthy)"; then
     success "Backend está funcionando correctamente"
 else
     warning "Backend no está completamente listo"
 fi
 
 # Verificar Frontend
-if docker-compose -f docker-compose.prod.yml ps frontend | grep -q "Up"; then
+if docker compose -f docker compose.prod.yml ps frontend | grep -q "Up"; then
     success "Frontend está funcionando correctamente"
 else
     warning "Frontend no está completamente listo"
@@ -121,9 +121,9 @@ fi
 
 # 11. Mostrar logs recientes si hay errores
 log "📋 Verificando logs por errores..."
-if docker-compose -f docker-compose.prod.yml logs --tail=20 | grep -i "error\|exception\|failed" > /dev/null; then
+if docker compose -f docker compose.prod.yml logs --tail=20 | grep -i "error\|exception\|failed" > /dev/null; then
     warning "Se encontraron algunos errores en los logs. Revisa los logs completos con:"
-    echo "docker-compose -f docker-compose.prod.yml logs backend"
+    echo "docker compose -f docker compose.prod.yml logs backend"
 fi
 
 # 12. Configurar backups automáticos
@@ -153,7 +153,7 @@ echo "  - Logs:       ./logs"
 echo "  - Backups:    Docker volume backup_data_prod"
 echo ""
 log "🔧 Comandos útiles:"
-echo "  - Ver logs:     docker-compose -f docker-compose.prod.yml logs -f"
-echo "  - Reiniciar:    docker-compose -f docker-compose.prod.yml restart"
-echo "  - Parar:        docker-compose -f docker-compose.prod.yml down"
+echo "  - Ver logs:     docker compose -f docker compose.prod.yml logs -f"
+echo "  - Reiniciar:    docker compose -f docker compose.prod.yml restart"
+echo "  - Parar:        docker compose -f docker compose.prod.yml down"
 echo ""

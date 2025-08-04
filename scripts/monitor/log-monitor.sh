@@ -117,9 +117,9 @@ monitor_all_logs() {
     echo -e "${CYAN}Presiona Ctrl+C para salir${NC}"
     echo ""
     
-    # Usar docker-compose logs si está disponible, sino logs individuales
-    if command -v docker-compose &> /dev/null; then
-        docker-compose logs -f
+    # Usar docker compose logs si está disponible, sino logs individuales
+    if command -v docker compose &> /dev/null; then
+        docker compose logs -f
     else
         # Monitorear en paralelo usando subshells
         (docker logs -f $BACKEND_CONTAINER 2>&1 | sed 's/^/[BACKEND] /') &

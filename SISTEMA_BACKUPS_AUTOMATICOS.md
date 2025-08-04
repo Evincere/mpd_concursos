@@ -175,7 +175,7 @@ ls /app/backups/*.gz | wc -l
 
 ```bash
 # 1. Preparar servidor limpio (si es necesario)
-sudo apt update && sudo apt install docker.io docker-compose git
+sudo apt update && sudo apt install docker.io docker compose git
 
 # 2. Clonar repositorio
 git clone <repositorio-mpd-concursos>

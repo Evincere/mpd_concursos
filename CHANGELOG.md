@@ -118,7 +118,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
     - Configuración JPA más flexible (`update` en lugar de `validate`)
     - Configuración de pool de conexiones optimizada
     - Logging específico para producción
-  - **Docker Compose Corregido**: `docker-compose.prod.yml` con configuración consistente
+  - **Docker Compose Corregido**: `docker compose.prod.yml` con configuración consistente
     - Perfil Spring Boot corregido de `dev` a `prod`
     - Variables de entorno completas y organizadas
     - Configuración de recursos y límites mejorada
@@ -868,7 +868,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - **Configurado** deployment para servidor vps-4778464-x.dattaweb.com (149.50.132.23)
 - **Optimizado** Docker Compose para producción con límites de recursos
 - **Agregado** soporte para HTTPS y configuración CORS específica para IP del servidor
-- **Creado** docker-compose.prod.yml con configuraciones optimizadas para producción
+- **Creado** docker compose.prod.yml con configuraciones optimizadas para producción
 
 ### 🔧 Scripts de Automatización
 - **Creado** deploy-production.sh - Script automático de deployment

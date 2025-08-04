@@ -394,10 +394,10 @@ Los siguientes archivos están listos para futuras implementaciones:
 4. **Verificar deployment:**
    ```bash
    # Ver estado de servicios
-   docker-compose -f docker-compose.prod.yml ps
+   docker compose -f docker compose.prod.yml ps
 
    # Ver logs en tiempo real
-   docker-compose -f docker-compose.prod.yml logs -f
+   docker compose -f docker compose.prod.yml logs -f
    ```
 
 ### Características del Nuevo Sistema de Deployment
@@ -420,21 +420,21 @@ Los siguientes archivos están listos para futuras implementaciones:
 ### Comandos de Gestión en Producción
 ```bash
 # Ver estado de contenedores
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker compose.prod.yml ps
 
 # Ver logs en tiempo real
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker compose.prod.yml logs -f
 
 # Reiniciar servicios
-docker-compose -f docker-compose.prod.yml restart
+docker compose -f docker compose.prod.yml restart
 
 # Detener todos los servicios
-docker-compose -f docker-compose.prod.yml down
+docker compose -f docker compose.prod.yml down
 
 # Actualizar desde repositorio
 git pull origin main
-docker-compose -f docker-compose.prod.yml build --no-cache
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker compose.prod.yml build --no-cache
+docker compose -f docker compose.prod.yml up -d
 ```
 
 ### Backend

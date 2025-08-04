@@ -116,7 +116,7 @@ Monitor de logs en tiempo real:
 │       └── README-DB-MONITOR.md         # Esta documentación
 ├── concurso-backend/                    # Backend del proyecto
 ├── concurso-frontend/                   # Frontend del proyecto
-└── docker-compose.yml                   # Configuración Docker
+└── docker compose.yml                   # Configuración Docker
 
 /opt/mpd-monitor/                        # Directorio de instalación
 ├── db-monitor.sh                        # Script principal de monitoreo

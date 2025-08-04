@@ -21,8 +21,8 @@
   - restore-system.sh: Restauración con validaciones de seguridad
   - setup-backup-cron.sh: Configuración automática de cron jobs
 - ✅ **Configuración Docker:** Volúmenes actualizados para producción
-  - docker-compose.yml: storage_data volume para desarrollo
-  - docker-compose.prod.yml: storage_data_prod y backup_data_prod
+  - docker compose.yml: storage_data volume para desarrollo
+  - docker compose.prod.yml: storage_data_prod y backup_data_prod
   - .env.production: Variables de entorno para almacenamiento unificado
 - ✅ **Compilación:** Backend exitoso (`mvn clean compile -q`)
 - ✅ **Documentación:** Guía completa en `SISTEMA_ALMACENAMIENTO_UNIFICADO.md`
@@ -54,7 +54,7 @@
 ### 🐳 Docker Build Optimización (2025-06-13)
 - ✅ **Frontend:** Agregada dependencia Chart.js faltante
 - ✅ **Backend:** Corregida configuración application-prod.properties
-- ✅ **Memoria:** Optimizados límites de memoria en docker-compose.yml
+- ✅ **Memoria:** Optimizados límites de memoria en docker compose.yml
 - ✅ **Build exitoso:** Frontend (92.2MB) + Backend (393MB) construidos
 - ✅ **Deploy exitoso:** Sistema completamente funcional en producción
 - ✅ **Base de datos:** Schema y datos de prueba cargados correctamente

@@ -11,7 +11,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data_prod:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 30s
@@ -51,7 +51,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - storage_data:/app/storage
+      - storage_data_prod:/app/storage
     deploy:
       resources:
         limits:
@@ -81,8 +81,8 @@ services:
       - mpd-concursos-network
 
 volumes:
-  mysql_data:
-  storage_data:
+  mysql_data_prod:
+  storage_data_prod:
 
 networks:
   mpd-concursos-network:

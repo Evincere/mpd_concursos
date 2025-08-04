@@ -56,7 +56,7 @@ services:
       DB_USERNAME: ${MYSQL_USER:-mpd_user}
       DB_PASSWORD: ${MYSQL_PASSWORD:-mpd_password}
       # Variables de configuración JPA
-      HIBERNATE_DDL_AUTO: update
+      HIBERNATE_DDL_AUTO: validate
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_SQL_INIT_MODE: never
       # Variables de seguridad

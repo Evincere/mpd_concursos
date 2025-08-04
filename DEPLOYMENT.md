@@ -3,7 +3,7 @@
 ## Problemas Resueltos
 
 ### 1. Inconsistencias en Configuración
-- ✅ **Corregido**: `docker-compose.prod.yml` ahora usa perfil `prod` correctamente
+- ✅ **Corregido**: `docker compose.prod.yml` ahora usa perfil `prod` correctamente
 - ✅ **Corregido**: Variables de entorno con valores por defecto seguros
 - ✅ **Corregido**: Configuración JPA más flexible (`update` en lugar de `validate`)
 
@@ -109,7 +109,7 @@ JAVA_OPTS=-Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
 2. Verificar que el puerto de MySQL (3307) esté disponible
 3. Revisar logs del contenedor MySQL:
 ```bash
-docker-compose -f docker-compose.prod.yml logs mysql
+docker compose -f docker compose.prod.yml logs mysql
 ```
 
 ### Error: CORS en frontend
@@ -124,12 +124,12 @@ docker-compose -f docker-compose.prod.yml logs mysql
 
 ### Ver logs en tiempo real
 ```bash
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker compose.prod.yml logs -f
 ```
 
 ### Ver logs específicos del backend
 ```bash
-docker-compose -f docker-compose.prod.yml logs -f backend
+docker compose -f docker compose.prod.yml logs -f backend
 ```
 
 ### Ver estado de recursos
@@ -143,7 +143,7 @@ En caso de problemas, puedes hacer rollback:
 
 1. **Detener servicios actuales**:
 ```bash
-docker-compose -f docker-compose.prod.yml down
+docker compose -f docker compose.prod.yml down
 ```
 
 2. **Restaurar backup de base de datos**:
@@ -155,7 +155,7 @@ docker-compose -f docker-compose.prod.yml down
 3. **Levantar versión anterior**:
 ```bash
 # Usar imagen anterior o código anterior
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker compose.prod.yml up -d
 ```
 
 ## URLs de Producción
