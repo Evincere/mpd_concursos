@@ -1,0 +1,1021 @@
+=== REPORTE DE USUARIOS AFECTADOS - DOCUMENTOS FALTANTES ===
+Fecha del reporte: 2025-08-03
+Total de usuarios afectados: 36
+Total de documentos a re-subir: 182
+
+--- USUARIO 1 ---
+Email: agosmondellosalinero@hotmail.com
+Nombre: Agostina Mondello Salinero
+DNI: 40271004
+Documentos faltantes (1):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 2 ---
+Email: asesoriajuridicaintegral2805@gmail.com
+Nombre: Mariela Cabrera
+DNI: 36393499
+Documentos faltantes (1):
+  1. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 3 ---
+Email: celeamaya1983@gmail.com
+Nombre: celeste yemina amaya murua
+DNI: 30672848
+Documentos faltantes (2):
+  1. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  2. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 4 ---
+Email: Cynthiamontecino2017@gmail.com
+Nombre: Cynthia Marcela Montecino
+DNI: 31486498
+Documentos faltantes (9):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  8. Documento Adicional
+     Archivo: Documento Adicional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  9. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 5 ---
+Email: daniel_valdivieso@hotmail.com
+Nombre: José Daniel Valdivieso
+DNI: 31124074
+Documentos faltantes (12):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  8. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  9. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  10. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  11. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  12. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 6 ---
+Email: dantequerakiara@gmail.com
+Nombre: Daiana Antequera
+DNI: 34627853
+Documentos faltantes (5):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 7 ---
+Email: dra.vanesa.correa@gmail.com
+Nombre: VANESA CECILIA CORREA
+DNI: 32029855
+Documentos faltantes (6):
+  1. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 8 ---
+Email: escribanayamin@gmail.com
+Nombre: Romina Magali Yamin
+DNI: 36746208
+Documentos faltantes (7):
+  1. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  2. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  3. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  4. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  5. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  6. Documento Adicional
+     Archivo: Documento Adicional.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  7. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 9 ---
+Email: fersamiac@gmail.com
+Nombre: Fernanda Elizabeth Samiac
+DNI: 33462634
+Documentos faltantes (2):
+  1. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 10 ---
+Email: gustavofelipevillar@gmail.com
+Nombre: Gustavo Felipe Villar
+DNI: 39531017
+Documentos faltantes (5):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 11 ---
+Email: jimecalderon29@gmail.com
+Nombre: Jimena Nahir Calderon
+DNI: 40561819
+Documentos faltantes (3):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 12 ---
+Email: lismarinas@hotmail.com
+Nombre: LIS MARINA INZIRILLO
+DNI: 28527280
+Documentos faltantes (7):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-03
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-03
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-03
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-03
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-03
+     Estado: PENDING
+  6. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-03
+     Estado: PENDING
+  7. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-03
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 13 ---
+Email: loncomaiten@gmail.com
+Nombre: Lorena vanina Bravo
+DNI: 24817510
+Documentos faltantes (2):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Documento Adicional
+     Archivo: Documento Adicional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 14 ---
+Email: luchovicari15@gmail.com
+Nombre: Luciano Federico Vicari
+DNI: 41113438
+Documentos faltantes (7):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 15 ---
+Email: manuelaoyola@gmail.com
+Nombre: Manuela Oyola
+DNI: 29787828
+Documentos faltantes (6):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Documento Adicional
+     Archivo: Documento Adicional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 16 ---
+Email: martin.espechefrigerio@gmail.com
+Nombre: Juan Martín Espeche Frigerio
+DNI: 38101160
+Documentos faltantes (1):
+  1. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 17 ---
+Email: mcueto@jus.mendoza.gov.ar
+Nombre: Maria Victoria Cueto
+DNI: 30536058
+Documentos faltantes (8):
+  1. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  8. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 18 ---
+Email: megonzalez@jus.mendoza.gov.ar
+Nombre: MARIA ELINA GONZALEZ SANTAMARIA
+DNI: 24467884
+Documentos faltantes (7):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 19 ---
+Email: melinamanca22@gmail.com
+Nombre: Melina Carla Manca Crespi
+DNI: 34641687
+Documentos faltantes (9):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  8. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  9. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 20 ---
+Email: mfernandezpuebla@gmail.com
+Nombre: Mariela Celeste Fernández Puebla
+DNI: 39379592
+Documentos faltantes (2):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 21 ---
+Email: mlujan2017@hotmail.com
+Nombre: María Luján Martinez
+DNI: 29267678
+Documentos faltantes (2):
+  1. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 22 ---
+Email: MNABOGADA@GMAIL.COM
+Nombre: Melisa Yanina Nuñez
+DNI: 36230412
+Documentos faltantes (8):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  8. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 23 ---
+Email: mony_pedernera@yahoo.com.ar
+Nombre: Monica Pedernera
+DNI: 26132438
+Documentos faltantes (4):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  2. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  3. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  4. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 24 ---
+Email: mrg17198498@yahoo.com
+Nombre: Maria Rita Guzman
+DNI: 29935464
+Documentos faltantes (7):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  6. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  7. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 25 ---
+Email: nachomunoz@gmail.com
+Nombre: José Ignacio Muñoz
+DNI: 31288297
+Documentos faltantes (4):
+  1. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 26 ---
+Email: nati.fernandez13@gmail.com
+Nombre: Natalia Carolina Fernández Iermoli
+DNI: 32316274
+Documentos faltantes (1):
+  1. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 27 ---
+Email: pablolima87@gmail.com
+Nombre: Pablo Gonzalo Lima
+DNI: 33276793
+Documentos faltantes (2):
+  1. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 28 ---
+Email: prodriguezgargantini@gmail.com
+Nombre: Paula RODRIGUEZ GARGANTINI
+DNI: 36890505
+Documentos faltantes (7):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 29 ---
+Email: renzomza99@gmail.com
+Nombre: Renzo Mazzocchi
+DNI: 41819923
+Documentos faltantes (4):
+  1. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Documento Adicional
+     Archivo: Documento Adicional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 30 ---
+Email: SILVI.BARRERA.ABEIRO@GMAIL.COM
+Nombre: SILVINA BEATRIZ BARRERA
+DNI: 21877460
+Documentos faltantes (8):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  4. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  5. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  6. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  7. Documento Adicional
+     Archivo: Documento Adicional.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  8. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 31 ---
+Email: smluzuriaga@gmail.com
+Nombre: Sergio Mauricio Luzuriaga
+DNI: 31865397
+Documentos faltantes (6):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+  6. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-02
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 32 ---
+Email: sol-martinezg@hotmail.com
+Nombre: Maria Sol Martinez Gomez
+DNI: 33886782
+Documentos faltantes (3):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 33 ---
+Email: user_test@example.com
+Nombre: Usuario Test
+DNI: 87654321
+Documentos faltantes (5):
+  1. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 34 ---
+Email: valentina_gauna@hotmail.com
+Nombre: VALENTINA ROCIO GAUNA
+DNI: 34405233
+Documentos faltantes (8):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  8. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 35 ---
+Email: veralau80@gmail.com
+Nombre: Maria Laura Vera Sance
+DNI: 28757104
+Documentos faltantes (10):
+  1. Certificado de Antecedentes Penales
+     Archivo: Certificado de Antecedentes Penales.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  2. Certificado de Antigüedad Profesional
+     Archivo: Certificado de Antigüedad Profesional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  3. Certificado Ley Micaela
+     Archivo: Certificado Ley Micaela.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  4. Certificado Sin Sanciones Disciplinarias
+     Archivo: Certificado Sin Sanciones Disciplinarias.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  5. Constancia de CUIL
+     Archivo: Constancia de CUIL.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  6. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  7. DNI (Dorso)
+     Archivo: DNI (Dorso).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  8. DNI (Frontal)
+     Archivo: DNI (Frontal).pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  9. Documento Adicional
+     Archivo: Documento Adicional.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+  10. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+
+--- USUARIO 36 ---
+Email: yamilamturk@gmail.com
+Nombre: ANDREA YAMILA MARTINEZ TURK
+DNI: 31037002
+Documentos faltantes (1):
+  1. Título Universitario y Certificado Analítico
+     Archivo: Título Universitario y Certificado Analítico.pdf
+     Subido originalmente: 2025-08-01
+     Estado: PENDING
+
+============================================================
+

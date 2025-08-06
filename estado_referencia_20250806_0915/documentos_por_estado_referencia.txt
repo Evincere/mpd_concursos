@@ -1,0 +1,2 @@
+status	cantidad	hoy
+PENDING	855	27

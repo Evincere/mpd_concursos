@@ -11,4 +11,5 @@
   "terminal.integrated.tabs.defaultColor": "terminal.ansiGreen",
   "terminal.integrated.confirmOnKill": "editor",
   "java.jdt.ls.java.home": "b:\\Program Files\\Java\\jdk-21",
+  "kiroAgent.configureMCP": "Disabled",
 }

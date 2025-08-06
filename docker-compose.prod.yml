@@ -90,7 +90,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - storage_data_prod:/app/document-storage
+      - storage_data_prod:/app/storage
       - backup_data_prod:/app/backups
       - ./logs:/app/logs
       - ./scripts:/app/scripts:ro

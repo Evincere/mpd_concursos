@@ -135,7 +135,7 @@ EOF
 check_dependencies() {
     log_info "Verificando dependencias..."
     
-    local deps=("docker" "docker-compose")
+    local deps=("docker")
     
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
@@ -222,7 +222,7 @@ deploy() {
 
     # Detener servicios existentes
     log_info "Deteniendo servicios existentes..."
-    docker-compose -f docker-compose.prod.yml down --remove-orphans || true
+    docker compose -f docker-compose.prod.yml down --remove-orphans || true
 
     # Limpiar imágenes antiguas
     log_info "Limpiando imágenes Docker antiguas..."
@@ -230,7 +230,7 @@ deploy() {
 
     # Construir y levantar servicios
     log_info "Construyendo y levantando servicios..."
-    docker-compose -f docker-compose.prod.yml up --build -d
+    docker compose -f docker-compose.prod.yml up --build -d
 
     # Esperar a que los servicios estén listos
     log_info "Esperando a que los servicios estén listos..."
@@ -238,16 +238,16 @@ deploy() {
 
     # Verificar estado de los servicios
     log_info "Verificando estado de los servicios..."
-    docker-compose -f docker-compose.prod.yml ps
+    docker compose -f docker-compose.prod.yml ps
 
     # Configurar backups automáticos
     setup_automatic_backups
 
     # Verificar logs por errores críticos
     log_info "Verificando logs por errores..."
-    if docker-compose -f docker-compose.prod.yml logs backend | grep -i "error\|exception\|failed" | head -5; then
+    if docker compose -f docker-compose.prod.yml logs backend | grep -i "error\|exception\|failed" | head -5; then
         log_warning "Se encontraron algunos errores en los logs. Revisa los logs completos con:"
-        echo "docker-compose -f docker-compose.prod.yml logs backend"
+        echo "docker compose -f docker-compose.prod.yml logs backend"
     fi
 
     log_success "Deployment completado!"
@@ -284,13 +284,13 @@ show_help() {
 # Función para mostrar logs
 show_logs() {
     log_info "Mostrando logs de los servicios..."
-    docker-compose -f docker-compose.prod.yml logs -f --tail=50
+    docker compose -f docker-compose.prod.yml logs -f --tail=50
 }
 
 # Función para mostrar estado
 show_status() {
     log_info "Estado de los servicios:"
-    docker-compose -f docker-compose.prod.yml ps
+    docker compose -f docker-compose.prod.yml ps
     echo ""
     log_info "Uso de recursos:"
     docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"
