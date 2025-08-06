@@ -1,16 +1,22 @@
 #!/bin/bash
-# Script 1: Crear backup completo del estado actual
+# Script 1: Crear backup completo del estado actual - VERSIÓN 3 FECHAS
 
 set -e
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/root/external_recovery"
+EXTRACTION_DIR="/root/external_recovery/extractions"
 
 echo "🔄 [$(date)] CREANDO BACKUP COMPLETO DEL ESTADO ACTUAL"
 echo "📅 Timestamp: $TIMESTAMP"
+echo "🎯 ESTRATEGIA: Recuperación con 3 fechas de respaldo (3/8, 4/8, 5/8)"
 
-# Crear directorio de backup
+# Crear directorios de backup y extracción
 mkdir -p "$BACKUP_DIR"
+mkdir -p "$EXTRACTION_DIR"
+mkdir -p "$EXTRACTION_DIR/03_agosto"
+mkdir -p "$EXTRACTION_DIR/04_agosto" 
+mkdir -p "$EXTRACTION_DIR/05_agosto"
 
 echo "💾 Backup de volúmenes Docker..."
 docker run --rm \
@@ -43,10 +49,25 @@ echo "📦 Archivos creados:"
 ls -la "$BACKUP_DIR"/*$TIMESTAMP*
 
 echo ""
-echo "🎯 PRÓXIMO PASO:"
-echo "Descargar todo el directorio $BACKUP_DIR a la máquina externa"
-echo "Comando sugerido desde máquina externa:"
-echo "scp -r root@$(hostname -I | awk '{print $1}'):$BACKUP_DIR ~/mpd_recovery_backup/"
+echo "📁 Estructura de directorios preparada:"
+echo "   $BACKUP_DIR/                    # Backup del estado actual"
+echo "   $EXTRACTION_DIR/03_agosto/      # Extracción del respaldo 3/8"
+echo "   $EXTRACTION_DIR/04_agosto/      # Extracción del respaldo 4/8"
+echo "   $EXTRACTION_DIR/05_agosto/      # Extracción del respaldo 5/8"
+
+echo ""
+echo "🎯 PRÓXIMOS PASOS:"
+echo "1. Descargar backup a máquina externa:"
+echo "   scp -r root@$(hostname -I | awk '{print $1}'):$BACKUP_DIR ~/mpd_recovery_backup/"
+echo ""
+echo "2. Ejecutar extracciones secuenciales:"
+echo "   - Restaurar al 3/8 → Ejecutar extracción"
+echo "   - Restaurar al 4/8 → Ejecutar extracción"  
+echo "   - Restaurar al 5/8 → Ejecutar extracción"
+echo ""
+echo "3. Consolidar en máquina externa"
+echo "4. Restaurar estado actual + integrar documentos"
 
 echo ""
 echo "⚠️ IMPORTANTE: Guarda este timestamp: $TIMESTAMP"
+echo "📋 CÓDIGO FUENTE: Respaldado en repositorio Git (commit fa63bd9a)"
