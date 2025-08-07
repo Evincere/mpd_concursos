@@ -1,9 +1,9 @@
 export const environment = {
   production: true,
 
-  // API Configuration - PRODUCTION READY
+  // API Configuration - PRODUCTION READY (Reverse Proxy Compatible)
   apiUrl: '/api',
-  wsUrl: 'ws://vps-4778464-x.dattaweb.com/ws',
+  wsUrl: '/ws',  // Relative path for WebSocket through reverse proxy
 
   // Security Configuration
   enableCSP: true,
