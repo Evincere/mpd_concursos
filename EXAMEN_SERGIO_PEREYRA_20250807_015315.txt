@@ -1,0 +1,91 @@
+🔍 Examinando estado actual del usuario...
+Usuario: Sergio Pereyra
+DNI: 26598410
+Timestamp: 20250807_015315
+
+[0;34m📊 1. INFORMACIÓN EN BASE DE DATOS:[0m
+===========================================
+🔍 Consultando base de datos...
+❌ MySQL no disponible directamente
+💡 Usar: docker exec -it mpd-concursos-mysql-prod mysql -u root -p concursos_mpd < /tmp/query_sergio_pereyra.sql
+
+[0;34m📊 2. ARCHIVOS EN VOLUMEN DOCKER - DOCUMENTS:[0m
+===========================================
+✅ Directorio de documentos encontrado: /var/lib/docker/volumes/mpd_concursos_storage_data_prod/_data/documents/26598410
+📄 ARCHIVOS ACTUALES:
+   total 9444
+   drwxr-xr-x   2 root root    4096 Aug  6 13:18 .
+   drwxr-xr-x 107 root root    4096 Aug  6 21:13 ..
+   -rw-r--r--   1 root root 3218907 Aug  6 12:40 4547b0e0-01ca-44b6-b42e-45c5164e4fdb_Certificado_de_Antig_edad_Profesional_1754494821022.pdf
+   -rw-r--r--   1 root root 3218907 Aug  6 13:18 87afd2e6-acea-44ea-a837-bb04db1abf79_Certificado_de_Antig_edad_Profesional_1754497096389.pdf
+   -rw-r--r--   1 root root 3218907 Aug  6 11:53 c8ba3b5c-3623-4353-af9e-8369cb186d29_Certificado_de_Antig_edad_Profesional_1754492022253.pdf
+📊 Total: 3 archivos (9.3M)
+
+[0;34m📊 3. ARCHIVOS EN VOLUMEN DOCKER - PROFILE IMAGES:[0m
+===========================================
+🔍 Buscando imágenes de perfil por UUID...
+NOTA: Las imágenes se almacenan por UUID, no por DNI
+📂 Directorios de imágenes de perfil existentes:
+   • 12f91429-3195-41f6-b39e-e66cc3ce5ddf/ (1 archivos)
+   • 1c14ef05-d7ad-46f6-8ae0-56814755048d/ (1 archivos)
+   • 248e1ead-b81b-4711-ac49-8bd63560f1b6/ (1 archivos)
+   • 2a958d1e-e787-4fb1-be8b-c14075e1febf/ (1 archivos)
+   • 2f0c351b-b14b-49c2-9a5c-02b045fcaeac/ (1 archivos)
+   ... (mostrando solo primeros 5)
+
+[0;34m📊 4. ARCHIVOS EN VOLUMEN DOCKER - CV DOCUMENTS:[0m
+===========================================
+🔍 Buscando documentos de CV por UUID...
+NOTA: Los CVs se almacenan por UUID, no por DNI
+📂 Directorios de CV existentes:
+   • 6baafe1c-5925-42b3-834b-997509390e04/ (2 archivos)
+   • 722e2225-9c1d-40f6-bfae-27158e75cb3f/ (1 archivos)
+   • 86d20329-1d2b-451d-ac99-11d4ece33ccd/ (3 archivos)
+   • ac74225f-0dfb-4137-bc03-f9e66101a34f/ (2 archivos)
+   • bf462dcf-d48b-4816-af64-8212c91aa96d/ (3 archivos)
+   ... (mostrando solo primeros 5)
+
+[0;34m📊 5. ARCHIVOS EN RESPALDOS LOCALES:[0m
+===========================================
+🔍 Buscando en respaldos locales...
+📅 04_agosto:
+   📄 Documents: No encontrado
+   📝 CV Documents: No encontrado
+   🖼️  Profile Images: No encontrado
+
+📅 05_agosto:
+   📄 Documents: No encontrado
+   📝 CV Documents: No encontrado
+   🖼️  Profile Images: No encontrado
+
+📅 06_agosto:
+   📄 Documents: 5 archivos
+   Ejemplos:
+     • e8ea170e-2bb8-4449-8899-a54f0b8bcda0_Certificado_Ley_Micaela_1754397099846.pdf (24K)
+     • 1e1af5f4-e6a9-49bb-87b5-f514cdc4b1ca_T_tulo_Universitario_y_Certificado_Anal_tico_1754397100015.pdf (204K)
+     • a16033f3-43b2-488a-846f-ba53e0dbe9ce_Constancia_de_CUIL_1754397100006.pdf (204K)
+   📝 CV Documents: No encontrado
+   🖼️  Profile Images: No encontrado
+
+[0;34m📊 6. PREPARACIÓN PARA PRUEBA:[0m
+===========================================
+🎯 PLAN DE PRUEBA:
+1. Hacer login como Sergio Pereyra (DNI: 26598410)
+2. Subir un documento de prueba
+3. Verificar que aparece en: /var/lib/docker/volumes/mpd_concursos_storage_data_prod/_data/documents/26598410
+4. Visualizar el documento desde la plataforma
+5. Eliminar el documento
+6. Confirmar eliminación en el sistema de archivos
+
+📋 COMANDOS DE MONITOREO:
+# Monitorear directorio del usuario:
+watch -n 2 'ls -la /var/lib/docker/volumes/mpd_concursos_storage_data_prod/_data/documents/26598410'
+
+# Ver logs del backend:
+docker logs -f mpd-concursos-backend-prod
+
+[0;34m📊 7. CREAR SCRIPT DE MONITOREO:[0m
+===========================================
+✅ Script de monitoreo creado: monitor_sergio_pereyra.sh
+   Ejecutar con: ./monitor_sergio_pereyra.sh
+

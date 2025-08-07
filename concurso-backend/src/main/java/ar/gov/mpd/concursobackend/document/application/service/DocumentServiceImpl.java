@@ -12,6 +12,7 @@ import ar.gov.mpd.concursobackend.document.domain.port.IDocumentStorageService;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentTypeRepository;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.*;
 import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionDeadlineService;
+import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
@@ -48,6 +49,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final IDocumentRepository documentRepository;
     private final IDocumentTypeRepository documentTypeRepository;
     private final IDocumentStorageService documentStorageService;
+    private final StorageConfig storageConfig;
     private final DocumentMapper documentMapper;
     private final IUserRepository userRepository;
     private final DocumentAuditService auditService;
@@ -658,7 +660,10 @@ public class DocumentServiceImpl implements DocumentService {
      */
     private String renameFileForArchiving(String originalFilePath, String archivedFileName) {
         try {
-            Path originalPath = Paths.get(documentStorageService.getStorageLocation()).resolve(originalFilePath);
+            // FIX: Construir la ruta completa correctamente
+            // El originalFilePath ya incluye "documents/" desde la BD
+            Path basePath = storageConfig.getBasePath(); // /app/storage
+            Path originalPath = basePath.resolve(originalFilePath); // /app/storage/documents/26598410/archivo.pdf
             Path archivedPath = originalPath.getParent().resolve(archivedFileName);
 
             // Verificar que el archivo original existe
@@ -671,8 +676,7 @@ public class DocumentServiceImpl implements DocumentService {
             Files.move(originalPath, archivedPath, StandardCopyOption.REPLACE_EXISTING);
 
             // Retornar el nuevo path relativo
-            Path storagePath = Paths.get(documentStorageService.getStorageLocation());
-            return storagePath.relativize(archivedPath).toString();
+            return storageConfig.getBasePath().relativize(archivedPath).toString();
 
         } catch (IOException e) {
             log.error("❌ [DocumentService] Error renombrando archivo: {} -> {}", originalFilePath, archivedFileName, e);
