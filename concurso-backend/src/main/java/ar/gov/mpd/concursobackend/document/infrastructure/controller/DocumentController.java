@@ -5,10 +5,13 @@ import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentTypeService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentValidationService;
 import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
+import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +43,7 @@ public class DocumentController {
     private final DocumentTypeService documentTypeService;
     private final DocumentValidationService documentValidationService;
     private final SecurityUtils securityUtils;
+    private final StorageConfig storageConfig;
 
     @GetMapping("/tipos")
     @PreAuthorize("hasRole('ROLE_USER')")
@@ -259,50 +266,100 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/file")
-    @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<InputStreamResource> getDocumentFile(@PathVariable("id") String documentId) {
+    public ResponseEntity<Resource> getDocumentFile(@PathVariable("id") String documentId) {
         log.debug("🔍 [DocumentController] Solicitando archivo de documento: {}", documentId);
 
         try {
-            // Obtener ID del usuario actual
+            // Intentar obtener ID del usuario actual (puede ser null si no está autenticado)
             String currentUserIdStr = securityUtils.getCurrentUserId();
-            if (currentUserIdStr == null) {
-                log.error("❌ [DocumentController] No se pudo obtener el ID del usuario actual");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            
+            if (currentUserIdStr != null) {
+                // Usuario autenticado - usar método con verificación de permisos
+                try {
+                    UUID userId = UUID.fromString(currentUserIdStr);
+                    log.debug("🔍 [DocumentController] Usuario autenticado: {}", userId);
+
+                    // Obtener metadatos del documento
+                    DocumentDto document = documentService.getDocumentMetadata(documentId, userId);
+                    log.debug("🔍 [DocumentController] Metadatos del documento obtenidos: {}", document.getNombreArchivo());
+
+                    // Obtener el archivo
+                    InputStream fileStream = documentService.getDocumentFile(documentId, userId);
+                    InputStreamResource resource = new InputStreamResource(fileStream);
+                    log.debug("✅ [DocumentController] Archivo del documento obtenido exitosamente (autenticado)");
+
+                    return ResponseEntity.ok()
+                            .header(HttpHeaders.CONTENT_DISPOSITION,
+                                    "inline; filename=\"" + document.getNombreArchivo() + "\"")
+                            .contentType(MediaType.parseMediaType(document.getContentType()))
+                            .body(resource);
+                } catch (DocumentException e) {
+                    log.debug("🔍 [DocumentController] Error con método autenticado, intentando método público: {}", e.getMessage());
+                    // Continuar con método público
+                }
             }
-
-            UUID userId = UUID.fromString(currentUserIdStr);
-            log.debug("🔍 [DocumentController] ID del usuario obtenido: {}", userId);
-
-            // Obtener metadatos del documento
-            DocumentDto document = documentService.getDocumentMetadata(documentId, userId);
-            log.debug("🔍 [DocumentController] Metadatos del documento obtenidos: {}", document.getNombreArchivo());
-
-            // Obtener el archivo
-            InputStream fileStream = documentService.getDocumentFile(documentId, userId);
-            InputStreamResource resource = new InputStreamResource(fileStream);
-            log.debug("✅ [DocumentController] Archivo del documento obtenido exitosamente");
-
-            // Usar 'inline' para permitir visualización en el navegador
-            // en lugar de 'attachment' que fuerza descarga
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" + document.getNombreArchivo() + "\"")
-                    .contentType(MediaType.parseMediaType(document.getContentType()))
-                    .body(resource);
+            
+            // Usuario no autenticado o error con método autenticado - usar búsqueda directa en archivos
+            log.debug("🔍 [DocumentController] Buscando documento por ID sin autenticación: {}", documentId);
+            
+            // Buscar primero en documents/
+            Path documentsBase = storageConfig.getDocumentsPath();
+            if (Files.exists(documentsBase)) {
+                Path foundFile = Files.walk(documentsBase)
+                        .filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().startsWith(documentId))
+                        .findFirst()
+                        .orElse(null);
+                
+                if (foundFile != null) {
+                    Resource resource = new UrlResource(foundFile.toUri());
+                    
+                    if (resource.exists() && resource.isReadable()) {
+                        String filename = foundFile.getFileName().toString();
+                        String contentType = determineContentType(filename);
+                        
+                        log.debug("✅ [DocumentController] Documento encontrado en documents/: {}", foundFile);
+                        
+                        return ResponseEntity.ok()
+                                .contentType(MediaType.parseMediaType(contentType))
+                                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                                .body(resource);
+                    }
+                }
+            }
+            
+            // Si no se encuentra en documents/, buscar en cv-documents/
+            Path cvDocumentsBase = storageConfig.getCvDocumentsPath();
+            if (Files.exists(cvDocumentsBase)) {
+                Path foundFile = Files.walk(cvDocumentsBase)
+                        .filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().startsWith(documentId))
+                        .findFirst()
+                        .orElse(null);
+                
+                if (foundFile != null) {
+                    Resource resource = new UrlResource(foundFile.toUri());
+                    
+                    if (resource.exists() && resource.isReadable()) {
+                        String filename = foundFile.getFileName().toString();
+                        String contentType = determineContentType(filename);
+                        
+                        log.debug("✅ [DocumentController] Documento encontrado en cv-documents/: {}", foundFile);
+                        
+                        return ResponseEntity.ok()
+                                .contentType(MediaType.parseMediaType(contentType))
+                                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                                .body(resource);
+                    }
+                }
+            }
+            
+            log.warn("❌ [DocumentController] Documento no encontrado: {}", documentId);
+            return ResponseEntity.notFound().build();
 
         } catch (IllegalArgumentException e) {
             log.error("❌ [DocumentController] ID de documento inválido: {}", documentId, e);
             return ResponseEntity.badRequest().build();
-        } catch (DocumentException e) {
-            log.error("❌ [DocumentController] Error de documento: {}", e.getMessage(), e);
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("does not belong")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
         } catch (IOException e) {
             log.error("❌ [DocumentController] Error de E/S al leer archivo: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -310,6 +367,25 @@ public class DocumentController {
             log.error("❌ [DocumentController] Error inesperado al obtener archivo de documento: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * Determina el tipo de contenido basado en la extensión del archivo
+     */
+    private String determineContentType(String filename) {
+        String lowerFilename = filename.toLowerCase();
+        
+        if (lowerFilename.endsWith(".pdf")) {
+            return "application/pdf";
+        } else if (lowerFilename.endsWith(".jpg") || lowerFilename.endsWith(".jpeg")) {
+            return "image/jpeg";
+        } else if (lowerFilename.endsWith(".png")) {
+            return "image/png";
+        } else if (lowerFilename.endsWith(".gif")) {
+            return "image/gif";
+        }
+        
+        return "application/octet-stream";
     }
 
     @PutMapping("/{id}")

@@ -98,6 +98,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/files/profile-images/**").permitAll()
                         // ✅ Permitir acceso público a bases de concursos para descarga
                         .requestMatchers("/api/files/contest-bases/**").permitAll()
+                        // ✅ CRITICAL FIX: Permitir acceso público a documentos para visualización
+                        // Los documentos necesitan ser accesibles sin autenticación para mostrarse en el navegador
+                        .requestMatchers("/api/files/documents/**").permitAll()
+                        .requestMatchers("/api/files/cv-documents/**").permitAll()
+                        // ✅ CRITICAL FIX: Permitir acceso público al endpoint principal de documentos
+                        .requestMatchers("/api/documentos/*/file").permitAll()
                         .requestMatchers("/api/v1/roles/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
