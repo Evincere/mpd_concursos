@@ -472,6 +472,56 @@ docker compose -f docker compose.prod.yml up -d
    npm run build
    ```
 
+## 🔄 Plan de Recuperación de Documentos
+
+### ⚠️ Situación Actual
+Durante el período 4-6 agosto 2025, se experimentó una pérdida de documentación de usuarios debido a configuración incorrecta de volúmenes Docker. El sistema ha sido estabilizado y se ha desarrollado un plan de recuperación completo.
+
+### 📊 Estado del Sistema
+- **✅ Sistema actual**: ESTABLE Y FUNCIONANDO
+- **📄 Documentos preservados**: ~605 archivos (560 PDFs + ~45 imágenes)
+- **⚠️ Documentos perdidos**: ~316 registros sin archivo físico
+- **👥 Usuarios afectados**: ~28 usuarios del período crítico
+
+### 🎯 Plan de Recuperación Definitivo
+Se ha desarrollado un **[Plan Definitivo de Recuperación](RECOVERY_PLAN_DEFINITIVO/)** con enfoque de exploración exhaustiva:
+
+#### Características del Plan
+- **Exploración sin suposiciones**: No asume ubicaciones específicas de archivos
+- **Análisis offline**: Minimiza downtime del sistema
+- **Recuperación inteligente**: Eliminación de duplicados y análisis de valor
+- **Múltiples backups**: Máxima seguridad durante el proceso
+
+#### Documentación Disponible
+- **[📋 Plan Maestro](RECOVERY_PLAN_DEFINITIVO/00_PLAN_MAESTRO.md)** - Estrategia completa
+- **[📖 Guía de Ejecución](RECOVERY_PLAN_DEFINITIVO/GUIA_EJECUCION_COMPLETA.md)** - Instrucciones paso a paso
+- **[🔧 Scripts Automatizados](RECOVERY_PLAN_DEFINITIVO/)** - 6 scripts especializados
+- **[📚 Documentación Técnica](docs/recovery_documentation/)** - Análisis detallado
+
+#### Resultados Esperados
+- **Tasa de recuperación**: 90-95% de documentos perdidos
+- **Archivos recuperables**: +300-600 documentos adicionales
+- **Usuarios beneficiados**: +50-120 usuarios
+- **Total final estimado**: ~900-1200 archivos
+
+### 🚀 Ejecución del Plan
+```bash
+# Acceder al plan definitivo
+cd RECOVERY_PLAN_DEFINITIVO/
+
+# Leer documentación
+cat 00_PLAN_MAESTRO.md
+cat GUIA_EJECUCION_COMPLETA.md
+
+# Ejecutar secuencialmente (con supervisión)
+./01_backup_estado_actual.sh
+./02_explorar_backup.sh [fecha]
+./03_descargar_hallazgos.sh [fecha]
+./04_analizar_hallazgos.sh      # En máquina externa
+./05_consolidar_archivos.sh     # En máquina externa  
+./06_integrar_recuperacion.sh [paquete]
+```
+
 ## 🔐 Seguridad
 
 - Autenticación mediante JWT

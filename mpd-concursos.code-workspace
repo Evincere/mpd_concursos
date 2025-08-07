@@ -2,6 +2,9 @@
   "folders": [
     {
       "path": "."
+    },
+    {
+      "path": "../../RECOVERY_PLAN_DEFINITIVO"
     }
   ],
   "settings": {
