@@ -132,7 +132,18 @@ scp -r root@SERVER_IP:/root/DESCARGA_05_AGOSTO ~/mpd_recovery_backups/
 
 ---
 
-### FASE 4: ANÁLISIS Y CONSOLIDACIÓN (4 horas)
+### FASE 3.5: PROCESAMIENTO DE RESPALDOS LOCALES (1 hora)
+**📍 Ubicación: SERVIDOR**
+
+```bash
+# En el servidor (antes de restaurar al estado actual):
+./RECOVERY_PLAN_DEFINITIVO/07_procesar_backups_locales.sh
+
+# Descargar a máquina externa:
+scp root@SERVER_IP:/root/BACKUPS_LOCALES_EXTRAIDOS_*.tar.gz ~/mpd_recovery_backups/
+```
+
+### FASE 4: ANÁLISIS Y CONSOLIDACIÓN (5 horas)
 **📍 Ubicación: MÁQUINA EXTERNA**
 
 ```bash
