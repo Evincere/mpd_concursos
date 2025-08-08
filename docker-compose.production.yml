@@ -96,7 +96,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       # Variables de base de datos
-      DB_HOST: mysql
+      DB_HOST: mpd-concursos-mysql
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-mpd_concursos}
       DB_USERNAME: ${MYSQL_USER:-mpd_user}

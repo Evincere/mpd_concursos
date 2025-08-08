@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js';
 /**
  * Servicio de Búsqueda y Filtrado Avanzado del Sistema CV
  * 
@@ -8,7 +9,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import Fuse from 'fuse.js';
+// import Fuse from 'fuse.js'; // Temporalmente comentado - dependencia faltante
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
 import {
@@ -433,7 +434,7 @@ export class CvSearchService {
     // Aplicar búsqueda de texto si hay término
     if (filters.searchTerm && this.experienceFuse) {
       const fuseResults = this.experienceFuse.search(filters.searchTerm);
-      results = fuseResults.map(result => result.item);
+      results = fuseResults.map((result: any) => result.item);
     }
 
     // Aplicar filtros específicos
@@ -467,7 +468,7 @@ export class CvSearchService {
     // Aplicar búsqueda de texto si hay término
     if (filters.searchTerm && this.educationFuse) {
       const fuseResults = this.educationFuse.search(filters.searchTerm);
-      results = fuseResults.map(result => result.item);
+      results = fuseResults.map((result: any) => result.item);
     }
 
     // Aplicar filtros específicos

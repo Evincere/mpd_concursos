@@ -9,17 +9,17 @@
       </button>
 
       <mat-menu #chartMenu="matMenu">
-        <button mat-menu-item (click)="downloadChart('png')">
+        <button mat-menu-item (click)="exportChart('png')">
           <mat-icon>download</mat-icon>
           <span>Descargar PNG</span>
         </button>
-        <button mat-menu-item (click)="downloadChart('jpg')">
-          <mat-icon>download</mat-icon>
-          <span>Descargar JPG</span>
-        </button>
-        <button mat-menu-item (click)="downloadChart('svg')">
+        <button mat-menu-item (click)="exportChart('svg')">
           <mat-icon>picture_as_pdf</mat-icon>
           <span>Exportar SVG</span>
+        </button>
+        <button mat-menu-item (click)="refresh()">
+          <mat-icon>refresh</mat-icon>
+          <span>Actualizar</span>
         </button>
       </mat-menu>
     </div>
@@ -27,12 +27,11 @@
 
   <mat-card-content [style.height]="height">
     <div class="chart-container" #chartContainer>
-      <!-- ApexCharts component with delayed rendering -->
-      <ng-container *ngIf="shouldRenderChart && isChartReady && apexSeries && apexSeries.length > 0; else loadingTemplate">
-        <!-- Additional wrapper to ensure proper DOM structure -->
+      <!-- ApexCharts component -->
+      <ng-container *ngIf="chartData && apexChartOptions; else loadingTemplate">
         <div class="chart-wrapper" [style.height]="height">
           <apx-chart
-            [series]="apexSeries"
+            [series]="apexChartOptions.series"
             [chart]="apexChartOptions.chart"
             [labels]="apexChartOptions.labels"
             [colors]="apexChartOptions.colors"
@@ -40,6 +39,7 @@
             [dataLabels]="apexChartOptions.dataLabels"
             [plotOptions]="apexChartOptions.plotOptions"
             [xaxis]="apexChartOptions.xaxis"
+            [yaxis]="apexChartOptions.yaxis"
             [tooltip]="apexChartOptions.tooltip">
           </apx-chart>
         </div>

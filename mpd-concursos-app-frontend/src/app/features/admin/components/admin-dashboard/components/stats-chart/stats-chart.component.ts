@@ -13,7 +13,7 @@ import {
   ApexAxisChartSeries
 } from 'ng-apexcharts';
 import { LoggingService } from '@core/services/logging/logging.service';
-import { APEX_GLOBAL_OPTIONS, APEX_CHART_TYPE_DEFAULTS } from '@core/config/chart-global-config';
+// import { APEX_GLOBAL_OPTIONS, APEX_CHART_TYPE_DEFAULTS } from '@core/config/chart-global-config'; // Comentado temporalmente
 
 /**
  * Interface for the data structure expected by ApexCharts.
@@ -68,308 +68,196 @@ export class StatsChartComponent implements AfterViewInit, OnDestroy, OnChanges 
   // ApexCharts configuration
   public apexChartOptions: any = {
     chart: {
-      type: 'pie',
+      type: 'bar',
       height: 300,
       background: 'transparent',
-      foreColor: '#f9fafb',
-      fontFamily: 'Roboto, "Helvetica Neue", sans-serif'
-    },
-    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-    legend: {
-      labels: {
-        colors: '#f9fafb'
-      }
-    },
-    dataLabels: {
-      enabled: true,
-      style: {
-        colors: ['#fff']
-      }
-    }
-  };
-  public apexSeries: any = [];
-  public isChartReady = false; // Flag to control chart rendering
-  public shouldRenderChart = false; // Additional flag for delayed rendering
-
-  private readonly LOG_TAG = 'StatsChartComponent'; // Tag for logging
-
-  constructor(
-    private loggingService: LoggingService,
-    private cdr: ChangeDetectorRef
-  ) {
-    this.loggingService.debug(`[${this.LOG_TAG}] StatsChartComponent constructor called.`, undefined, this.LOG_TAG);
-  }
-
-  /**
-   * Lifecycle hook that is called when any data-bound property changes
-   */
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['chartData'] && !changes['chartData'].firstChange && this.chartData) {
-      this.loggingService.debug(`[${this.LOG_TAG}] Chart data changed, updating configuration.`, undefined, this.LOG_TAG);
-      this.initializeChart();
-    }
-  }
-
-  /**
-   * Lifecycle hook that is called after Angular has initialized all of the component's views and child views.
-   * This is where the ApexCharts configuration is set up.
-   */
-  ngAfterViewInit(): void {
-    this.loggingService.info(`[${this.LOG_TAG}] ngAfterViewInit called.`, undefined, this.LOG_TAG);
-
-    // Use multiple strategies to ensure DOM is ready
-    this.waitForDOMReady();
-  }
-
-  /**
-   * Wait for DOM to be ready using multiple strategies
-   */
-  private waitForDOMReady(): void {
-    // Strategy 1: Check if container exists immediately
-    if (this.chartContainer && this.chartContainer.nativeElement) {
-      this.loggingService.debug(`[${this.LOG_TAG}] Chart container found immediately.`, undefined, this.LOG_TAG);
-      this.scheduleChartInitialization();
-      return;
-    }
-
-    // Strategy 2: Use requestAnimationFrame to wait for next render cycle
-    requestAnimationFrame(() => {
-      if (this.chartContainer && this.chartContainer.nativeElement) {
-        this.loggingService.debug(`[${this.LOG_TAG}] Chart container found after requestAnimationFrame.`, undefined, this.LOG_TAG);
-        this.scheduleChartInitialization();
-        return;
-      }
-
-      // Strategy 3: Use setTimeout with increasing delays
-      this.retryWithDelay(0);
-    });
-  }
-
-  /**
-   * Retry initialization with increasing delays
-   */
-  private retryWithDelay(attempt: number): void {
-    const maxAttempts = 5;
-    const delay = Math.min(100 * Math.pow(2, attempt), 1000); // Exponential backoff, max 1s
-
-    if (attempt >= maxAttempts) {
-      this.loggingService.error(`[${this.LOG_TAG}] Failed to find chart container after ${maxAttempts} attempts.`, undefined, this.LOG_TAG);
-      return;
-    }
-
-    setTimeout(() => {
-      if (this.chartContainer && this.chartContainer.nativeElement) {
-        this.loggingService.debug(`[${this.LOG_TAG}] Chart container found after ${attempt + 1} attempts.`, undefined, this.LOG_TAG);
-        this.scheduleChartInitialization();
-      } else {
-        this.loggingService.warn(`[${this.LOG_TAG}] Chart container not found, attempt ${attempt + 1}/${maxAttempts}. Retrying...`, undefined, this.LOG_TAG);
-        this.retryWithDelay(attempt + 1);
-      }
-    }, delay);
-  }
-
-  /**
-   * Schedule chart initialization with additional safety checks
-   */
-  private scheduleChartInitialization(): void {
-    // Additional safety: wait one more frame to ensure everything is settled
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        this.initializeChart();
-      }, 50); // Small additional delay
-    });
-  }
-
-  /**
-   * Lifecycle hook for cleanup
-   */
-  ngOnDestroy(): void {
-    this.isChartReady = false;
-    this.shouldRenderChart = false;
-    this.loggingService.debug(`[${this.LOG_TAG}] Component destroyed.`, undefined, this.LOG_TAG);
-  }
-
-  /**
-   * Initialize chart with proper validation
-   */
-  private initializeChart(): void {
-    // Validate container exists
-    if (!this.chartContainer || !this.chartContainer.nativeElement) {
-      this.loggingService.error(`[${this.LOG_TAG}] Cannot initialize chart: container not found.`, undefined, this.LOG_TAG);
-      return;
-    }
-
-    // Validate data exists
-    if (!this.chartData || !this.chartData.series || !this.chartData.labels) {
-      this.loggingService.warn(`[${this.LOG_TAG}] Cannot initialize chart: invalid data.`, this.chartData, this.LOG_TAG);
-      return;
-    }
-
-    // Validate container is visible and has dimensions
-    const containerElement = this.chartContainer.nativeElement;
-    const rect = containerElement.getBoundingClientRect();
-
-    if (rect.width === 0 || rect.height === 0) {
-      this.loggingService.warn(`[${this.LOG_TAG}] Container has no dimensions, retrying...`, { width: rect.width, height: rect.height }, this.LOG_TAG);
-      // Retry after a short delay
-      setTimeout(() => {
-        this.initializeChart();
-      }, 100);
-      return;
-    }
-
-    this.loggingService.debug(`[${this.LOG_TAG}] Initializing chart with data:`, this.chartData, this.LOG_TAG);
-    this.loggingService.debug(`[${this.LOG_TAG}] Container dimensions:`, { width: rect.width, height: rect.height }, this.LOG_TAG);
-
-    this.setupApexChart();
-  }
-
-  /**
-   * Sets up the ApexCharts configuration based on chart type and data
-   */
-  private setupApexChart(): void {
-    this.loggingService.info(`[${this.LOG_TAG}] setupApexChart method called. Chart type: ${this.chartType}.`, undefined, this.LOG_TAG);
-
-    try {
-      // Reset chart ready state
-      this.isChartReady = false;
-
-      // Validate input data
-      if (!this.chartData || !this.chartData.series || !this.chartData.labels) {
-        this.loggingService.warn(`[${this.LOG_TAG}] Invalid chart data provided.`, this.chartData, this.LOG_TAG);
-        return;
-      }
-
-      // Ensure series is properly formatted for ApexCharts
-      if (this.chartType === 'pie' || this.chartType === 'donut') {
-        // For pie/donut charts, series must be a simple array of numbers
-        this.apexSeries = Array.isArray(this.chartData.series) ?
-          this.chartData.series.map(value => {
-            const num = Number(value);
-            return isNaN(num) ? 0 : num;
-          }) : [];
-      } else {
-        // For bar/line charts, series must be an array of objects with name and data
-        if (Array.isArray(this.chartData.series) && typeof this.chartData.series[0] === 'object') {
-          this.apexSeries = this.chartData.series;
-        } else {
-          this.apexSeries = [{
-            name: this.title || 'Data',
-            data: Array.isArray(this.chartData.series) ?
-              this.chartData.series.map(value => {
-                const num = Number(value);
-                return isNaN(num) ? 0 : num;
-              }) : []
-          }];
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: false,
+          zoom: false,
+          zoomin: false,
+          zoomout: false,
+          pan: false,
+          reset: false
         }
       }
-
-      // Validate series data
-      if (!this.apexSeries || this.apexSeries.length === 0) {
-        this.loggingService.warn(`[${this.LOG_TAG}] No valid series data available.`, this.apexSeries, this.LOG_TAG);
-        return;
+    },
+    theme: {
+      mode: 'light'
+    },
+    colors: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'],
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      curve: 'smooth' as const,
+      width: 2
+    },
+    xaxis: {
+      categories: []
+    },
+    yaxis: {
+      title: {
+        text: 'Valores'
       }
-
-      // Build chart configuration step by step
-      this.apexChartOptions = {
+    },
+    legend: {
+      show: true,
+      position: 'bottom' as const
+    },
+    responsive: [{
+      breakpoint: 480,
+      options: {
         chart: {
-          type: this.chartType === 'donut' ? 'donut' : this.chartType,
-          height: parseInt(this.height.replace('px', '')),
-          background: 'transparent',
-          foreColor: '#f9fafb',
-          fontFamily: 'Roboto, "Helvetica Neue", sans-serif',
-          animations: {
-            enabled: false
-          },
-          // Ensure chart has a unique ID to avoid conflicts
-          id: `chart-${Math.random().toString(36).substr(2, 9)}`
+          width: '100%'
         },
-
-        // Colors
-        colors: this.chartData.colors || ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-
-        // Labels (only for pie/donut charts)
-        labels: (this.chartType === 'pie' || this.chartType === 'donut') ? this.chartData.labels : undefined,
-
-        // Legend
         legend: {
-          show: true,
-          position: 'bottom',
-          labels: {
-            colors: '#f9fafb'
-          }
-        },
+          position: 'bottom' as const
+        }
+      }
+    }]
+  };
 
-        // Data labels
-        dataLabels: {
-          enabled: true,
-          style: {
-            colors: ['#fff']
-          }
-        },
+  // Chart instance reference
+  private chartInstance: any;
 
-        // Tooltip
-        tooltip: {
-          theme: 'dark'
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private loggingService: LoggingService
+  ) {}
+
+  ngAfterViewInit(): void {
+    try {
+      this.initializeChart();
+    } catch (error) {
+      this.loggingService.error('Error initializing chart:', error);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['chartData'] || changes['chartType'] || changes['chartOptions']) {
+      this.updateChart();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+    }
+  }
+
+  /**
+   * Initialize the ApexCharts instance
+   */
+  private initializeChart(): void {
+    if (!this.chartData) {
+      this.loggingService.warn('No chart data provided');
+      return;
+    }
+
+    this.updateChartOptions();
+  }
+
+  /**
+   * Update chart with new data
+   */
+  private updateChart(): void {
+    if (!this.chartData) return;
+
+    this.updateChartOptions();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Update chart options based on current inputs
+   */
+  private updateChartOptions(): void {
+    try {
+      // Configure chart based on type
+      const baseOptions = {
+        ...this.apexChartOptions,
+        chart: {
+          ...this.apexChartOptions.chart,
+          type: this.chartType,
+          height: parseInt(this.height.replace('px', ''))
+        },
+        series: this.formatSeriesData(),
+        xaxis: {
+          ...this.apexChartOptions.xaxis,
+          categories: this.chartData.labels
         }
       };
 
-      // Add xaxis for bar/line charts
-      if (this.chartType !== 'pie' && this.chartType !== 'donut') {
-        this.apexChartOptions.xaxis = {
-          categories: this.chartData.labels,
-          labels: {
-            style: {
-              colors: '#f9fafb'
-            }
-          }
-        };
+      // Apply custom colors if provided
+      if (this.chartData.colors && this.chartData.colors.length > 0) {
+        baseOptions.colors = this.chartData.colors;
       }
 
-      // Add plotOptions for donut charts
-      if (this.chartType === 'donut') {
-        this.apexChartOptions.plotOptions = {
-          pie: {
-            donut: {
-              size: '70%'
-            }
-          }
-        };
-      }
-
-      // Mark chart as ready
-      this.isChartReady = true;
-
-      // Enable rendering after a short delay to ensure DOM is stable
-      setTimeout(() => {
-        this.shouldRenderChart = true;
-        this.cdr.detectChanges();
-      }, 100);
-
-      this.loggingService.info(`[${this.LOG_TAG}] ApexChart configuration setup completed for type "${this.chartType}".`, undefined, this.LOG_TAG);
-      this.loggingService.debug(`[${this.LOG_TAG}] Series data:`, this.apexSeries, this.LOG_TAG);
-      this.loggingService.debug(`[${this.LOG_TAG}] Chart options:`, this.apexChartOptions, this.LOG_TAG);
+      // Apply custom chart options
+      this.apexChartOptions = {
+        ...baseOptions,
+        ...this.chartOptions
+      };
 
     } catch (error) {
-      this.loggingService.error(`[${this.LOG_TAG}] Error setting up ApexChart:`, error, this.LOG_TAG);
-      this.isChartReady = false;
+      this.loggingService.error('Error updating chart options:', error);
     }
   }
 
   /**
-   * Triggers the download of the chart as an image (PNG, JPG, or SVG).
-   * ApexCharts provides built-in export functionality.
-   * @param format The desired image format ('png' | 'jpg' | 'svg').
+   * Format series data based on chart type
    */
-  downloadChart(format: 'png' | 'jpg' | 'svg'): void {
-    this.loggingService.info(`[${this.LOG_TAG}] Download chart requested. Format: ${format}.`, undefined, this.LOG_TAG);
+  private formatSeriesData(): any {
+    if (!this.chartData) return [];
 
-    // ApexCharts provides built-in export functionality
-    // This would be implemented using ApexCharts.exec() method
-    // For now, we'll log the action
-    this.loggingService.info(`[${this.LOG_TAG}] Chart download functionality available with ApexCharts built-in export.`, undefined, this.LOG_TAG);
+    try {
+      // For pie and donut charts
+      if (this.chartType === 'pie' || this.chartType === 'donut') {
+        return Array.isArray(this.chartData.series) ? this.chartData.series : [this.chartData.series];
+      }
 
-    // TODO: Implement ApexCharts export functionality
-    // Example: ApexCharts.exec('chart-id', 'exportChart', { type: format });
+      // For bar and line charts
+      if (Array.isArray(this.chartData.series) && typeof this.chartData.series[0] === 'number') {
+        return [{
+          name: 'Datos',
+          data: this.chartData.series as number[]
+        }];
+      }
+
+      // If already in proper format
+      return this.chartData.series;
+    } catch (error) {
+      this.loggingService.error('Error formatting series data:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Export chart as image
+   */
+  exportChart(format: 'png' | 'svg' = 'png'): void {
+    try {
+      if (this.chartInstance) {
+        this.chartInstance.dataURI().then((uri: any) => {
+          const link = document.createElement('a');
+          link.href = uri.imgURI;
+          link.download = `${this.title.toLowerCase().replace(/\s+/g, '_')}_chart.${format}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        });
+      }
+    } catch (error) {
+      this.loggingService.error('Error exporting chart:', error);
+    }
+  }
+
+  /**
+   * Refresh chart data
+   */
+  refresh(): void {
+    this.updateChart();
   }
 }

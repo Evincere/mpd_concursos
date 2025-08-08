@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js';
 /**
  * Servicio de Autocompletado Inteligente del Sistema CV
  * 
@@ -10,7 +11,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
-import Fuse from 'fuse.js';
+// import Fuse from 'fuse.js'; // Temporalmente comentado - dependencia faltante
 import { CvValidationService } from './cv-validation.service';
 
 /**
@@ -423,7 +424,7 @@ export class CvAutocompleteService {
       // Búsqueda fuzzy con Fuse.js
       const fuseResults = fuse.search(term);
       results = fuseResults
-        .map(result => ({
+        .map((result: any) => ({
           ...result.item,
           score: 1 - (result.score || 0) // Invertir score para que mayor sea mejor
         }))

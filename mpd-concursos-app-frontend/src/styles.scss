@@ -3,10 +3,15 @@
 
 /* === FUENTES LOCALES === */
 /* Importar fuentes desde node_modules para evitar dependencias externas */
-@import '@fontsource/roboto/300.css';
-@import '@fontsource/roboto/400.css';
-@import '@fontsource/roboto/500.css';
-@import '@fortawesome/fontawesome-free/css/all.min.css';
+/* Temporalmente comentado - dependencias faltantes */
+// @import '@fontsource/roboto/300.css';
+// @import '@fontsource/roboto/400.css';
+// @import '@fontsource/roboto/500.css';
+// @import '@fortawesome/fontawesome-free/css/all.min.css';
+
+/* Fuentes de respaldo desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 
 /* === ANIMACIONES DE ICONOS === */
 @import 'styles/icon-animations.scss';

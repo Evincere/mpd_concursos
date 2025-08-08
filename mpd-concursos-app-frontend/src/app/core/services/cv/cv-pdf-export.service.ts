@@ -1,3 +1,4 @@
+import { TDocumentDefinitions, Content, Style } from 'pdfmake/interfaces';
 /**
  * Servicio de Exportación PDF del Sistema CV
  *
@@ -9,7 +10,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { TDocumentDefinitions, Content, Style } from 'pdfmake/interfaces';
+// import type { TDocumentDefinitions, Content, Style } from 'pdfmake/interfaces'; // Temporalmente comentado - dependencia faltante
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 
