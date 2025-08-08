@@ -307,6 +307,9 @@
     0 4px 16px rgba(245, 158, 11, 0.1),
     0 1px 4px rgba(0, 0, 0, 0.1);
 
+  /* 🔧 FIX: Asegurar que los eventos de clic pasen a los elementos internos */
+  pointer-events: auto;
+
   /* ✅ UX/UI: Headers de inscripción provisional en blanco */
   .alert-header span,
   .info-header span {
@@ -332,6 +335,7 @@
       rgba(245, 158, 11, 0.02) 50%,
       rgba(245, 158, 11, 0.04) 100%
     );
+    /* 🔧 FIX: Asegurar que el pseudo-elemento no interfiera con clics */
     pointer-events: none;
     border-radius: var(--radius-md);
   }
@@ -339,6 +343,8 @@
   > * {
     position: relative;
     z-index: 1;
+    /* 🔧 FIX: Asegurar que todos los elementos internos sean clickeables */
+    pointer-events: auto;
   }
 
   .provisional-alert {
@@ -445,6 +451,61 @@
 
       /* ✅ Transición más suave */
       transition: all var(--transition-normal);
+
+      /* 🔧 FIX: Asegurar que los eventos de clic pasen al checkbox */
+      position: relative;
+      pointer-events: auto;
+
+      /* 🔧 FIX: Evitar que pseudo-elementos interfieran con clics */
+      &::before,
+      &::after {
+        pointer-events: none;
+      }
+
+      /* 🔧 FIX: Asegurar que el checkbox sea completamente clickeable */
+      app-custom-checkbox {
+        position: relative;
+        z-index: 10;
+        pointer-events: auto;
+        
+        /* Aumentar el área clickeable del checkbox */
+        .custom-checkbox-container {
+          position: relative;
+          z-index: 10;
+          pointer-events: auto;
+        }
+
+        .custom-checkbox {
+          position: relative;
+          z-index: 10;
+          pointer-events: auto;
+          
+          /* Aumentar área clickeable */
+          padding: 8px;
+          margin: -8px;
+          
+          /* Asegurar que el input sea accesible */
+          input[type="checkbox"] {
+            position: relative;
+            z-index: 15;
+            pointer-events: auto;
+          }
+          
+          /* Asegurar que el checkmark sea clickeable */
+          .checkmark {
+            position: relative;
+            z-index: 12;
+            pointer-events: auto;
+          }
+          
+          /* Asegurar que el label sea clickeable */
+          .checkbox-label {
+            position: relative;
+            z-index: 12;
+            pointer-events: auto;
+          }
+        }
+      }
 
       &:hover {
         background: rgba(245, 158, 11, 0.1);
@@ -934,6 +995,24 @@
   .checkbox-label {
     color: #ffffff !important;
   }
+  
+  /* 🔧 FIX: Asegurar máxima clickeabilidad para todos los checkboxes */
+  .custom-checkbox-container {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+  }
+  
+  .custom-checkbox {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    
+    /* Asegurar que todos los elementos internos sean clickeables */
+    * {
+      pointer-events: auto;
+    }
+  }
 }
 
 .circunscripcion-item {
@@ -1359,6 +1438,63 @@
 
 .confirmation-checkbox {
   margin-top: 1.5rem;
+  
+  /* 🔧 FIX: Asegurar que el checkbox de confirmación sea completamente clickeable */
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+
+  /* 🔧 FIX: Evitar que pseudo-elementos interfieran con clics */
+  &::before,
+  &::after {
+    pointer-events: none;
+  }
+
+  /* 🔧 FIX: Asegurar que el checkbox sea completamente clickeable */
+  app-custom-checkbox {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    
+    /* Aumentar el área clickeable del checkbox */
+    .custom-checkbox-container {
+      position: relative;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .custom-checkbox {
+      position: relative;
+      z-index: 10;
+      pointer-events: auto;
+      
+      /* Aumentar área clickeable */
+      padding: 8px;
+      margin: -8px;
+      
+      /* Asegurar que el input sea accesible */
+      input[type="checkbox"] {
+        position: relative;
+        z-index: 15;
+        pointer-events: auto;
+      }
+      
+      /* Asegurar que el checkmark sea clickeable */
+      .checkmark {
+        position: relative;
+        z-index: 12;
+        pointer-events: auto;
+      }
+      
+      /* Asegurar que el label sea clickeable */
+      .checkbox-label {
+        position: relative;
+        z-index: 12;
+        pointer-events: auto;
+      }
+    }
+  }
+
   // CustomCheckboxComponent will handle glassmorphism styling
 }
 
