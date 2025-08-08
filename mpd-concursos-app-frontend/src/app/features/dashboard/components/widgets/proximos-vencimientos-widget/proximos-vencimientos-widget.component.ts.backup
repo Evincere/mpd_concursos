@@ -380,17 +380,11 @@ export class ProximosVencimientosWidgetComponent implements OnInit, OnChanges {
   /**
    * ✅ MEJORA: Texto más descriptivo para días restantes
    */
-  /**
-   * ✅ CORREGIDO: Texto más descriptivo y correcto para días restantes
-   */
   getDaysText(daysRemaining: number): string {
-    if (daysRemaining < 0) return "vencido";
-    if (daysRemaining === 0) {
-      // Para 0 días, verificar si es "vence hoy" basado en la hora
-      return "vence hoy";
-    }
-    if (daysRemaining === 1) return "día";
-    return "días";
+    if (daysRemaining < 0) return 'vencido';
+    if (daysRemaining === 0) return 'hoy';
+    if (daysRemaining === 1) return 'día';
+    return 'días';
   }
 
   /**

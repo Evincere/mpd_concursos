@@ -1,0 +1,34 @@
+🔄 Iniciando recuperación de usuario...
+DNI: 23520516
+Nombre: enriquehbravo
+Timestamp: 20250807_053020
+
+[0;34m📊 1. VERIFICANDO RESPALDOS DISPONIBLES:[0m
+===========================================
+✅ Directorio de respaldos encontrado
+❌ 04_agosto: No encontrado en documents/
+✅ 05_agosto: 8 archivos en documents/
+✅ 06_agosto: 8 archivos en documents/
+✅ Usuario encontrado en 2 fechas: 05_agosto 06_agosto
+
+[0;34m📊 2. OBTENIENDO UUID DEL USUARIO:[0m
+===========================================
+⚠️  UUID no encontrado en BD, usando solo DNI para documents/
+
+[0;34m📊 3. ESTADO ACTUAL EN DOCKER VOLUME:[0m
+===========================================
+📂 Directorio actual existe: 1 archivos (164K)
+📄 Archivos actuales:
+   total 168
+   drwxr-xr-x   2 root root   4096 Aug  7 05:26 .
+   drwxr-xr-x 107 root root   4096 Aug  6 21:13 ..
+   -rw-r--r--   1 root root 162549 Aug  7 05:26 0cb90939-2d13-442d-b243-8430a2b23601_Certificado_de_Antecedentes_Penales_1754345179244.pdf
+
+[0;34m📊 4. CREANDO BACKUP DEL ESTADO ACTUAL:[0m
+===========================================
+✅ Backup creado en: /tmp/backup_usuario_23520516_20250807_053020/documents_backup
+
+[0;34m📊 5. RESTAURANDO DOCUMENTS:[0m
+===========================================
+📅 Procesando 05_agosto...
+   ⏭️  0cb90939-2d13-442d-b243-8430a2b23601_Certificado_de_Antecedentes_Penales_1754345179244.pdf (ya existe, más reciente)

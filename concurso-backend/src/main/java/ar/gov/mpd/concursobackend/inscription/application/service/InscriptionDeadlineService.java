@@ -89,20 +89,23 @@ public class InscriptionDeadlineService {
             return null;
         }
 
-        // Agregar 3 días hábiles
-        LocalDateTime deadline = inscriptionEndDate;
+        // ✅ CORREGIDO: Empezar desde el día SIGUIENTE al vencimiento de inscripción
+        LocalDateTime deadline = inscriptionEndDate.plusDays(1).withHour(0).withMinute(0).withSecond(0);
         int businessDaysAdded = 0;
         
         while (businessDaysAdded < 3) {
-            deadline = deadline.plusDays(1);
-            
             // Verificar si es día hábil (lunes a viernes)
             if (deadline.getDayOfWeek().getValue() >= 1 && deadline.getDayOfWeek().getValue() <= 5) {
                 businessDaysAdded++;
             }
+            
+            // Si ya agregamos 3 días hábiles, no sumar más días
+            if (businessDaysAdded < 3) {
+                deadline = deadline.plusDays(1);
+            }
         }
         
-        // Establecer la hora límite a las 23:59:59
+        // ✅ CORREGIDO: El último día hábil está disponible hasta las 23:59:59
         return deadline.withHour(23).withMinute(59).withSecond(59);
     }
 

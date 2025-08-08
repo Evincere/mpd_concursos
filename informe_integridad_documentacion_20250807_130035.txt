@@ -1,0 +1,29 @@
+🔍 INFORME DE INTEGRIDAD DE DOCUMENTACIÓN MPD CONCURSOS
+============================================================
+
+📅 Fecha de análisis: 07/08/2025 13:00:35
+🎯 Análisis realizado: Verificación de documentos obligatorios
+
+📊 ESTADÍSTICAS GENERALES:
+------------------------------
+👥 Total usuarios inscritos analizados: 160
+✅ Usuarios con documentación completa: 0 (0.0%)
+❌ Usuarios con documentación incompleta: 160 (100.0%)
+📄 Total documentos verificados: 1120
+📋 Documentos faltantes: 294
+🗂️ Documentos con problemas físicos: 826
+
+📋 TIPOS DE DOCUMENTOS OBLIGATORIOS:
+----------------------------------------
+   - DNI (Dorso) (DNI_DORSO)
+   - Certificado de Antigüedad Profesional (CERTIFICADO_PROFESIONAL_ANTIGUEDAD)
+   - Constancia de CUIL (CONSTANCIA_CUIL)
+   - DNI (Frontal) (DNI_FRONTAL)
+   - Certificado de Antecedentes Penales (ANTECEDENTES_PENALES)
+   - Certificado Sin Sanciones Disciplinarias (CERTIFICADO_SIN_SANCIONES)
+   - Título Universitario y Certificado Analítico (TITULO_UNIVERSITARIO_Y_CERTIFICADO_ANALITICO)
+
+📁 ARCHIVOS GENERADOS:
+--------------------
+📊 CSV con usuarios con problemas: usuarios_con_problemas_documentacion_20250807_130035.csv
+📄 Informe detallado: informe_integridad_documentacion_20250807_130035.txt

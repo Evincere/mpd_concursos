@@ -1,0 +1,39 @@
+🔄 Iniciando recuperación de usuario...
+DNI: 23856207
+Nombre: Gzannier
+Timestamp: 20250807_053021
+
+[0;34m📊 1. VERIFICANDO RESPALDOS DISPONIBLES:[0m
+===========================================
+✅ Directorio de respaldos encontrado
+❌ 04_agosto: No encontrado en documents/
+❌ 05_agosto: No encontrado en documents/
+✅ 06_agosto: 7 archivos en documents/
+✅ Usuario encontrado en 1 fechas: 06_agosto
+
+[0;34m📊 2. OBTENIENDO UUID DEL USUARIO:[0m
+===========================================
+⚠️  UUID no encontrado en BD, usando solo DNI para documents/
+
+[0;34m📊 3. ESTADO ACTUAL EN DOCKER VOLUME:[0m
+===========================================
+📂 Directorio actual existe: 7 archivos (6.2M)
+📄 Archivos actuales:
+   total 6312
+   drwxr-xr-x   2 root root    4096 Aug  5 17:41 .
+   drwxr-xr-x 107 root root    4096 Aug  6 21:13 ..
+   -rw-r--r--   1 root root  262037 Aug  5 14:50 2029414c-ba70-4da2-954f-b52418123e62_DNI__Dorso__1754416246647.pdf
+   -rw-r--r--   1 root root 4925083 Aug  5 15:17 24773118-244e-488e-88ad-de9d480c196b_T_tulo_Universitario_y_Certificado_Anal_tico_1754417848371.pdf
+   -rw-r--r--   1 root root   69032 Aug  5 15:11 4f429dda-3b81-4ff2-84b0-7c9fcc733c3f_Constancia_de_CUIL_1754417482611.pdf
+   -rw-r--r--   1 root root  421814 Aug  5 17:41 9549c8c0-07cb-450f-86b1-ce054fba33c8_Documento_Adicional_1754426488201.pdf
+   -rw-r--r--   1 root root  262037 Aug  5 14:49 ARCHIVED_490ede4a-743a-4785-b746-0385e7aa803f_DNI_DORSO_20250805_174956.pdf
+   -rw-r--r--   1 root root  347874 Aug  5 16:23 f7a7391c-f0b7-4b28-89bd-2a719dc3354f_Certificado_Ley_Micaela_1754421833918.pdf
+   -rw-r--r--   1 root root  161124 Aug  5 14:51 fb9ee851-7f40-4876-8473-78506b7e4b94_DNI__Frontal__1754416266969.pdf
+
+[0;34m📊 4. CREANDO BACKUP DEL ESTADO ACTUAL:[0m
+===========================================
+✅ Backup creado en: /tmp/backup_usuario_23856207_20250807_053021/documents_backup
+
+[0;34m📊 5. RESTAURANDO DOCUMENTS:[0m
+===========================================
+📅 Procesando 06_agosto...

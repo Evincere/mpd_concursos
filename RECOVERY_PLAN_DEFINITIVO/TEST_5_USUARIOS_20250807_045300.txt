@@ -1,0 +1,5 @@
+🔍 Iniciando test con 5 usuarios...
+Timestamp: 20250807_045300
+
+[0;34m📊 PROCESANDO USUARIOS:[0m
+===========================================

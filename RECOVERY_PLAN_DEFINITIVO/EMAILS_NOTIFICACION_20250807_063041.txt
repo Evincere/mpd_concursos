@@ -1,0 +1,3 @@
+# EMAILS PARA NOTIFICACIÓN MASIVA - 20250807_063041
+# Formato: email@domain.com
+

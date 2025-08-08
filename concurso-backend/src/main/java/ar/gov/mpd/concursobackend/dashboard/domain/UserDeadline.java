@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -37,18 +38,34 @@ public class UserDeadline {
     
     /**
      * Calcula los días restantes hasta el vencimiento
+     * ✅ CORREGIDO: Cálculo mejorado para manejar correctamente los días inclusive
      */
     public Integer getDaysRemaining() {
         if (deadline == null) {
             return null;
         }
         
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isAfter(deadline)) {
-            return 0; // Vencido
+        LocalDate now = LocalDate.now();
+        LocalDate deadlineDate = deadline.toLocalDate();
+        
+        // Si ya pasó la fecha, es 0 días (vencido)
+        if (now.isAfter(deadlineDate)) {
+            return 0;
         }
         
-        return (int) ChronoUnit.DAYS.between(now, deadline);
+        // Si es hoy, verificar la hora
+        if (now.isEqual(deadlineDate)) {
+            // Si aún no pasó la hora del deadline, cuenta como "hoy" (0 días)
+            if (LocalDateTime.now().isBefore(deadline)) {
+                return 0;
+            } else {
+                return 0; // Ya vencido hoy
+            }
+        }
+        
+        // Para fechas futuras, calcular días inclusive
+        // Si hoy es 7/8 y deadline es 8/8, devuelve 1 día
+        return (int) ChronoUnit.DAYS.between(now, deadlineDate);
     }
     
     /**
@@ -69,10 +86,11 @@ public class UserDeadline {
     
     /**
      * Determina si el vencimiento es urgente (menos de 3 días)
+     * ✅ CORREGIDO: Alineado con frontend (≤1 día = urgente)
      */
     public Boolean isUrgent() {
         Integer daysRemaining = getDaysRemaining();
-        return daysRemaining != null && daysRemaining <= 3;
+        return daysRemaining != null && daysRemaining <= 1;
     }
     
     /**
@@ -87,6 +105,7 @@ public class UserDeadline {
     
     /**
      * Calcula la prioridad automáticamente basada en días restantes
+     * ✅ CORREGIDO: Alineado con lógica del frontend
      */
     public DeadlinePriority calculatePriority() {
         Integer daysRemaining = getDaysRemaining();
@@ -95,12 +114,41 @@ public class UserDeadline {
         }
         
         if (daysRemaining <= 1) {
-            return DeadlinePriority.HIGH;
+            return DeadlinePriority.HIGH;    // ≤1 día = URGENTE (HIGH)
         } else if (daysRemaining <= 7) {
-            return DeadlinePriority.MEDIUM;
+            return DeadlinePriority.MEDIUM;  // 2-7 días = ATENCIÓN (MEDIUM)
         } else {
-            return DeadlinePriority.LOW;
+            return DeadlinePriority.LOW;     // >7 días = NORMAL (LOW)
         }
+    }
+    
+    /**
+     * ✅ NUEVO: Obtiene texto descriptivo para los días restantes
+     */
+    public String getDaysRemainingText() {
+        Integer days = getDaysRemaining();
+        if (days == null) {
+            return "Sin fecha";
+        }
+        
+        if (days < 0) {
+            return "Vencido";
+        }
+        
+        if (days == 0) {
+            // Verificar si vence hoy o ya venció
+            if (LocalDateTime.now().isBefore(deadline)) {
+                return "Vence hoy";
+            } else {
+                return "Vencido hoy";
+            }
+        }
+        
+        if (days == 1) {
+            return "1 día";
+        }
+        
+        return days + " días";
     }
     
     public enum DeadlineType {

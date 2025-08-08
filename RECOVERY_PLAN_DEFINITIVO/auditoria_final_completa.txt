@@ -1,0 +1,93 @@
+[0;36m============================================================================[0m
+[0;36m🔍 AUDITORÍA DEFINITIVA DE DOCUMENTOS[0m
+[0;36m============================================================================[0m
+🔍 Iniciando auditoría definitiva...
+Timestamp: 20250807_061113
+
+[0;34m📊 1. OBTENIENDO USUARIOS:[0m
+===========================================
+🔍 Ejecutando consulta...
+✅ Encontrados 133 usuarios con documentos
+
+[0;34m📊 2. PROCESANDO USUARIOS:[0m
+===========================================
+[1;33m🔍 Progreso: 1/133 usuarios procesados[0m
+📊 Progreso: 1/133 usuarios procesados
+[1;33m🔍 Progreso: 50/133 usuarios procesados[0m
+📊 Progreso: 50/133 usuarios procesados
+[1;33m🔍 Progreso: 100/133 usuarios procesados[0m
+📊 Progreso: 100/133 usuarios procesados
+
+[0;34m📊 3. ESTADÍSTICAS FINALES:[0m
+===========================================
+📈 RESUMEN COMPLETO:
+   • Total usuarios analizados: 133
+   • Usuarios sin problemas: 43
+   • Usuarios con problemas: 90
+   • Usuarios recuperables: 21
+
+📊 DOCUMENTOS:
+   • Total registrados en BD: 916
+   • Total archivos físicos: 700
+   • Documentos faltantes: 216
+
+📊 PORCENTAJES:
+   • Sin problemas: 32%
+   • Con problemas: 67%
+   • Recuperables: 15%
+
+[0;34m📊 4. ANÁLISIS DE PROBLEMAS:[0m
+===========================================
+🔍 TIPOS DE PROBLEMAS:
+   • Usuarios con documentos faltantes: 54
+   • Usuarios con documentos huérfanos: 36
+
+🚨 CASOS MÁS CRÍTICOS (Top 10):
+   • 40271004 (agostinams): 9 documentos faltantes - Recuperable: NO
+   • 31486498 (CynthiaMarcela): 9 documentos faltantes - Recuperable: NO
+   • 29834591 (naloisio): 9 documentos faltantes - Recuperable: NO
+   • 28757104 (MAVERA): 9 documentos faltantes - Recuperable: NO
+   • 36230412 (mNUNEZ): 8 documentos faltantes - Recuperable: NO
+   • 36030880 (Daisi1991.): 8 documentos faltantes - Recuperable: NO
+   • 34627671 (Ignacioaragones): 8 documentos faltantes - Recuperable: NO
+   • 34405233 (VALE1289): 8 documentos faltantes - Recuperable: NO
+   • 33886782 (Solmartinez25): 8 documentos faltantes - Recuperable: NO
+   • 33462634 (fsamiac): 8 documentos faltantes - Recuperable: NO
+
+[0;34m📊 5. RECOMENDACIONES:[0m
+===========================================
+💡 PLAN DE ACCIÓN:
+1️⃣  RECUPERACIÓN AUTOMÁTICA:
+   • Ejecutar: chmod +x RECOVERY_COMMANDS_20250807_061113.sh && ./RECOVERY_COMMANDS_20250807_061113.sh
+   • Esto recuperará 21 usuarios automáticamente
+
+2️⃣  CASOS MANUALES:
+   • 69 usuarios requieren atención manual
+   • Revisar archivo: PROBLEMAS_DEFINITIVOS_20250807_061113.csv
+
+[0;34m📊 6. ARCHIVOS GENERADOS:[0m
+===========================================
+📄 Archivos de salida:
+   • Reporte completo: AUDITORIA_DEFINITIVA_20250807_061113.txt
+   • Lista de problemas: PROBLEMAS_DEFINITIVOS_20250807_061113.csv
+   • Script de recuperación: RECOVERY_COMMANDS_20250807_061113.sh
+
+[0;32m✅ AUDITORÍA DEFINITIVA COMPLETADA[0m
+[0;36m📄 Reporte completo: AUDITORIA_DEFINITIVA_20250807_061113.txt[0m
+[0;36m📋 Lista de problemas: PROBLEMAS_DEFINITIVOS_20250807_061113.csv[0m
+[0;36m🔧 Script de recuperación: RECOVERY_COMMANDS_20250807_061113.sh[0m
+
+[1;33m🎯 RESUMEN EJECUTIVO FINAL:[0m
+[1;33m=============================[0m
+• Total usuarios: 133
+• Sin problemas: 43 (32%)
+• Con problemas: 90 (67%)
+• Recuperables: 21 (15%)
+• Documentos faltantes: 216
+[0;31m⚠️  SITUACIÓN MIXTA[0m
+[0;31m   Recuperables: 21[0m
+[0;31m   Manuales: 69[0m
+
+[0;36m============================================================================[0m
+[0;36m🎉 ¡AUDITORÍA DEFINITIVA COMPLETADA![0m
+[0;36m============================================================================[0m

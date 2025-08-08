@@ -1,0 +1,3 @@
+# USUARIOS RECUPERABLES - 20250807_044516
+# Formato: ./17_recuperar_usuario_especifico.sh DNI USERNAME
+

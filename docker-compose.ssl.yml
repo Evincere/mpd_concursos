@@ -55,7 +55,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-mpd_user}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mpd_password}
     volumes:
-      - mysql_data_prod:/var/lib/mysql
+      - mpd_concursos_mysql_data_prod:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -103,7 +103,7 @@ services:
       LOGGING_LEVEL_ROOT: WARN
       LOGGING_LEVEL_AR_GOV_MPD: INFO
     volumes:
-      - document_storage_prod:/app/document-storage
+      - mpd_concursos_storage_data_prod:/app/storage
       - ./logs:/app/logs
     deploy:
       resources:
@@ -160,10 +160,10 @@ services:
       start_period: 30s
 
 volumes:
-  mysql_data_prod:
-    driver: local
-  document_storage_prod:
-    driver: local
+  mpd_concursos_mysql_data_prod:
+    external: true
+  mpd_concursos_storage_data_prod:
+    external: true
   nginx_logs:
     driver: local
 
