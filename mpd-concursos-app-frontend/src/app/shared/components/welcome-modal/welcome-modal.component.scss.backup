@@ -14,7 +14,6 @@
   justify-content: center;
   z-index: 9999;
   animation: fadeIn 0.3s ease-out;
-  padding: 1rem; /* ✅ Añadir padding para evitar que toque los bordes */
 }
 
 .modal-container {
@@ -25,15 +24,11 @@
   padding: 0;
   max-width: 600px;
   width: 90%;
-  /* ✅ CORREGIDO: Permitir altura automática con límite más alto */
-  max-height: 95vh;
-  min-height: auto;
+  max-height: 80vh;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   animation: slideInUp 0.4s ease-out;
   position: relative;
-  display: flex;
-  flex-direction: column;
 }
 
 .modal-header {
@@ -43,7 +38,6 @@
   padding: 1.5rem 1.5rem 0 1.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   margin-bottom: 0;
-  flex-shrink: 0; /* ✅ No permitir que se comprima */
 }
 
 .header-content {
@@ -63,6 +57,8 @@
   text-align: left;
 }
 
+
+
 .modal-title {
   font-size: 1.8rem;
   font-weight: 700;
@@ -79,31 +75,8 @@
 
 .modal-body {
   padding: 1.5rem;
-  /* ✅ CORREGIDO: Altura automática con scroll solo si es necesario */
-  flex: 1;
+  max-height: 60vh;
   overflow-y: auto;
-  /* ✅ Scrollbar más elegante */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
-}
-
-/* ✅ Webkit scrollbar styling */
-.modal-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
 }
 
 .welcome-content {
@@ -167,7 +140,6 @@
   padding: 1rem 1.5rem 1.5rem 1.5rem;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   background: rgba(248, 249, 250, 0.8);
-  flex-shrink: 0; /* ✅ No permitir que se comprima */
 }
 
 .footer-options {
@@ -177,30 +149,27 @@
 .checkbox-container {
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* ✅ Más espacio para mejor UX */
+  gap: 0.5rem;
   cursor: pointer;
   font-size: 0.9rem;
   color: #555;
-  padding: 0.5rem; /* ✅ Área de clic más grande */
-  border-radius: 5px;
-  transition: background-color 0.2s ease;
-}
-
-.checkbox-container:hover {
-  background: rgba(0, 0, 0, 0.05);
 }
 
 .checkbox-input {
   margin: 0;
-  width: 18px;
-  height: 18px;
-  accent-color: #4CAF50; /* ✅ Color moderno para el checkbox */
 }
 
+.checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ddd;
+  border-radius: 3px;
+  display: inline-block;
+  position: relative;
+}
 
 .checkbox-label {
   user-select: none;
-  line-height: 1.4;
 }
 
 .footer-actions {
@@ -246,17 +215,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .modal-backdrop {
-    padding: 0.5rem; /* ✅ Menos padding en móvil */
-  }
-
   .modal-container {
-    margin: 0;
+    margin: 1rem;
     max-width: none;
-    width: 100%;
-    /* ✅ En móvil, altura prácticamente completa */
-    max-height: 98vh;
-    min-height: 70vh;
+    width: calc(100% - 2rem);
   }
 
   .modal-title {
@@ -268,9 +230,9 @@
   }
 
   .header-content {
-    flex-direction: row; /* ✅ Mantener horizontal en móvil */
-    text-align: left;
-    gap: 0.75rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
   }
 
   .footer-actions {
@@ -278,35 +240,8 @@
   }
 
   .recommendation-item {
-    /* ✅ Mantener layout horizontal en móvil también */
-    flex-direction: row;
-    text-align: left;
-  }
-  
-  /* ✅ Ajustar padding para más espacio en móvil */
-  .modal-header {
-    padding: 1rem 1rem 0 1rem;
-  }
-  
-  .modal-body {
-    padding: 1rem;
-  }
-  
-  .modal-footer {
-    padding: 1rem 1rem 1rem 1rem;
-  }
-}
-
-/* ✅ Responsive para pantallas muy pequeñas */
-@media (max-width: 480px) {
-  .modal-container {
-    max-height: 100vh;
-    border-radius: 0; /* ✅ Sin bordes redondeados en pantallas muy pequeñas */
-  }
-  
-  .footer-actions {
     flex-direction: column;
-    gap: 0.75rem;
+    text-align: center;
   }
 }
 
@@ -336,26 +271,5 @@
 
   .modal-footer {
     background: rgba(20, 20, 20, 0.8);
-  }
-  
-  /* ✅ Scrollbar para tema oscuro */
-  .modal-body {
-    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
-  }
-  
-  .modal-body::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .modal-body::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  .modal-body::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  
-  .checkbox-container:hover {
-    background: rgba(255, 255, 255, 0.05);
   }
 }

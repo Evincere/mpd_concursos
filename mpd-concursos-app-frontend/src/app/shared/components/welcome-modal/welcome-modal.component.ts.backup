@@ -112,6 +112,7 @@ import { CustomIconButtonComponent } from '@shared/components/custom-icon-button
                 type="checkbox"
                 [(ngModel)]="dontShowAgain"
                 class="checkbox-input">
+              <span class="checkbox-custom"></span>
               <span class="checkbox-label">No mostrar nuevamente</span>
             </label>
           </div>
