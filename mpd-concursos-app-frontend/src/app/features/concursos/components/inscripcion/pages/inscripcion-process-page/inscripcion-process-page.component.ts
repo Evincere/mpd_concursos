@@ -49,18 +49,11 @@ import { CanComponentDeactivate } from '../../guards/inscription-deactivate.guar
 import {
   DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION,
   CIRCUNSCRIPCIONES_JUDICIALES,
-  DepartamentoCircunscripcion,
   SeleccionCircunscripcion,
   convertirSeleccionAFormato,
   convertirFormatoASeleccion,
   validarSeleccionCircunscripciones
 } from '@shared/constants/circunscripciones.constants';
-
-// Interface for circunscripcion objects
-interface Circunscripcion {
-  id: string;
-  [key: string]: unknown;
-}
 
 // Interface for inscription objects from backend
 interface InscriptionResponse {
@@ -150,7 +143,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     type: NavigationType;
     timestamp: number;
     source?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } | null = null;
 
   // ✅ PÚBLICO para acceso desde guard - simplificado
@@ -595,7 +588,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
    * @param source Fuente de la navegación (opcional)
    * @param metadata Metadatos adicionales (opcional)
    */
-  private markNavigationType(type: NavigationType, source?: string, metadata?: Record<string, any>): void {
+  private markNavigationType(type: NavigationType, source?: string, metadata?: Record<string, unknown>): void {
     this.navigationContext = {
       type,
       timestamp: Date.now(),
@@ -617,7 +610,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
    * @param maxAgeMs Edad máxima en milisegundos (default: 2000ms)
    * @returns true si la navegación es del tipo especificado y reciente
    */
-  private isRecentNavigationType(type: NavigationType, maxAgeMs: number = 2000): boolean {
+  private isRecentNavigationType(type: NavigationType, maxAgeMs = 2000): boolean {
     if (!this.navigationContext) return false;
 
     const isCorrectType = this.navigationContext.type === type;
