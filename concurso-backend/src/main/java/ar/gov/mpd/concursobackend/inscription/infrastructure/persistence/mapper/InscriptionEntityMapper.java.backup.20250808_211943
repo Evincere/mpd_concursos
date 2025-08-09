@@ -1,7 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper;
 
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionPreferences;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
@@ -12,7 +11,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring", imports = {
@@ -32,11 +30,6 @@ public interface InscriptionEntityMapper {
     @Mapping(target = "updatedAt", source = "lastUpdated")
     @Mapping(target = "inscriptionDate", source = "inscriptionDate")
     @Mapping(target = "centroDeVida", expression = "java(domain.getPreferences() != null ? domain.getPreferences().getCentroDeVida() : null)")
-    @Mapping(target = "selectedCircunscripciones", expression = "java(domain.getPreferences() != null ? domain.getPreferences().getSelectedCircunscripciones() : null)")
-    @Mapping(target = "acceptedTerms", expression = "java(domain.getPreferences() != null ? domain.getPreferences().isAcceptedTerms() : false)")
-    @Mapping(target = "confirmedPersonalData", expression = "java(domain.getPreferences() != null ? domain.getPreferences().isConfirmedPersonalData() : false)")
-    @Mapping(target = "termsAcceptanceDate", expression = "java(domain.getPreferences() != null ? domain.getPreferences().getTermsAcceptanceDate() : null)")
-    @Mapping(target = "dataConfirmationDate", expression = "java(domain.getPreferences() != null ? domain.getPreferences().getDataConfirmationDate() : null)")
     InscriptionEntity toEntity(Inscription domain);
 
     default Inscription toDomain(InscriptionEntity entity) {
@@ -49,19 +42,6 @@ public interface InscriptionEntityMapper {
         UserId userId = new UserId(entity.getUserId());
         InscriptionState state = map(entity.getStatus());
 
-        // 🔥 CRITICAL FIX: Crear InscriptionPreferences con TODAS las propiedades
-        InscriptionPreferences preferences = null;
-        if (hasPreferencesData(entity)) {
-            preferences = InscriptionPreferences.builder()
-                .selectedCircunscripciones(entity.getSelectedCircunscripciones())
-                .centroDeVida(entity.getCentroDeVida())
-                .acceptedTerms(entity.isAcceptedTerms())
-                .confirmedPersonalData(entity.isConfirmedPersonalData())
-                .termsAcceptanceDate(entity.getTermsAcceptanceDate())
-                .dataConfirmationDate(entity.getDataConfirmationDate())
-                .build();
-        }
-
         return createInscription(
             id,
             contestId,
@@ -69,20 +49,11 @@ public interface InscriptionEntityMapper {
             state,
             entity.getInscriptionDate(),
             entity.getCreatedAt(),
-            entity.getUpdatedAt(),
-            preferences
+            entity.getUpdatedAt()
         );
     }
 
-    // Helper method to check if entity has preferences data
-    default boolean hasPreferencesData(InscriptionEntity entity) {
-        return entity.getSelectedCircunscripciones() != null ||
-               entity.getCentroDeVida() != null ||
-               entity.isAcceptedTerms() ||
-               entity.isConfirmedPersonalData() ||
-               entity.getTermsAcceptanceDate() != null ||
-               entity.getDataConfirmationDate() != null;
-    }
+
 
     // Método para convertir ContestId a Long
     default Long map(ContestId value) {
@@ -146,11 +117,10 @@ public interface InscriptionEntityMapper {
         }
     }
 
-    // 🔥 UPDATED: Método para crear una instancia de Inscription con preferences
+    // Método para crear una instancia de Inscription con el estado correcto
     default Inscription createInscription(InscriptionId id, ContestId contestId, UserId userId,
                                          InscriptionState state, LocalDateTime inscriptionDate,
-                                         LocalDateTime createdAt, LocalDateTime lastUpdated,
-                                         InscriptionPreferences preferences) {
+                                         LocalDateTime createdAt, LocalDateTime lastUpdated) {
         return Inscription.builder()
                 .id(id)
                 .contestId(contestId)
@@ -159,7 +129,6 @@ public interface InscriptionEntityMapper {
                 .inscriptionDate(inscriptionDate)
                 .createdAt(createdAt)
                 .lastUpdated(lastUpdated)
-                .preferences(preferences)
                 .build();
     }
 }

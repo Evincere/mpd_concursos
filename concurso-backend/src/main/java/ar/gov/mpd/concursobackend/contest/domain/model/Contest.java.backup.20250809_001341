@@ -69,8 +69,8 @@ public class Contest {
         if (status == ContestStatus.IN_EVALUATION) return ContestStatus.IN_EVALUATION;
         if (status == ContestStatus.RESULTS_PUBLISHED) return ContestStatus.RESULTS_PUBLISHED;
 
-        // Estados dinámicos (para SCHEDULED y ACTIVE)
-        if (status == ContestStatus.SCHEDULED || status == ContestStatus.ACTIVE) {
+        // Estados dinámicos (solo para SCHEDULED)
+        if (status == ContestStatus.SCHEDULED) {
             // Si hay fechas específicas de inscripción, usarlas
             if (inscriptionStartDate != null && inscriptionEndDate != null) {
                 if (now.isBefore(inscriptionStartDate)) {
