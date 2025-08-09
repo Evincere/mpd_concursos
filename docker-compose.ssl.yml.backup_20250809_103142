@@ -47,7 +47,7 @@ services:
   # MySQL Database
   mysql:
     image: mysql:8.0
-    container_name: mpd-concursos-mysql
+    container_name: mpd-concursos-mysql-prod
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
@@ -84,7 +84,7 @@ services:
     build:
       context: ./concurso-backend
       dockerfile: Dockerfile
-    container_name: mpd-concursos-backend
+    container_name: mpd-concursos-backend-prod
     restart: unless-stopped
     depends_on:
       mysql:
@@ -132,7 +132,7 @@ services:
     build:
       context: ./mpd-concursos-app-frontend
       dockerfile: Dockerfile
-    container_name: mpd-concursos-frontend
+    container_name: mpd-concursos-frontend-prod
     restart: unless-stopped
     depends_on:
       backend:

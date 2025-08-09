@@ -42,7 +42,6 @@ import { InscriptionDocumentationService, InscriptionDocumentationState } from '
 import { RequiredDocument } from '@core/services/documentos/documento-validation.service';
 import { DocumentoUsuario, TipoDocumento } from '@core/models/documento.model'; // Import TipoDocumento
 import { LoggingService } from '@core/services/logging/logging.service';
-import { GracePeriodService, GracePeriodInfo } from '@core/services/inscripcion/grace-period.service';
 import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
 import { CanComponentDeactivate } from '../../guards/inscription-deactivate.guard';
 import {
@@ -219,7 +218,6 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     private documentosService: DocumentosService,
     private authService: AuthService,
     private notificationService: NotificationService,
-    private gracePeriodService: GracePeriodService,
     private http: HttpClient, // Assuming HttpClient is directly used for T&C content
     private cdr: ChangeDetectorRef,
     private loggingService: LoggingService,
@@ -238,8 +236,6 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   }
 
   ngOnInit(): void {
-    // EMERGENCY FIX: Inicializar mensaje dinámico
-    this.updateProvisionalMessage();
     // Obtener parámetros de la ruta
     this.route.queryParams.pipe(
       takeUntil(this.destroy$)
@@ -2575,83 +2571,5 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     }
 
     return 'Las bases y condiciones aún no se han publicado. Serán publicadas próximamente.';
-  }
-
-  
-  // Métodos para período de gracia
-  private updateProvisionalMessage(): void {
-    // EMERGENCY FIX - Datos mock para testing inmediato
-    const now = new Date();
-    const mockDeadline = new Date('2025-08-13T23:59:59'); // Miércoles 13/8
-    
-    const remainingMs = mockDeadline.getTime() - now.getTime();
-    const hoursRemaining = Math.ceil(remainingMs / (1000 * 60 * 60));
-    const daysRemaining = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
-    const isExpired = remainingMs <= 0;
-    
-    // Simular información del período de gracia
-    this.gracePeriodInfo = {
-      isContestClosed: true,
-      documentationDeadline: mockDeadline,
-      hoursRemaining: Math.max(0, hoursRemaining),
-      daysRemaining: Math.max(0, daysRemaining),
-      isExpired: isExpired,
-      contestEndDate: new Date('2025-08-08T23:59:59')
-    };
-
-    // Generar mensaje según estado
-    if (isExpired) {
-      this.currentProvisionalMessage = {
-        title: 'Plazo de Documentación Vencido',
-        description: 'El plazo para completar la documentación ha vencido. Su inscripción ha sido congelada.',
-        warningNote: 'Su inscripción ha sido marcada como rechazada automáticamente.',
-        checkboxText: 'Entiendo que mi inscripción ha sido rechazada',
-        alertClass: 'expired-alert'
-      };
-    } else if (this.gracePeriodInfo.isInGracePeriod) {
-      this.currentProvisionalMessage = {
-        title: 'Período de Gracia - Completar Documentación',
-        description: `Está en el período de gracia para completar su documentación. El concurso ya cerró, pero tiene hasta el ${mockDeadline.toLocaleDateString('es-AR')} a las ${mockDeadline.toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})} para completar los documentos faltantes.`,
-        warningNote: `⚠️ CRÍTICO: Quedan solo ${daysRemaining} días y ${hoursRemaining % 24} horas. Si no completa la documentación antes del vencimiento, su inscripción será automáticamente rechazada.`,
-        checkboxText: 'Entiendo que debo completar la documentación antes del vencimiento para que mi inscripción sea válida',
-        alertClass: 'grace-period-alert'
-      };
-    } else {
-      // Período normal (fallback)
-      this.currentProvisionalMessage = {
-        title: 'Inscripción Provisional',
-        description: 'Si no puede completar toda la documentación ahora, puede proceder con una inscripción provisional.',
-        warningNote: 'La falta de documentación completa dentro del plazo resultará en la descalificación automática.',
-        checkboxText: 'Acepto proceder con inscripción provisional',
-        alertClass: 'provisional-alert'
-      };
-    }
-    
-    console.log('[EMERGENCY FIX] Mensaje actualizado:', this.currentProvisionalMessage);
-  }
-
-  getAlertIcon(): string {
-    if (!this.gracePeriodInfo) return 'fa-exclamation-triangle';
-    if (this.gracePeriodInfo.isExpired) return 'fa-times-circle';
-    if (this.gracePeriodInfo.isInGracePeriod) return 'fa-clock';
-    return 'fa-exclamation-triangle';
-  }
-
-  getWarningClass(): string {
-    if (!this.gracePeriodInfo) return '';
-    if (this.gracePeriodInfo.isExpired) return 'expired-warning';
-    if (this.gracePeriodInfo.isInGracePeriod) return 'grace-period-warning';
-    return '';
-  }
-
-  getWarningIcon(): string {
-    if (!this.gracePeriodInfo) return 'fa-exclamation-circle';
-    if (this.gracePeriodInfo.isExpired) return 'fa-times-circle';
-    if (this.gracePeriodInfo.isInGracePeriod) return 'fa-exclamation-triangle';
-    return 'fa-exclamation-circle';
-  }
-
-  getHoursInDay(totalHours: number): number {
-    return totalHours % 24;
   }
 }

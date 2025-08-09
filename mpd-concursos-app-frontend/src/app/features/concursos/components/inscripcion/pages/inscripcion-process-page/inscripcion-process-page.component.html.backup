@@ -290,40 +290,30 @@
 
 
           <!-- UNIFICADO: Checkbox para inscripción provisional cuando hay documentos pendientes -->
-                    <!-- MENSAJE DINÁMICO PERÍODO DE GRACIA -->
           <div class="provisional-inscription-section" *ngIf="!shouldHideProvisionalSection()">
-            <div class="provisional-alert" [ngClass]="currentProvisionalMessage?.alertClass">
+            <div class="provisional-alert">
               <div class="alert-header">
-                <i class="fas" [ngClass]="getAlertIcon()"></i>
-                <span>{{ currentProvisionalMessage?.title || 'Inscripción Provisional' }}</span>
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Inscripción Provisional</span>
               </div>
               <p>
-                {{ currentProvisionalMessage?.description || 'Si no puede completar toda la documentación ahora, puede proceder con una inscripción provisional. Tendrá 3 días hábiles después del cierre de inscripciones para completar la documentación pendiente.' }}
+                Si no puede completar toda la documentación ahora, puede proceder con una
+                <strong>inscripción provisional</strong>. Tendrá <strong>3 días hábiles</strong>
+                después del cierre de inscripciones para completar la documentación pendiente.
               </p>
-              <div class="warning-note" [ngClass]="getWarningClass()">
-                <i class="fas" [ngClass]="getWarningIcon()"></i>
-                <span>{{ currentProvisionalMessage?.warningNote || 'La falta de documentación completa dentro del plazo resultará en la descalificación automática.' }}</span>
+              <div class="warning-note">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>La falta de documentación completa dentro del plazo resultará en la descalificación automática.</span>
               </div>
 
-              <!-- Countdown simple para período de gracia -->
-              <div class="grace-period-details" *ngIf="gracePeriodInfo?.isInGracePeriod">
-                <div class="deadline-info">
-                  <strong>Tiempo restante: {{ gracePeriodInfo?.daysRemaining || 0 }} días y {{ getHoursInDay(gracePeriodInfo?.hoursRemaining || 0) }} horas</strong>
-                  <br>
-                  <small>Vence: {{ gracePeriodInfo?.documentationDeadline | date:'dd/MM/yyyy HH:mm' }}</small>
-                </div>
-              </div>
-
-              <!-- Checkbox -->
-              <div class="checkbox-section">
-                <label>
-                  <input type="checkbox" [(ngModel)]="provisionalAccepted" [required]="true">
-                  {{ currentProvisionalMessage?.checkboxText || 'Acepto proceder con inscripción provisional y comprometerme a completar la documentación dentro del plazo establecido' }}
-                </label>
+              <!-- Checkbox integrado en el banner -->
+              <div class="provisional-acceptance">
+                <app-custom-checkbox
+                  formControlName="documentosCompletos"
+                  label="Acepto proceder con inscripción provisional y comprometerme a completar la documentación dentro del plazo establecido">
+                </app-custom-checkbox>
               </div>
             </div>
-          </div>
-
           </div>
         </div>
       </div>

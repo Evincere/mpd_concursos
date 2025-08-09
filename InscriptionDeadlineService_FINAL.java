@@ -118,9 +118,9 @@ public class InscriptionDeadlineService {
                     // Agregar nota explicativa
                     InscriptionNote note = InscriptionNote.builder()
                             .id(UUID.randomUUID())
-                            .text("Rechazada automáticamente por no completar documentación requerida dentro del plazo perentorio de 3 días hábiles posterior al cierre de inscripciones.")
+                            .content("Rechazada automáticamente por no completar documentación requerida dentro del plazo perentorio de 3 días hábiles posterior al cierre de inscripciones.")
                             .createdAt(LocalDateTime.now())
-                            
+                            .isSystemGenerated(true)
                             .build();
                     inscription.addNote(note);
                     
@@ -147,9 +147,9 @@ public class InscriptionDeadlineService {
                     // Agregar nota de congelación
                     InscriptionNote note = InscriptionNote.builder()
                             .id(UUID.randomUUID())
-                            .text("Congelada para evaluación administrativa - fin del período de gracia para documentación.")
+                            .content("Congelada para evaluación administrativa - fin del período de gracia para documentación.")
                             .createdAt(LocalDateTime.now())
-                            
+                            .isSystemGenerated(true)
                             .build();
                     inscription.addNote(note);
                     
@@ -278,66 +278,5 @@ public class InscriptionDeadlineService {
     public LocalDateTime calculateDocumentationDeadline(LocalDateTime inscriptionEndDate) {
         log.warn("⚠️ Método legacy calculateDocumentationDeadline() - debe usarse calculateGracePeriodEnd()");
         return calculateGracePeriodEnd(inscriptionEndDate);
-    }
-
-    /**
-     * Actualiza el estado de una inscripción basado en la documentación
-     * MÉTODO REQUERIDO POR DocumentServiceImpl
-     */
-    @Transactional
-    public void updateInscriptionDocumentationStatus(Inscription inscription, boolean hasAllRequiredDocuments) {
-        if (inscription == null) {
-            return;
-        }
-
-        // Si está congelada, no cambiar el estado
-        if (inscription.getFrozenDate() != null) {
-            log.warn("Intento de actualizar documentación de inscripción congelada: {}", inscription.getId());
-            return;
-        }
-
-        InscriptionState currentState = inscription.getState();
-        
-        if (hasAllRequiredDocuments) {
-            // Si ahora tiene todos los documentos, cambiar a COMPLETED_WITH_DOCS
-            if (currentState == InscriptionState.COMPLETED_PENDING_DOCS) {
-                inscription.setState(InscriptionState.COMPLETED_WITH_DOCS);
-                inscription.setLastUpdated(LocalDateTime.now());
-                inscriptionRepository.save(inscription);
-                
-                log.info("Inscripción {} actualizada a COMPLETED_WITH_DOCS", inscription.getId());
-            }
-        } else {
-            // Si no tiene todos los documentos y está completada, cambiar a PENDING_DOCS
-            if (currentState == InscriptionState.COMPLETED_WITH_DOCS) {
-                inscription.setState(InscriptionState.COMPLETED_PENDING_DOCS);
-                inscription.setLastUpdated(LocalDateTime.now());
-                
-                // Establecer plazo perentorio usando la fecha correcta del concurso
-                if (inscription.getDocumentationDeadline() == null) {
-                    // Obtener la fecha de fin de inscripción del concurso
-                    LocalDateTime contestEndDate = null;
-                    try {
-                        Contest contest = contestRepository.findById(inscription.getContestId().getValue())
-                                .orElse(null);
-                        if (contest != null) {
-                            contestEndDate = contest.getInscriptionEndDate();
-                        }
-                    } catch (Exception e) {
-                        log.warn("Error al obtener fecha de fin de inscripción del concurso {}: {}",
-                                inscription.getContestId().getValue(), e.getMessage());
-                    }
-
-                    // Calcular deadline usando la fecha correcta del concurso
-                    LocalDateTime deadline = calculateGracePeriodEnd(
-                            contestEndDate != null ? contestEndDate : LocalDateTime.now());
-                    inscription.setDocumentationDeadline(deadline);
-                }
-                
-                inscriptionRepository.save(inscription);
-                
-                log.info("Inscripción {} actualizada a COMPLETED_PENDING_DOCS", inscription.getId());
-            }
-        }
     }
 }

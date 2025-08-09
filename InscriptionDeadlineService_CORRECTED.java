@@ -4,7 +4,6 @@ import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Servicio para manejar los plazos perentorios de documentación
- * VERSIÓN CORREGIDA - Implementa lógica de negocio correcta
+ * VERSIÓN CORREGIDA - Implementa lógica de negocio correcta:
+ * 
+ * 1. Los 3 días hábiles se cuentan desde el CIERRE DEL CONCURSO (no desde inscripción individual)
+ * 2. Al vencimiento: COMPLETED_PENDING_DOCS → REJECTED (no FROZEN)
+ * 3. Congelación de TODAS las inscripciones para revisión administrativa
  */
 @Service
 @RequiredArgsConstructor
@@ -36,13 +38,14 @@ public class InscriptionDeadlineService {
      * - Los 3 días hábiles se cuentan desde el cierre del concurso
      * - Al vencimiento: COMPLETED_PENDING_DOCS → REJECTED automáticamente
      * - TODAS las inscripciones se congelan para revisión administrativa
+     * Se ejecuta cada hora
      */
     @Scheduled(fixedRate = 3600000) // Cada hora
     @Transactional
     public void processInscriptionsAfterGracePeriod() {
         log.info("🔍 Verificando plazos de gracia post-inscripción");
 
-        // Buscar concursos cerrados
+        // Buscar concursos cerrados que podrían tener plazos vencidos
         List<Contest> closedContests = contestRepository.findByStatus(ContestStatus.CLOSED);
         
         for (Contest contest : closedContests) {
@@ -54,6 +57,7 @@ public class InscriptionDeadlineService {
 
     /**
      * Procesa las inscripciones de un concurso específico si el plazo de gracia ha vencido
+     * LÓGICA CORRECTA DEL NEGOCIO
      */
     @Transactional
     public void processContestInscriptionsIfGracePeriodExpired(Contest contest) {
@@ -78,11 +82,8 @@ public class InscriptionDeadlineService {
             return;
         }
 
-        // Verificar si ya se procesó este concurso (verificando si hay inscripciones congeladas)
-        List<Inscription> allInscriptions = inscriptionRepository.findByContestId(contest.getId());
-        boolean alreadyProcessed = allInscriptions.stream().anyMatch(i -> i.getFrozenDate() != null);
-        
-        if (alreadyProcessed) {
+        // Verificar si ya se procesó este concurso
+        if (contestAlreadyProcessed(contest.getId())) {
             log.debug("Concurso {} ya fue procesado anteriormente", contest.getTitle());
             return;
         }
@@ -90,16 +91,20 @@ public class InscriptionDeadlineService {
         log.info("🚨 PROCESANDO concurso {} - Plazo de gracia VENCIDO", contest.getTitle());
 
         // Procesar todas las inscripciones del concurso
-        processInscriptionsForContest(contest, allInscriptions);
+        processInscriptionsForContest(contest);
         
         log.info("✅ Concurso {} procesado completamente", contest.getTitle());
     }
 
     /**
      * Procesa todas las inscripciones de un concurso después del vencimiento del plazo de gracia
+     * IMPLEMENTA LA LÓGICA CORRECTA DE NEGOCIO
      */
     @Transactional
-    public void processInscriptionsForContest(Contest contest, List<Inscription> allInscriptions) {
+    public void processInscriptionsForContest(Contest contest) {
+        // 1. Obtener todas las inscripciones del concurso
+        List<Inscription> allInscriptions = inscriptionRepository.findByContestId(contest.getId());
+        
         int rejectedCount = 0;
         int frozenCount = 0;
         int errorCount = 0;
@@ -116,42 +121,25 @@ public class InscriptionDeadlineService {
                     inscription.setLastUpdated(LocalDateTime.now());
                     
                     // Agregar nota explicativa
-                    InscriptionNote note = InscriptionNote.builder()
-                            .id(UUID.randomUUID())
-                            .text("Rechazada automáticamente por no completar documentación requerida dentro del plazo perentorio de 3 días hábiles posterior al cierre de inscripciones.")
-                            .createdAt(LocalDateTime.now())
-                            
-                            .build();
-                    inscription.addNote(note);
+                    inscription.addNote("Rechazada automáticamente por no completar documentación requerida dentro del plazo perentorio de 3 días hábiles posterior al cierre de inscripciones.");
                     
                     inscriptionRepository.save(inscription);
                     rejectedCount++;
                     
                     log.info("❌ Inscripción {} RECHAZADA por documentación pendiente", inscription.getId());
                     
-                    // Enviar notificación de rechazo automático (usando el método existente de congelación como base)
-                    try {
-                        notificationService.notifyUserAboutInscriptionFrozen(inscription, contest);
-                        log.info("📧 Notificación enviada para inscripción rechazada {}", inscription.getId());
-                    } catch (Exception notificationError) {
-                        log.error("Error enviando notificación de rechazo para inscripción {}: {}", 
-                                 inscription.getId(), notificationError.getMessage(), notificationError);
-                    }
+                    // Enviar notificación de rechazo automático
+                    sendRejectionNotification(inscription, contest);
                 }
                 
                 // REGLA DE NEGOCIO: Congelar TODAS las inscripciones (excepto las ya canceladas)
+                // para que no se puedan modificar más - fase de evaluación administrativa
                 if (currentState != InscriptionState.CANCELLED && inscription.getFrozenDate() == null) {
                     inscription.setFrozenDate(LocalDateTime.now());
                     inscription.setLastUpdated(LocalDateTime.now());
                     
                     // Agregar nota de congelación
-                    InscriptionNote note = InscriptionNote.builder()
-                            .id(UUID.randomUUID())
-                            .text("Congelada para evaluación administrativa - fin del período de gracia para documentación.")
-                            .createdAt(LocalDateTime.now())
-                            
-                            .build();
-                    inscription.addNote(note);
+                    inscription.addNote("Congelada para evaluación administrativa - fin del período de gracia para documentación.");
                     
                     inscriptionRepository.save(inscription);
                     frozenCount++;
@@ -167,11 +155,17 @@ public class InscriptionDeadlineService {
         
         log.info("📊 Procesamiento completado - Rechazadas: {}, Congeladas: {}, Errores: {}", 
                 rejectedCount, frozenCount, errorCount);
+        
+        // Marcar concurso como procesado
+        markContestAsProcessed(contest);
     }
 
     /**
      * Calcula el fin del plazo de gracia: 3 días hábiles después del cierre de inscripción
      * LÓGICA CORRECTA: Se cuenta desde el cierre del concurso, no desde inscripciones individuales
+     * 
+     * @param contestEndDate Fecha de cierre de inscripción del concurso
+     * @return Fecha de fin del plazo de gracia
      */
     public LocalDateTime calculateGracePeriodEnd(LocalDateTime contestEndDate) {
         if (contestEndDate == null) {
@@ -209,6 +203,50 @@ public class InscriptionDeadlineService {
     }
 
     /**
+     * Verifica si un concurso ya fue procesado para evitar reprocesamiento
+     */
+    private boolean contestAlreadyProcessed(Long contestId) {
+        // Un concurso se considera procesado si tiene inscripciones congeladas por plazo vencido
+        // Verificamos si existen inscripciones con frozen_date establecido
+        List<Inscription> frozenInscriptions = inscriptionRepository.findByContestIdAndFrozenDateNotNull(contestId);
+        
+        boolean alreadyProcessed = !frozenInscriptions.isEmpty();
+        
+        if (alreadyProcessed) {
+            log.debug("🔒 Concurso {} ya procesado - {} inscripciones congeladas", contestId, frozenInscriptions.size());
+        }
+        
+        return alreadyProcessed;
+    }
+
+    /**
+     * Marca un concurso como procesado (a través de inscripciones congeladas)
+     */
+    private void markContestAsProcessed(Contest contest) {
+        log.info("✅ Concurso {} marcado como procesado - inscripciones congeladas", contest.getId());
+    }
+
+    /**
+     * Envía notificación de rechazo automático por documentación incompleta
+     */
+    private void sendRejectionNotification(Inscription inscription, Contest contest) {
+        try {
+            String reason = "Su inscripción fue rechazada automáticamente por no completar la documentación requerida " +
+                          "dentro del plazo perentorio de 3 días hábiles posterior al cierre de inscripciones.";
+            
+            notificationService.notifyUserAboutInscriptionRejected(inscription, contest, reason);
+            log.info("📧 Notificación de rechazo enviada para inscripción {}", inscription.getId());
+        } catch (Exception e) {
+            log.error("❌ Error enviando notificación de rechazo para inscripción {}: {}", 
+                     inscription.getId(), e.getMessage(), e);
+        }
+    }
+
+    // ============================================================================
+    // MÉTODOS AUXILIARES PARA CONSULTAS Y VERIFICACIONES
+    // ============================================================================
+
+    /**
      * Verifica si una inscripción puede aún cargar documentos
      */
     public boolean canUploadDocuments(Inscription inscription) {
@@ -243,6 +281,29 @@ public class InscriptionDeadlineService {
     }
 
     /**
+     * Obtiene información sobre el estado del plazo de gracia para un concurso
+     */
+    public GracePeriodInfo getGracePeriodInfo(Contest contest) {
+        if (contest == null || contest.getInscriptionEndDate() == null) {
+            return null;
+        }
+
+        LocalDateTime gracePeriodEnd = calculateGracePeriodEnd(contest.getInscriptionEndDate());
+        LocalDateTime now = LocalDateTime.now();
+        
+        boolean isExpired = now.isAfter(gracePeriodEnd);
+        long hoursRemaining = isExpired ? 0 : java.time.Duration.between(now, gracePeriodEnd).toHours();
+        
+        return new GracePeriodInfo(
+            contest.getId(),
+            contest.getInscriptionEndDate(),
+            gracePeriodEnd,
+            isExpired,
+            hoursRemaining
+        );
+    }
+
+    /**
      * Obtiene el tiempo restante para cargar documentos
      */
     public long getHoursUntilDeadline(Inscription inscription) {
@@ -260,84 +321,34 @@ public class InscriptionDeadlineService {
         return java.time.Duration.between(now, deadline).toHours();
     }
 
-    /**
-     * MÉTODO LEGACY - Mantener para compatibilidad hacia atrás
-     * @deprecated Usar processInscriptionsAfterGracePeriod() que implementa la lógica correcta
-     */
-    @Deprecated
-    public void freezeExpiredInscriptions() {
-        log.warn("⚠️ Método legacy freezeExpiredInscriptions() llamado - redirigiendo a lógica correcta");
-        processInscriptionsAfterGracePeriod();
-    }
+    // ============================================================================
+    // CLASE AUXILIAR PARA INFORMACIÓN DEL PLAZO DE GRACIA
+    // ============================================================================
     
     /**
-     * MÉTODO LEGACY - Mantener para compatibilidad
-     * @deprecated La lógica correcta usa la fecha del concurso, no fechas individuales
+     * DTO para información del plazo de gracia
      */
-    @Deprecated
-    public LocalDateTime calculateDocumentationDeadline(LocalDateTime inscriptionEndDate) {
-        log.warn("⚠️ Método legacy calculateDocumentationDeadline() - debe usarse calculateGracePeriodEnd()");
-        return calculateGracePeriodEnd(inscriptionEndDate);
-    }
+    public static class GracePeriodInfo {
+        private Long contestId;
+        private LocalDateTime inscriptionEndDate;
+        private LocalDateTime gracePeriodEnd;
+        private boolean isExpired;
+        private long hoursRemaining;
 
-    /**
-     * Actualiza el estado de una inscripción basado en la documentación
-     * MÉTODO REQUERIDO POR DocumentServiceImpl
-     */
-    @Transactional
-    public void updateInscriptionDocumentationStatus(Inscription inscription, boolean hasAllRequiredDocuments) {
-        if (inscription == null) {
-            return;
+        public GracePeriodInfo(Long contestId, LocalDateTime inscriptionEndDate, 
+                              LocalDateTime gracePeriodEnd, boolean isExpired, long hoursRemaining) {
+            this.contestId = contestId;
+            this.inscriptionEndDate = inscriptionEndDate;
+            this.gracePeriodEnd = gracePeriodEnd;
+            this.isExpired = isExpired;
+            this.hoursRemaining = hoursRemaining;
         }
 
-        // Si está congelada, no cambiar el estado
-        if (inscription.getFrozenDate() != null) {
-            log.warn("Intento de actualizar documentación de inscripción congelada: {}", inscription.getId());
-            return;
-        }
-
-        InscriptionState currentState = inscription.getState();
-        
-        if (hasAllRequiredDocuments) {
-            // Si ahora tiene todos los documentos, cambiar a COMPLETED_WITH_DOCS
-            if (currentState == InscriptionState.COMPLETED_PENDING_DOCS) {
-                inscription.setState(InscriptionState.COMPLETED_WITH_DOCS);
-                inscription.setLastUpdated(LocalDateTime.now());
-                inscriptionRepository.save(inscription);
-                
-                log.info("Inscripción {} actualizada a COMPLETED_WITH_DOCS", inscription.getId());
-            }
-        } else {
-            // Si no tiene todos los documentos y está completada, cambiar a PENDING_DOCS
-            if (currentState == InscriptionState.COMPLETED_WITH_DOCS) {
-                inscription.setState(InscriptionState.COMPLETED_PENDING_DOCS);
-                inscription.setLastUpdated(LocalDateTime.now());
-                
-                // Establecer plazo perentorio usando la fecha correcta del concurso
-                if (inscription.getDocumentationDeadline() == null) {
-                    // Obtener la fecha de fin de inscripción del concurso
-                    LocalDateTime contestEndDate = null;
-                    try {
-                        Contest contest = contestRepository.findById(inscription.getContestId().getValue())
-                                .orElse(null);
-                        if (contest != null) {
-                            contestEndDate = contest.getInscriptionEndDate();
-                        }
-                    } catch (Exception e) {
-                        log.warn("Error al obtener fecha de fin de inscripción del concurso {}: {}",
-                                inscription.getContestId().getValue(), e.getMessage());
-                    }
-
-                    // Calcular deadline usando la fecha correcta del concurso
-                    LocalDateTime deadline = calculateGracePeriodEnd(
-                            contestEndDate != null ? contestEndDate : LocalDateTime.now());
-                    inscription.setDocumentationDeadline(deadline);
-                }
-                
-                inscriptionRepository.save(inscription);
-                
-                log.info("Inscripción {} actualizada a COMPLETED_PENDING_DOCS", inscription.getId());
-            }
-        }
+        // Getters
+        public Long getContestId() { return contestId; }
+        public LocalDateTime getInscriptionEndDate() { return inscriptionEndDate; }
+        public LocalDateTime getGracePeriodEnd() { return gracePeriodEnd; }
+        public boolean isExpired() { return isExpired; }
+        public long getHoursRemaining() { return hoursRemaining; }
     }
 }

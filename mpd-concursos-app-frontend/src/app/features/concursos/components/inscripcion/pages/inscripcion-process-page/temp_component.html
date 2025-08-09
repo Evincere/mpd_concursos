@@ -1,0 +1,43 @@
+          <!-- UNIFICADO: Checkbox para inscripción provisional cuando hay documentos pendientes - VERSIÓN DINÁMICA -->
+          <div class="provisional-inscription-section" *ngIf="!shouldHideProvisionalSection()">
+            <div class="provisional-alert" [ngClass]="currentProvisionalMessage?.alertClass">
+              <div class="alert-header">
+                <i class="fas" [ngClass]="getAlertIcon()"></i>
+                <span>{{ currentProvisionalMessage?.title || 'Inscripción Provisional' }}</span>
+              </div>
+              <p [innerHTML]="currentProvisionalMessage?.description || 'Si no puede completar toda la documentación ahora, puede proceder con una inscripción provisional.'">
+              </p>
+              <div class="warning-note" [ngClass]="getWarningClass()">
+                <i class="fas" [ngClass]="getWarningIcon()"></i>
+                <span [innerHTML]="currentProvisionalMessage?.warningNote || 'La falta de documentación completa dentro del plazo resultará en la descalificación automática.'"></span>
+              </div>
+
+              <!-- Checkbox dinámico -->
+              <div class="checkbox-container">
+                <mat-checkbox 
+                  [(ngModel)]="provisionalAccepted" 
+                  [required]="true"
+                  [disabled]="gracePeriodInfo?.isExpired"
+                  class="provisional-checkbox">
+                  {{ currentProvisionalMessage?.checkboxText || 'Acepto proceder con inscripción provisional y comprometerme a completar la documentación dentro del plazo establecido' }}
+                </mat-checkbox>
+              </div>
+
+              <!-- Información adicional del deadline si estamos en período de gracia -->
+              <div class="grace-period-details" *ngIf="gracePeriodInfo?.isInGracePeriod">
+                <div class="deadline-countdown">
+                  <div class="countdown-item">
+                    <span class="countdown-number">{{ gracePeriodInfo?.daysRemaining || 0 }}</span>
+                    <span class="countdown-label">días</span>
+                  </div>
+                  <div class="countdown-item">
+                    <span class="countdown-number">{{ getHoursInDay(gracePeriodInfo?.hoursRemaining || 0) }}</span>
+                    <span class="countdown-label">horas</span>
+                  </div>
+                  <div class="deadline-text">
+                    Vence: {{ gracePeriodInfo?.documentationDeadline | date:'EEEE, dd \'de\' MMMM \'de\' yyyy \'a las\' HH:mm' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>

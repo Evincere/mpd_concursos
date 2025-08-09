@@ -16,8 +16,6 @@ Ruta interna: /app/storage/
 
 ```
 /app/storage/
-├── backup_before_recovery_20250806_183729.tar.gz (111MB)
-├── backup_huerfanos_melina_20250808_122528/
 ├── contest-bases/
 ├── cv-documents/               # 64 subdirectorios activos
 ├── documents/                  # 224 subdirectorios activos ⭐ PRINCIPAL

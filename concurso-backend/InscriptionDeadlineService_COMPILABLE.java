@@ -118,9 +118,11 @@ public class InscriptionDeadlineService {
                     // Agregar nota explicativa
                     InscriptionNote note = InscriptionNote.builder()
                             .id(UUID.randomUUID())
+                            .inscriptionId(inscription.getId().getValue())
                             .text("Rechazada automáticamente por no completar documentación requerida dentro del plazo perentorio de 3 días hábiles posterior al cierre de inscripciones.")
+                            .createdBy(null) // Sistema
+                            .createdByUsername("SISTEMA")
                             .createdAt(LocalDateTime.now())
-                            
                             .build();
                     inscription.addNote(note);
                     
@@ -147,9 +149,11 @@ public class InscriptionDeadlineService {
                     // Agregar nota de congelación
                     InscriptionNote note = InscriptionNote.builder()
                             .id(UUID.randomUUID())
+                            .inscriptionId(inscription.getId().getValue())
                             .text("Congelada para evaluación administrativa - fin del período de gracia para documentación.")
+                            .createdBy(null) // Sistema
+                            .createdByUsername("SISTEMA")
                             .createdAt(LocalDateTime.now())
-                            
                             .build();
                     inscription.addNote(note);
                     
@@ -261,26 +265,6 @@ public class InscriptionDeadlineService {
     }
 
     /**
-     * MÉTODO LEGACY - Mantener para compatibilidad hacia atrás
-     * @deprecated Usar processInscriptionsAfterGracePeriod() que implementa la lógica correcta
-     */
-    @Deprecated
-    public void freezeExpiredInscriptions() {
-        log.warn("⚠️ Método legacy freezeExpiredInscriptions() llamado - redirigiendo a lógica correcta");
-        processInscriptionsAfterGracePeriod();
-    }
-    
-    /**
-     * MÉTODO LEGACY - Mantener para compatibilidad
-     * @deprecated La lógica correcta usa la fecha del concurso, no fechas individuales
-     */
-    @Deprecated
-    public LocalDateTime calculateDocumentationDeadline(LocalDateTime inscriptionEndDate) {
-        log.warn("⚠️ Método legacy calculateDocumentationDeadline() - debe usarse calculateGracePeriodEnd()");
-        return calculateGracePeriodEnd(inscriptionEndDate);
-    }
-
-    /**
      * Actualiza el estado de una inscripción basado en la documentación
      * MÉTODO REQUERIDO POR DocumentServiceImpl
      */
@@ -313,24 +297,24 @@ public class InscriptionDeadlineService {
                 inscription.setState(InscriptionState.COMPLETED_PENDING_DOCS);
                 inscription.setLastUpdated(LocalDateTime.now());
                 
-                // Establecer plazo perentorio usando la fecha correcta del concurso
+                // Establecer plazo perentorio si no existe
                 if (inscription.getDocumentationDeadline() == null) {
                     // Obtener la fecha de fin de inscripción del concurso
-                    LocalDateTime contestEndDate = null;
+                    LocalDateTime inscriptionEndDate = null;
                     try {
                         Contest contest = contestRepository.findById(inscription.getContestId().getValue())
                                 .orElse(null);
                         if (contest != null) {
-                            contestEndDate = contest.getInscriptionEndDate();
+                            inscriptionEndDate = contest.getInscriptionEndDate();
                         }
                     } catch (Exception e) {
                         log.warn("Error al obtener fecha de fin de inscripción del concurso {}: {}",
                                 inscription.getContestId().getValue(), e.getMessage());
                     }
 
-                    // Calcular deadline usando la fecha correcta del concurso
+                    // Si no se puede obtener la fecha del concurso, usar la fecha actual como fallback
                     LocalDateTime deadline = calculateGracePeriodEnd(
-                            contestEndDate != null ? contestEndDate : LocalDateTime.now());
+                            inscriptionEndDate != null ? inscriptionEndDate : LocalDateTime.now());
                     inscription.setDocumentationDeadline(deadline);
                 }
                 
@@ -339,5 +323,25 @@ public class InscriptionDeadlineService {
                 log.info("Inscripción {} actualizada a COMPLETED_PENDING_DOCS", inscription.getId());
             }
         }
+    }
+
+    /**
+     * MÉTODO LEGACY - Mantener para compatibilidad hacia atrás
+     * @deprecated Usar processInscriptionsAfterGracePeriod() que implementa la lógica correcta
+     */
+    @Deprecated
+    public void freezeExpiredInscriptions() {
+        log.warn("⚠️ Método legacy freezeExpiredInscriptions() llamado - redirigiendo a lógica correcta");
+        processInscriptionsAfterGracePeriod();
+    }
+    
+    /**
+     * MÉTODO LEGACY - Mantener para compatibilidad
+     * @deprecated La lógica correcta usa la fecha del concurso, no fechas individuales
+     */
+    @Deprecated
+    public LocalDateTime calculateDocumentationDeadline(LocalDateTime inscriptionEndDate) {
+        log.warn("⚠️ Método legacy calculateDocumentationDeadline() - debe usarse calculateGracePeriodEnd()");
+        return calculateGracePeriodEnd(inscriptionEndDate);
     }
 }
