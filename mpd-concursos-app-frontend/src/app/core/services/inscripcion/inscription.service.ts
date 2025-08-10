@@ -330,6 +330,67 @@ export class InscriptionService {
   }
 
   /**
+   * ✅ SOLUCIÓN: Obtiene los detalles específicos de una inscripción
+   * Incluye centro de vida, circunscripciones seleccionadas, etc.
+   * @param inscriptionId ID de la inscripción
+   * @returns Observable con los detalles de la inscripción
+   */
+  getInscriptionDetails(inscriptionId: string): Observable<any> {
+    if (!this.validateAuthentication()) return EMPTY;
+    if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] getInscriptionDetails: Inscription ID is required.', undefined, 'Inscription');
+      return throwError(() => new Error('El ID de inscripción es requerido'));
+    }
+
+    this.loggingService.debug(`[InscriptionService] Fetching inscription details for ID: ${inscriptionId}`, undefined, 'Inscription');
+    
+    // ✅ SOLUCIÓN PROBLEMA 28: Aplicar reintentos inteligentes para errores de red
+    return this.withNetworkRetry(
+      this.http.get<any>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/details`),
+      'getInscriptionDetails'
+    ).pipe(
+      tap(details => {
+        this.loggingService.debug(`[InscriptionService] Inscription details fetched for ${inscriptionId}:`, details, 'Inscription');
+      }),
+      catchError(error => {
+        this.loggingService.warn(`[InscriptionService] Error fetching inscription details for ${inscriptionId}:`, error, 'Inscription');
+        return this.handleSimpleError(error);
+      })
+    );
+  }
+
+  /**
+   * ✅ SOLUCIÓN: Actualiza los datos específicos de una inscripción
+   * Permite guardar centro de vida y circunscripciones seleccionadas
+   * @param inscriptionId ID de la inscripción
+   * @param data Datos a actualizar
+   * @returns Observable con la respuesta de la actualización
+   */
+  updateInscriptionData(inscriptionId: string, data: any): Observable<any> {
+    if (!this.validateAuthentication()) return EMPTY;
+    if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] updateInscriptionData: Inscription ID is required.', undefined, 'Inscription');
+      return throwError(() => new Error('El ID de inscripción es requerido'));
+    }
+
+    this.loggingService.debug(`[InscriptionService] Updating inscription data for ID: ${inscriptionId}`, data, 'Inscription');
+    
+    // ✅ SOLUCIÓN PROBLEMA 28: Aplicar reintentos inteligentes para errores de red
+    return this.withNetworkRetry(
+      this.http.patch<any>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/data`, data),
+      'updateInscriptionData'
+    ).pipe(
+      tap(response => {
+        this.loggingService.debug(`[InscriptionService] Inscription data updated for ${inscriptionId}:`, response, 'Inscription');
+      }),
+      catchError(error => {
+        this.loggingService.warn(`[InscriptionService] Error updating inscription data for ${inscriptionId}:`, error, 'Inscription');
+        return this.handleSimpleError(error);
+      })
+    );
+  }
+
+  /**
    * Creates a new inscription for a given contest.
    * @param contestId The ID of the contest.
    * @returns An Observable of the created inscription response.
@@ -1196,4 +1257,5 @@ export class InscriptionService {
     }
     this.inscriptions$.next([...currentInscriptions]); // Emit new array to trigger updates
   }
+
 }

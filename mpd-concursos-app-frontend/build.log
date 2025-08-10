@@ -1,0 +1,150 @@
+npm verbose cli /usr/bin/node /usr/bin/npm
+npm info using npm@10.8.2
+npm info using node@v20.19.4
+npm verbose title npm run build
+npm verbose argv "run" "build" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:/root/.npm/_logs/2025-08-09T16_12_18_951Z-
+npm verbose logfile /root/.npm/_logs/2025-08-09T16_12_18_951Z-debug-0.log
+
+> mpd-concursos-app-frontend@1.0.0 build
+> ng build --configuration production
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+
+./src/app/core/services/cv/cv-pdf-export.service.ts:22:38-69 - Warning: Module not found: Error: Can't resolve 'pdfmake/build/pdfmake' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+./src/app/core/services/cv/cv-pdf-export.service.ts:23:39-72 - Warning: Module not found: Error: Can't resolve 'pdfmake/build/vfs_fonts' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+Warning: ▲ [WARNING] Comments in CSS use "/* ... */" instead of "//" [js-comment-in-css]
+
+    /root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/features/admin/components/concursos/components/concurso-fechas-dashboard/concurso-fechas-dashboard.component.ts-angular-inline--53.css:195:6:
+      195 │       // Enhanced glassmorphism for custom tabs
+          ╵       ~~
+
+
+
+Warning: ▲ [WARNING] Comments in CSS use "/* ... */" instead of "//" [js-comment-in-css]
+
+    /root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/features/perfil/components/documentacion-tab/documentacion-tab.component.ts-angular-inline--24.css:247:6:
+      247 │       // Contenido principal de la card
+          ╵       ~~
+
+
+
+Warning: ▲ [WARNING] Comments in CSS use "/* ... */" instead of "//" [js-comment-in-css]
+
+    /root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/shared/components/global-loader/global-loader.component.ts-angular-inline--41.css:59:4:
+      59 │     // Estilos para tema oscuro
+         ╵     ~~
+
+
+
+Warning: ▲ [WARNING] Comments in CSS use "/* ... */" instead of "//" [js-comment-in-css]
+
+    /root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/shared/components/keyboard-shortcuts-help/keyboard-shortcuts-help.component.ts-angular-inline--43.css:121:4:
+      121 │     // Estilos para tema oscuro
+          ╵     ~~
+
+
+
+
+
+./src/app/core/services/cv/cv-autocomplete.service.ts:1:0-27 - Error: Module not found: Error: Can't resolve 'fuse.js' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+./src/app/core/services/cv/cv-search.service.ts:1:0-27 - Error: Module not found: Error: Can't resolve 'fuse.js' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+./src/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts:9:0-51 - Error: Module not found: Error: Can't resolve 'ng-apexcharts' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/features/admin/components/admin-dashboard/components/stats-chart'
+
+Error: [96msrc/app/core/config/chart-global-config.ts[0m:[93m6[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module 'ng-apexcharts' or its corresponding type declarations.
+
+[7m6[0m import { ApexOptions } from 'ng-apexcharts';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-autocomplete.service.ts[0m:[93m1[0m:[93m18[0m - [91merror[0m[90m TS2307: [0mCannot find module 'fuse.js' or its corresponding type declarations.
+
+[7m1[0m import Fuse from 'fuse.js';
+[7m [0m [91m                 ~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-pdf-export.service.ts[0m:[93m1[0m:[93m54[0m - [91merror[0m[90m TS2307: [0mCannot find module 'pdfmake/interfaces' or its corresponding type declarations.
+
+[7m1[0m import { TDocumentDefinitions, Content, Style } from 'pdfmake/interfaces';
+[7m [0m [91m                                                     ~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-pdf-export.service.ts[0m:[93m73[0m:[93m42[0m - [91merror[0m[90m TS2307: [0mCannot find module 'pdfmake/build/pdfmake' or its corresponding type declarations.
+
+[7m73[0m       const pdfMakeModule = await import('pdfmake/build/pdfmake') as any;
+[7m  [0m [91m                                         ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-pdf-export.service.ts[0m:[93m74[0m:[93m43[0m - [91merror[0m[90m TS2307: [0mCannot find module 'pdfmake/build/vfs_fonts' or its corresponding type declarations.
+
+[7m74[0m       const pdfFontsModule = await import('pdfmake/build/vfs_fonts') as any;
+[7m  [0m [91m                                          ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-search.service.ts[0m:[93m1[0m:[93m18[0m - [91merror[0m[90m TS2307: [0mCannot find module 'fuse.js' or its corresponding type declarations.
+
+[7m1[0m import Fuse from 'fuse.js';
+[7m [0m [91m                 ~~~~~~~~~[0m
+
+
+Error: [96msrc/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts[0m:[93m8[0m:[93m36[0m - [91merror[0m[90m TS2307: [0mCannot find module 'ng-apexcharts' or its corresponding type declarations.
+
+[7m8[0m import { NgApexchartsModule } from 'ng-apexcharts';
+[7m [0m [91m                                   ~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts[0m:[93m14[0m:[93m8[0m - [91merror[0m[90m TS2307: [0mCannot find module 'ng-apexcharts' or its corresponding type declarations.
+
+[7m14[0m } from 'ng-apexcharts';
+[7m  [0m [91m       ~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts[0m:[93m46[0m:[93m12[0m - [91merror[0m[90m NG1010: [0m'imports' must be an array of components, directives, pipes, or NgModules.
+  Value is of type '[CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, (not statically analyzable)]'.
+
+[7m 46[0m   imports: [
+[7m   [0m [91m           ~[0m
+[7m 47[0m     CommonModule,
+[7m   [0m [91m~~~~~~~~~~~~~~~~~[0m
+[7m...[0m 
+[7m 53[0m     NgApexchartsModule
+[7m   [0m [91m~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m 54[0m   ]
+[7m   [0m [91m~~~[0m
+
+
+Error: [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.html[0m:[93m333[0m:[93m40[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types '3' and '4' have no overlap.
+
+[7m333[0m       <div class="step-content" *ngIf="currentStep === 4" @fadeInOut>
+[7m   [0m [91m                                       ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.ts[0m:[93m79[0m:[93m16[0m
+    [7m79[0m   templateUrl: './inscripcion-process-page.component.html',
+    [7m  [0m [96m               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    Error occurs in the template of component InscripcionProcessPageComponent.
+
+
+Error: [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.html[0m:[93m481[0m:[93m16[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types '3' and '4' have no overlap.
+
+[7m481[0m         *ngIf="currentStep === 4"
+[7m   [0m [91m               ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.ts[0m:[93m79[0m:[93m16[0m
+    [7m79[0m   templateUrl: './inscripcion-process-page.component.html',
+    [7m  [0m [96m               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    Error occurs in the template of component InscripcionProcessPageComponent.
+
+
+
+npm verbose cwd /root/concursos/mpd_concursos/mpd-concursos-app-frontend
+npm verbose os Linux 5.15.0-151-generic
+npm verbose node v20.19.4
+npm verbose npm  v10.8.2
+npm verbose exit 1
+npm verbose code 1

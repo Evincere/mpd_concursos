@@ -2196,3 +2196,189 @@
 .alert-header .fa-exclamation-triangle {
   color: #f59e0b;
 }
+
+/* ===== NUEVOS ESTILOS PARA MEJORAS DEL PERÍODO DE GRACIA ===== */
+
+/* Mensaje específico para período de gracia activo
+.grace-period-notice {
+  margin-top: 1rem;
+  
+  .alert {
+    background-color: #fffbf0;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    i {
+      color: #f59e0b;
+      font-size: 1.2rem;
+    }
+    
+    strong {
+      color: #92400e;
+    }
+  }
+}
+
+/* Mejorar el espaciado del botón "Guardar y Salir"
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 1.5rem;
+  
+  app-custom-button {
+    &:not(:last-child) {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+/* Mejorar el estilo del botón secundario
+app-custom-button[variant="secondary"] {
+  ::ng-deep .custom-button {
+    background-color: #6b7280;
+    border-color: #6b7280;
+    color: white;
+    
+    &:hover {
+      background-color: #4b5563;
+      border-color: #4b5563;
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
+    }
+  }
+}
+
+/* Responsivo para dispositivos móviles
+@media (max-width: 768px) {
+  .grace-period-notice {
+    .alert {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      
+      i {
+        align-self: flex-start;
+        margin-bottom: 0.25rem;
+      }
+    }
+  }
+  
+  .button-row {
+    flex-direction: column;
+    align-items: stretch;
+    
+    app-custom-button {
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 0.5rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+/* ===== FIN NUEVOS ESTILOS PARA PERÍODO DE GRACIA ===== */
+
+/* ===== NUEVOS ESTILOS PARA MEJORAS DEL PERÍODO DE GRACIA ===== */
+
+/* Mensaje específico para período de gracia activo */
+.grace-period-notice {
+  margin-top: 1rem;
+  
+  .alert {
+    background-color: #fffbf0;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    i {
+      color: #f59e0b;
+      font-size: 1.2rem;
+    }
+    
+    strong {
+      color: #92400e;
+    }
+  }
+}
+
+/* Mejorar el espaciado del botón "Guardar y Salir" */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 1.5rem;
+  
+  app-custom-button {
+    &:not(:last-child) {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+/* Mejorar el estilo del botón secundario */
+app-custom-button[variant="secondary"] {
+  ::ng-deep .custom-button {
+    background-color: #6b7280;
+    border-color: #6b7280;
+    color: white;
+    
+    &:hover {
+      background-color: #4b5563;
+      border-color: #4b5563;
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
+    }
+  }
+}
+
+/* Responsivo para dispositivos móviles */
+@media (max-width: 768px) {
+  .grace-period-notice {
+    .alert {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      
+      i {
+        align-self: flex-start;
+        margin-bottom: 0.25rem;
+      }
+    }
+  }
+  
+  .button-row {
+    flex-direction: column;
+    align-items: stretch;
+    
+    app-custom-button {
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 0.5rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+/* ===== FIN NUEVOS ESTILOS PARA PERÍODO DE GRACIA ===== */

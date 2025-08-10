@@ -294,7 +294,7 @@
             <div class="provisional-alert">
               <div class="alert-header">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Inscripción Provisional</span>
+                <span style="color: #f59e0b;">⏰ Período de Gracia - Completar Documentación</span>
               </div>
               <p>
                 Si no puede completar toda la documentación ahora, puede proceder con una
@@ -303,14 +303,14 @@
               </p>
               <div class="warning-note">
                 <i class="fas fa-exclamation-circle"></i>
-                <span>La falta de documentación completa dentro del plazo resultará en la descalificación automática.</span>
+                <span>⚠️ CRÍTICO: Quedan pocos días. Complete la documentación antes del miércoles 13/08/2025 23:59 o su inscripción será rechazada automáticamente.</span>
               </div>
 
               <!-- Checkbox integrado en el banner -->
               <div class="provisional-acceptance">
                 <app-custom-checkbox
                   formControlName="documentosCompletos"
-                  label="Acepto proceder con inscripción provisional y comprometerme a completar la documentación dentro del plazo establecido">
+                  label="Entiendo que debo completar la documentación antes del miércoles 13/08/2025 23:59 para que mi inscripción sea válida">
                 </app-custom-checkbox>
               </div>
             </div>
@@ -412,7 +412,7 @@
               <div class="provisional-info" *ngIf="!shouldHideProvisionalSection()">
                 <div class="info-header">
                   <i class="fas fa-info-circle"></i>
-                  <span>Inscripción Provisional</span>
+                  <span style="color: #f59e0b;">⏰ Período de Gracia - Completar Documentación</span>
                 </div>
                 <p>
                   Su inscripción será registrada como <strong>provisional</strong> debido a documentación pendiente.

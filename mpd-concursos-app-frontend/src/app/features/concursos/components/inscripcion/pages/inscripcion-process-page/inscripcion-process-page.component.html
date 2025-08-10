@@ -290,46 +290,47 @@
 
 
           <!-- UNIFICADO: Checkbox para inscripción provisional cuando hay documentos pendientes -->
-                    <!-- MENSAJE DINÁMICO PERÍODO DE GRACIA -->
           <div class="provisional-inscription-section" *ngIf="!shouldHideProvisionalSection()">
-            <div class="provisional-alert" [ngClass]="currentProvisionalMessage?.alertClass">
+            <div class="provisional-alert">
               <div class="alert-header">
-                <i class="fas" [ngClass]="getAlertIcon()"></i>
-                <span>{{ currentProvisionalMessage?.title || 'Inscripción Provisional' }}</span>
+                <i class="fas fa-exclamation-triangle"></i>
+                <span style="color: #f59e0b;">{{ getGracePeriodMessage().title }}</span>
               </div>
               <p>
-                {{ currentProvisionalMessage?.description || 'Si no puede completar toda la documentación ahora, puede proceder con una inscripción provisional. Tendrá 3 días hábiles después del cierre de inscripciones para completar la documentación pendiente.' }}
+                {{ getGracePeriodMessage().description }}
               </p>
-              <div class="warning-note" [ngClass]="getWarningClass()">
-                <i class="fas" [ngClass]="getWarningIcon()"></i>
-                <span>{{ currentProvisionalMessage?.warningNote || 'La falta de documentación completa dentro del plazo resultará en la descalificación automática.' }}</span>
+              <div class="warning-note">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>⚠️ CRÍTICO: Quedan pocos días. Complete la documentación antes del miércoles 13/08/2025 23:59 o su inscripción será rechazada automáticamente.</span>
               </div>
 
-              <!-- Countdown simple para período de gracia -->
-              <div class="grace-period-details" *ngIf="gracePeriodInfo?.isInGracePeriod">
-                <div class="deadline-info">
-                  <strong>Tiempo restante: {{ gracePeriodInfo?.daysRemaining || 0 }} días y {{ getHoursInDay(gracePeriodInfo?.hoursRemaining || 0) }} horas</strong>
-                  <br>
-                  <small>Vence: {{ gracePeriodInfo?.documentationDeadline | date:'dd/MM/yyyy HH:mm' }}</small>
+              <!-- Checkbox integrado en el banner - SOLO mostrar si NO está en período de gracia -->
+              <div class="provisional-acceptance" *ngIf="!isInGracePeriod()">
+                <app-custom-checkbox
+                  formControlName="documentosCompletos"
+                  label="Acepto proceder con inscripción provisional y completar la documentación durante el período de gracia"
+                  class="provisional-checkbox">
+                </app-custom-checkbox>
+              </div>
+
+              <!-- Mensaje específico para período de gracia activo -->
+              <div class="grace-period-notice" *ngIf="isInGracePeriod()">
+                <div class="alert alert-warning">
+                  <i class="fas fa-clock"></i>
+                  <strong>Período de gracia activo:</strong> Para continuar, debe cargar TODOS los documentos obligatorios pendientes.
                 </div>
               </div>
-
-              <!-- Checkbox -->
-              <div class="checkbox-section">
-                <label>
-                  <input type="checkbox" [(ngModel)]="provisionalAccepted" [required]="true">
-                  {{ currentProvisionalMessage?.checkboxText || 'Acepto proceder con inscripción provisional y comprometerme a completar la documentación dentro del plazo establecido' }}
-                </label>
               </div>
-            </div>
-          </div>
 
-          </div>
-        </div>
-      </div>
-
+              <!-- Mensaje específico para período de gracia activo -->
+              <div class="grace-period-notice" *ngIf="isInGracePeriod()">
+                <div class="alert alert-warning">
+                  <i class="fas fa-clock"></i>
+                  <strong>Período de gracia activo:</strong> Para continuar, debe cargar TODOS los documentos obligatorios pendientes.
+                </div>
+              </div>
       <!-- Paso 4: Confirmación -->
-      <div class="step-content" *ngIf="currentStep === 4" @fadeInOut>
+      <div class="step-content" *ngIf="isStep4()" @fadeInOut>
         <div class="content-section">
           <h3>Confirmación de Inscripción</h3>
           <p class="section-description">
@@ -421,13 +422,18 @@
               <!-- Información de inscripción provisional (solo informativa en el resumen) -->
               <div class="provisional-info" *ngIf="!shouldHideProvisionalSection()">
                 <div class="info-header">
-                  <i class="fas fa-info-circle"></i>
-                  <span>Inscripción Provisional</span>
+                  <span style="color: #f59e0b;">{{ getGracePeriodMessage().title }}</span>
+                  <span style="color: #f59e0b;">{{ getGracePeriodMessage().title }}</span>
                 </div>
-                <p>
+                <p *ngIf="!isInGracePeriod()">
                   Su inscripción será registrada como <strong>provisional</strong> debido a documentación pendiente.
                   Recuerde que tiene <strong>3 días hábiles</strong> después del cierre de inscripciones para completar
                   la documentación y evitar la descalificación automática.
+                </p>
+                <p *ngIf="isInGracePeriod()">
+                  <strong>Estado actual:</strong> Su inscripción está en período de gracia debido a documentación pendiente.
+                  Debe completar la carga de todos los documentos requeridos antes del miércoles 13/08/2025 23:59
+                  para evitar que su inscripción sea rechazada automáticamente.
                 </p>
               </div>
             </div>
@@ -444,13 +450,22 @@
     </div>
 
     <!-- Botones de acción -->
-    <div class="action-buttons">
+    <div class="action-buttons button-row">
       <app-custom-button
         *ngIf="currentStep > 1"
         variant="secondary"
         label="Atrás"
         icon="arrow-left"
         (buttonClick)="previousStep()">
+
+      <!-- NUEVO: Botón Guardar y Salir -->
+      <app-custom-button
+        *ngIf="shouldShowSaveAndExitButton()"
+        variant="secondary"
+        label="Guardar y Salir"
+        icon="save"
+        (buttonClick)="saveAndExit()">
+      </app-custom-button>
       </app-custom-button>
 
       <app-custom-button
@@ -463,7 +478,7 @@
       </app-custom-button>
 
       <app-custom-button
-        *ngIf="currentStep === 4"
+        *ngIf="isStep4()"
         variant="success"
         label="Finalizar Inscripción"
         icon="check-circle"

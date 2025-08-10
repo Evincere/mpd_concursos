@@ -1,0 +1,208 @@
+nohup: ignoring input
+
+> mpd-concursos-app-frontend@1.0.0 start
+> node fix-colorette.js && cross-env NODE_OPTIONS=--no-deprecation ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json
+
+🔧 Aplicando parche para colorette...
+📝 Parcheando: node_modules/colorette/index.cjs
+✅ Parcheado exitosamente: node_modules/colorette/index.cjs
+📝 Parcheando: node_modules/colorette/index.js
+✅ Parcheado exitosamente: node_modules/colorette/index.js
+🎉 Colorette parcheado exitosamente en 2 ubicaciones
+🚀 Ahora puedes ejecutar: npm run start
+Warning: Running a server with --disable-host-check is a security risk. See https://medium.com/webpack/webpack-dev-server-middleware-security-issues-1489d950874a for more information.
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+
+Initial chunk files                                                                                     | Names                                                                      |  Raw size
+vendor.js                                                                                               | vendor                                                                     |   5.08 MB | 
+main.js                                                                                                 | main                                                                       |   4.33 MB | 
+styles.css, styles.js                                                                                   | styles                                                                     | 621.17 kB | 
+polyfills.js                                                                                            | polyfills                                                                  | 268.16 kB | 
+runtime.js                                                                                              | runtime                                                                    |  12.98 kB | 
+
+                                                                                                        | Initial total                                                              |  10.32 MB
+
+Lazy chunk files                                                                                        | Names                                                                      |  Raw size
+src_app_features_admin_admin_module_ts.js                                                               | features-admin-admin-module                                                |  10.38 MB | 
+src_app_features_perfil_perfil_component_ts.js                                                          | perfil-component                                                           |   4.69 MB | 
+src_app_features_admin_components_inscripciones_inscripciones_module_ts.js                              | components-inscripciones-inscripciones-module                              |   1.76 MB | 
+src_app_features_admin_components_concursos_concursos_module_ts.js                                      | components-concursos-concursos-module                                      |   1.55 MB | 
+src_app_features_admin_components_usuarios_usuarios_routes_ts.js                                        | components-usuarios-usuarios-routes                                        |   1.32 MB | 
+src_app_features_concursos_components_inscripcion_routes_ts.js                                          | features-concursos-components-inscripcion-routes                           |   1.07 MB | 
+src_app_features_concursos_concursos_module_ts.js                                                       | features-concursos-concursos-module                                        | 940.84 kB | 
+src_app_features_admin_components_messaging_message-templates_message-templates_component_ts.js         | components-messaging-message-templates-message-templates-component         | 835.93 kB | 
+src_app_features_postulaciones_postulaciones_module_ts.js                                               | features-postulaciones-postulaciones-module                                | 675.20 kB | 
+src_app_features_admin_components_inscripciones_components_documents-manager_documents-manage-c26a18.js | components-documents-manager-documents-manager-component                   | 669.27 kB | 
+src_app_features_examenes_examenes_routes_ts.js                                                         | features-examenes-examenes-routes                                          | 620.92 kB | 
+src_app_features_admin_components_concursos_components_concurso-form-page_concurso-form-page_-536835.js | components-concurso-form-page-concurso-form-page-component                 | 493.38 kB | 
+src_app_features_admin_components_concursos_components_concurso-detalle_concurso-detalle-admi-456cdb.js | components-concurso-detalle-concurso-detalle-admin-component               | 457.68 kB | 
+src_app_features_admin_components_messaging_system-events_system-events_component_ts.js                 | components-messaging-system-events-system-events-component                 | 356.35 kB | 
+src_app_features_admin_components_messaging_notification-triggers_notification-triggers_compo-1d7a40.js | components-messaging-notification-triggers-notification-triggers-component | 347.10 kB | 
+src_app_features_admin_components_messaging_notification-queue_notification-queue_component_ts.js       | components-messaging-notification-queue-notification-queue-component       | 318.67 kB | 
+src_app_features_admin_components_support_support-dashboard_support-dashboard_component_ts.js           | support-dashboard-support-dashboard-component                              | 317.44 kB | 
+src_app_features_admin_components_messaging_conversation-history_conversation-history_component_ts.js   | components-messaging-conversation-history-conversation-history-component   | 301.33 kB | 
+default-src_app_features_concursos_components_inscripcion_documentos-embebidos_documento-mult-62920b.js | features-concursos-components-inscripcion-routes                           | 267.75 kB | 
+src_app_features_admin_components_support_ticket-detail_ticket-detail_component_ts.js                   | ticket-detail-ticket-detail-component                                      | 266.64 kB | 
+src_app_features_admin_components_messaging_messaging-dashboard_messaging-dashboard_component_ts.js     | components-messaging-messaging-dashboard-messaging-dashboard-component     | 266.23 kB | 
+src_app_features_admin_components_messaging_monitoring-dashboard_monitoring-dashboard_component_ts.js   | components-messaging-monitoring-dashboard-monitoring-dashboard-component   | 264.44 kB | 
+src_app_features_admin_components_concursos_components_fechas-importantes-admin_fechas-import-d42614.js | components-fechas-importantes-admin-fechas-importantes-admin-component     | 242.88 kB | 
+default-src_app_shared_components_confirm-dialog_confirm-dialog_component_ts-node_modules_ang-aed068.js | features-examenes-examenes-routes                                          | 237.50 kB | 
+default-src_app_shared_components_custom-form_custom-card_custom-card_component_ts-src_app_sh-208062.js | features-admin-admin-module                                                | 216.25 kB | 
+default-node_modules_angular_cdk_fesm2022_drag-drop_mjs.js                                              | features-examenes-examenes-routes                                          | 173.46 kB | 
+src_app_features_admin_components_support_ticket-list_ticket-list_component_ts.js                       | ticket-list-ticket-list-component                                          | 132.92 kB | 
+src_app_features_examples_examples_module_ts.js                                                         | features-examples-examples-module                                          | 115.62 kB | 
+default-src_app_shared_components_loader_loader_component_ts-src_app_shared_components_search-790c5a.js | features-concursos-concursos-module                                        |  91.54 kB | 
+default-node_modules_angular_material_fesm2022_slider_mjs.js                                            | features-examples-examples-module                                          |  91.42 kB | 
+default-src_app_shared_components_custom-form_custom-select_custom-select_component_ts-src_ap-09b17a.js | features-concursos-concursos-module                                        |  88.81 kB | 
+default-src_app_shared_components_en-desarrollo_en-desarrollo_component_ts.js                           | features-examenes-examenes-routes                                          |  70.48 kB | 
+default-src_app_shared_components_custom-dialog_custom-dialog_service_ts.js                             | perfil-component                                                           |  61.96 kB | 
+default-src_app_shared_directives_tooltip_directive_ts.js                                               | features-examples-examples-module                                          |  56.45 kB | 
+default-src_app_shared_components_custom-form_custom-button_custom-button_component_ts.js               | features-concursos-concursos-module                                        |  50.27 kB | 
+default-src_app_shared_components_custom-form_custom-form-field_custom-form-field_component_ts.js       | features-concursos-concursos-module                                        |  47.60 kB | 
+common.js                                                                                               | common                                                                     |  43.25 kB | 
+default-src_app_shared_components_progress-indicator_progress-indicator_component_ts.js                 | features-concursos-concursos-module                                        |  29.55 kB | 
+default-src_app_core_services_postulaciones_postulaciones_service_ts.js                                 | features-postulaciones-postulaciones-module                                |  26.39 kB | 
+default-src_app_shared_components_custom-form_custom-datepicker_custom-datepicker_component_ts.js       | perfil-component                                                           |  26.32 kB | 
+default-src_app_shared_components_custom-form_custom-checkbox_custom-checkbox_component_ts.js           | features-concursos-components-inscripcion-routes                           |  23.38 kB | 
+default-node_modules_angular_material_fesm2022_progress-bar_mjs.js                                      | features-concursos-concursos-module                                        |  22.72 kB | 
+default-src_app_shared_services_dialog_unified-dialog_service_ts-src_app_shared_utils_safe-ac-a83b99.js | features-concursos-components-inscripcion-routes                           |  22.21 kB | 
+default-src_app_core_services_admin_admin-concursos_service_ts.js                                       | components-concursos-concursos-module                                      |  21.20 kB | 
+default-node_modules_angular_material_fesm2022_progress-spinner_mjs.js                                  | features-concursos-concursos-module                                        |  21.02 kB | 
+default-src_app_core_services_support_support-ticket_service_ts.js                                      | support-dashboard-support-dashboard-component                              |  17.70 kB | 
+src_app_features_admin_components_usuarios_editar-usuario-dialog_editar-usuario-dialog_component_ts.js  | editar-usuario-dialog-editar-usuario-dialog-component                      |  13.76 kB | 
+default-src_app_core_services_messaging_message-templates_service_ts.js                                 | components-messaging-message-templates-message-templates-component         |  13.61 kB | 
+default-src_app_core_services_contest-document_contest-document_service_ts.js                           | features-concursos-concursos-module                                        |  13.16 kB | 
+src_app_features_configuracion_configuracion_module_ts.js                                               | features-configuracion-configuracion-module                                |   5.89 kB | 
+src_app_features_ayuda_ayuda_module_ts.js                                                               | features-ayuda-ayuda-module                                                |   5.37 kB | 
+src_app_features_admin_components_support_support_routes_ts.js                                          | components-support-support-routes                                          |   2.90 kB | 
+src_app_features_perfil_perfil_module_ts.js                                                             | features-perfil-perfil-module                                              |   2.26 kB | 
+
+Build at: 2025-08-09T16:21:36.325Z - Hash: d2bab2f3961d4911 - Time: 80277ms
+
+./src/app/core/services/cv/cv-pdf-export.service.ts:22:38-69 - Warning: Module not found: Error: Can't resolve 'pdfmake/build/pdfmake' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+./src/app/core/services/cv/cv-pdf-export.service.ts:23:39-72 - Warning: Module not found: Error: Can't resolve 'pdfmake/build/vfs_fonts' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+
+
+./src/app/core/services/cv/cv-autocomplete.service.ts:1:0-27 - Error: Module not found: Error: Can't resolve 'fuse.js' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+./src/app/core/services/cv/cv-search.service.ts:1:0-27 - Error: Module not found: Error: Can't resolve 'fuse.js' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/core/services/cv'
+
+./src/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts:9:0-51 - Error: Module not found: Error: Can't resolve 'ng-apexcharts' in '/root/concursos/mpd_concursos/mpd-concursos-app-frontend/src/app/features/admin/components/admin-dashboard/components/stats-chart'
+
+Error: [96msrc/app/core/config/chart-global-config.ts[0m:[93m6[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module 'ng-apexcharts' or its corresponding type declarations.
+
+[7m6[0m import { ApexOptions } from 'ng-apexcharts';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-autocomplete.service.ts[0m:[93m1[0m:[93m18[0m - [91merror[0m[90m TS2307: [0mCannot find module 'fuse.js' or its corresponding type declarations.
+
+[7m1[0m import Fuse from 'fuse.js';
+[7m [0m [91m                 ~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-pdf-export.service.ts[0m:[93m1[0m:[93m54[0m - [91merror[0m[90m TS2307: [0mCannot find module 'pdfmake/interfaces' or its corresponding type declarations.
+
+[7m1[0m import { TDocumentDefinitions, Content, Style } from 'pdfmake/interfaces';
+[7m [0m [91m                                                     ~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-pdf-export.service.ts[0m:[93m73[0m:[93m42[0m - [91merror[0m[90m TS2307: [0mCannot find module 'pdfmake/build/pdfmake' or its corresponding type declarations.
+
+[7m73[0m       const pdfMakeModule = await import('pdfmake/build/pdfmake') as any;
+[7m  [0m [91m                                         ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-pdf-export.service.ts[0m:[93m74[0m:[93m43[0m - [91merror[0m[90m TS2307: [0mCannot find module 'pdfmake/build/vfs_fonts' or its corresponding type declarations.
+
+[7m74[0m       const pdfFontsModule = await import('pdfmake/build/vfs_fonts') as any;
+[7m  [0m [91m                                          ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/core/services/cv/cv-search.service.ts[0m:[93m1[0m:[93m18[0m - [91merror[0m[90m TS2307: [0mCannot find module 'fuse.js' or its corresponding type declarations.
+
+[7m1[0m import Fuse from 'fuse.js';
+[7m [0m [91m                 ~~~~~~~~~[0m
+
+
+Error: [96msrc/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts[0m:[93m8[0m:[93m36[0m - [91merror[0m[90m TS2307: [0mCannot find module 'ng-apexcharts' or its corresponding type declarations.
+
+[7m8[0m import { NgApexchartsModule } from 'ng-apexcharts';
+[7m [0m [91m                                   ~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts[0m:[93m14[0m:[93m8[0m - [91merror[0m[90m TS2307: [0mCannot find module 'ng-apexcharts' or its corresponding type declarations.
+
+[7m14[0m } from 'ng-apexcharts';
+[7m  [0m [91m       ~~~~~~~~~~~~~~~[0m
+
+
+Error: [96msrc/app/features/admin/components/admin-dashboard/components/stats-chart/stats-chart.component.ts[0m:[93m46[0m:[93m12[0m - [91merror[0m[90m NG1010: [0m'imports' must be an array of components, directives, pipes, or NgModules.
+  Value is of type '[CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, (not statically analyzable)]'.
+
+[7m 46[0m   imports: [
+[7m   [0m [91m           ~[0m
+[7m 47[0m     CommonModule,
+[7m   [0m [91m~~~~~~~~~~~~~~~~~[0m
+[7m...[0m 
+[7m 53[0m     NgApexchartsModule
+[7m   [0m [91m~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m 54[0m   ]
+[7m   [0m [91m~~~[0m
+
+
+Error: [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.html[0m:[93m333[0m:[93m40[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types '3' and '4' have no overlap.
+
+[7m333[0m       <div class="step-content" *ngIf="currentStep == 4" @fadeInOut>
+[7m   [0m [91m                                       ~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.ts[0m:[93m79[0m:[93m16[0m
+    [7m79[0m   templateUrl: './inscripcion-process-page.component.html',
+    [7m  [0m [96m               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    Error occurs in the template of component InscripcionProcessPageComponent.
+
+
+Error: [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.html[0m:[93m481[0m:[93m16[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types '3' and '4' have no overlap.
+
+[7m481[0m         *ngIf="currentStep == 4"
+[7m   [0m [91m               ~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/app/features/concursos/components/inscripcion/pages/inscripcion-process-page/inscripcion-process-page.component.ts[0m:[93m79[0m:[93m16[0m
+    [7m79[0m   templateUrl: './inscripcion-process-page.component.html',
+    [7m  [0m [96m               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    Error occurs in the template of component InscripcionProcessPageComponent.
+
+
+
+
+** Angular Live Development Server is listening on 0.0.0.0:4200, open your browser on http://localhost:4200/ **
+
+
+✖ Failed to compile.
+
+<--- Last few GCs --->
+
+[1032237:0x1f9defa0]   142284 ms: Mark-Compact 2019.6 (2084.3) -> 2007.4 (2088.1) MB, 1959.60 / 0.00 ms  (average mu = 0.090, current mu = 0.016) allocation failure; scavenge might not succeed
+[1032237:0x1f9defa0]   143206 ms: Mark-Compact 2023.6 (2088.4) -> 2008.0 (2088.9) MB, 876.06 / 0.00 ms  (average mu = 0.077, current mu = 0.050) allocation failure; scavenge might not succeed
+
+
+<--- JS stacktrace --->
+
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0xb8cf03 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 2: 0xf060d0 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 3: 0xf063b7 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 4: 0x1118005  [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 5: 0x1118594 v8::internal::Heap::RecomputeLimits(v8::internal::GarbageCollector) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 6: 0x112f484 v8::internal::Heap::PerformGarbageCollection(v8::internal::GarbageCollector, v8::internal::GarbageCollectionReason, char const*) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 7: 0x112fc9c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 8: 0x1105fa1 v8::internal::HeapAllocator::AllocateRawWithLightRetrySlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+ 9: 0x1107135 v8::internal::HeapAllocator::AllocateRawWithRetryOrFailSlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+10: 0x10e4786 v8::internal::Factory::NewFillerObject(int, v8::internal::AllocationAlignment, v8::internal::AllocationType, v8::internal::AllocationOrigin) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+11: 0x15402c6 v8::internal::Runtime_AllocateInYoungGeneration(int, unsigned long*, v8::internal::Isolate*) [ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json]
+12: 0x7fe98f699ef6 

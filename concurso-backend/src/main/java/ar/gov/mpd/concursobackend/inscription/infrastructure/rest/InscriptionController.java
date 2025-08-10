@@ -1,12 +1,16 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
 
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
+import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailsResponse;
+import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDataUpdateRequest;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
 import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapper;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CancelInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.port.in.GetInscriptionDetailsUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionDataUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionValidationService;
@@ -42,6 +46,8 @@ public class InscriptionController {
     private final FindInscriptionsUseCase findInscriptionsUseCase;
     private final CancelInscriptionUseCase cancelInscriptionUseCase;
     private final UpdateInscriptionStatusUseCase updateInscriptionStatusUseCase;
+    private final GetInscriptionDetailsUseCase getInscriptionDetailsUseCase;
+    private final UpdateInscriptionDataUseCase updateInscriptionDataUseCase;
     private final SecurityUtils securityUtils;
     private final LoadInscriptionPort loadInscriptionPort;
     private final InscriptionMapper inscriptionMapper;
@@ -545,6 +551,52 @@ public class InscriptionController {
         } catch (IllegalArgumentException e) {
             log.error("Validation error when updating inscription status: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * ✅ SOLUCIÓN: Obtiene los detalles específicos de una inscripción
+     * Incluye centro de vida y circunscripciones seleccionadas
+     */
+    @GetMapping("/{id}/details")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    public ResponseEntity<InscriptionDetailsResponse> getInscriptionDetailsSpecific(@PathVariable UUID id) {
+        try {
+            log.debug("Getting specific details for inscription {}", id);
+            InscriptionDetailsResponse details = getInscriptionDetailsUseCase.getInscriptionDetails(id);
+            return ResponseEntity.ok(details);
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when getting inscription details: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error getting inscription details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * ✅ SOLUCIÓN: Actualiza los datos específicos de una inscripción
+     * Permite actualizar centro de vida y circunscripciones seleccionadas
+     */
+    @PatchMapping("/{id}/data")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Void> updateInscriptionData(
+            @PathVariable UUID id, 
+            @RequestBody InscriptionDataUpdateRequest request) {
+        try {
+            log.debug("Updating inscription data for {}: {}", id, request);
+            updateInscriptionDataUseCase.updateInscriptionData(id, request);
+            log.info("Inscription data updated successfully for {}", id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when updating inscription data: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            log.error("State error when updating inscription data: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (Exception e) {
+            log.error("Error updating inscription data: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

@@ -142,51 +142,13 @@ docker exec mpd-concursos-backend find /app/storage/documents -name "*{DNI}*"
 ### 🎯 Importancia de la Arquitectura Containerizada
 El sistema utiliza **almacenamiento interno del contenedor**, no volúmenes externos mapeados directamente al host.
 
-## 📊 Métricas del Sistema (9 de agosto 2025)
+## 📊 Métricas del Sistema (8 de agosto 2025)
 
-- **Total usuarios con documentos:** 260+
+- **Total usuarios con documentos:** 224+
 - **Sistema de storage:** ✅ OPERATIVO
 - **Integridad de archivos:** ✅ VERIFICADA
-- **Último backup:** 9 de agosto 2025 (múltiples backups diarios)
+- **Último backup:** 6 de agosto 2025 (111MB)
 - **Capacidad utilizada:** Múltiples GB en documentos activos
-
-## 💾 Sistema de Backups
-
-### 🏗️ Ubicación de Backups
-```
-Host: /root/concursos/mpd_concursos/backups/
-Estructura:
-├── mpd_concursos_YYYYMMDD_HHMMSS.sql    # Backups de base de datos
-├── YYYYMMDD_HHMMSS_pre_redeploy/        # Backups pre-deployment
-│   ├── database_complete_backup.sql      # BD completa
-│   ├── user_documents_storage.tar.gz     # Archivos de usuarios
-│   └── mysql_data_volume.tar.gz          # Volumen MySQL completo
-└── ssl-fix-YYYYMMDD_HHMMSS/             # Backups específicos
-```
-
-### ⏰ Configuración Automática
-- **Frecuencia:** Cada 6 horas (00:00, 06:00, 12:00, 18:00)
-- **Script:** `/opt/mpd-monitor/backup-complete.sh`
-- **Logs:** `/var/log/mpd-backup.log`
-- **Cron configurado:** ✅ ACTIVO
-
-### 📋 Tipos de Backup
-1. **Base de datos:** Dumps SQL completos
-2. **Archivos de usuarios:** Compresión tar.gz del storage
-3. **Configuraciones:** Properties y archivos de configuración
-4. **Volúmenes Docker:** Backup completo de volúmenes MySQL
-
-### 🔍 Verificación de Backups
-```bash
-# Ver backups disponibles
-ls -la /root/concursos/mpd_concursos/backups/
-
-# Ver configuración de cron
-crontab -l | grep backup
-
-# Ver logs de backup
-tail -f /var/log/mpd-backup.log
-```
 
 ## 🔍 Recomendaciones para Verificación Futura
 
