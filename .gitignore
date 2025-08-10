@@ -64,7 +64,30 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typingslogs/*.log
+
+# =============================================================================
+# ARCHIVOS DE BACKUP Y RECUPERACIÓN
+# =============================================================================
+# Carpetas de backup
 backups/
+backup_*/
+*_backup/
+backup-*/
+
+# Archivos de backup individuales
+*.backup
+*.backup.*
+*_backup.*
+*.bak
+*.sql.backup
+*.tar.gz.backup
+
+# Archivos de recuperación
+recovery_*/
+*_recovery/
+RECOVERY_*/
+
+# Logs de sistema
 logs/
 
 # Environment files with sensitive data
