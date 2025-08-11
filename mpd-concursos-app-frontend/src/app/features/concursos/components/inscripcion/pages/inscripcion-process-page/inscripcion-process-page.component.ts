@@ -35,7 +35,6 @@ import { Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { DocumentosEmbebidosComponent } from '../../documentos-embebidos/documentos-embebidos.component';
 import { CustomAddressAutocompleteComponent } from '@shared/components/custom-address-autocomplete/custom-address-autocomplete.component';
-FinalStepValidationComponent
 import { FinalStepValidationComponent } from '../../final-step-validation/final-step-validation.component';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
