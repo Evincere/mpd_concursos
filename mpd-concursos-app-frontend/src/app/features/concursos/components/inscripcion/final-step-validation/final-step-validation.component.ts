@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { CustomCheckboxComponent } from '@shared/components/custom-form/custom-checkbox/custom-checkbox.component';
 import { NotificationService } from '@shared/services/notification.service';
 import { 
   DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION, 
@@ -37,7 +38,8 @@ import {
     MatProgressSpinnerModule,
     MatDividerModule,
     MatCardModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    CustomCheckboxComponent
   ],
   selector: 'app-final-step-validation',
   templateUrl: './final-step-validation.component.html',
@@ -57,12 +59,7 @@ export class FinalStepValidationComponent implements OnInit {
   // Datos de circunscripciones
   departamentosSegundaCircunscripcion = DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION;
   seleccionesCircunscripciones: SeleccionCircunscripcion[] = [];
-  availableCircunscripciones: string[] = [
-    'Primera Circunscripción',
-    'Segunda Circunscripción', 
-    'Tercera Circunscripción',
-    'Cuarta Circunscripción'
-  ];
+  circunscripcionesDisponibles = CIRCUNSCRIPCIONES_JUDICIALES;
 
   constructor(
     private fb: FormBuilder,
@@ -77,16 +74,11 @@ export class FinalStepValidationComponent implements OnInit {
 
   private createForm() {
     this.validationForm = this.fb.group({
-      centroDeVida: ['', [Validators.required, Validators.minLength(10)]],
-      circunscripciones: this.fb.array(
-        this.availableCircunscripciones.map(() => this.fb.control(false))
-      )
+      centroDeVida: ['', [Validators.required, Validators.minLength(10)]]
     });
   }
 
-  get circunscripcionesArray(): FormArray {
-    return this.validationForm.get('circunscripciones') as FormArray;
-  }
+
 
   validateInscription() {
     this.isLoading = true;
@@ -132,8 +124,11 @@ export class FinalStepValidationComponent implements OnInit {
   }
 
   onSubsanar() {
-    if (this.validationForm.invalid) {
+    if (this.validationForm.invalid || !this.hasSelectedCircunscripciones()) {
       this.markFormGroupTouched();
+      if (!this.hasSelectedCircunscripciones()) {
+        this.notificationService.error('Debe seleccionar al menos una circunscripción');
+      }
       return;
     }
 
@@ -223,16 +218,6 @@ export class FinalStepValidationComponent implements OnInit {
     return this.seleccionesCircunscripciones.map(s => s.circunscripcion);
   }
 
-  getCircunscripcionDescription(circunscripcion: string): string {
-    const descriptions: { [key: string]: string } = {
-      'Primera Circunscripción': 'Capital Federal y Gran Buenos Aires',
-      'Segunda Circunscripción': 'Interior de Buenos Aires',
-      'Tercera Circunscripción': 'Córdoba, Santa Fe, Entre Ríos',
-      'Cuarta Circunscripción': 'Resto del país'
-    };
-    return descriptions[circunscripcion] || '';
-  }
-
   /**
    * Resetea el formulario a su estado inicial
    */
@@ -245,18 +230,9 @@ export class FinalStepValidationComponent implements OnInit {
   // ===== MÉTODOS PARA MANEJO DE CIRCUNSCRIPCIONES =====
 
   /**
-   * Verifica si una circunscripción está seleccionada (para circunscripciones simples)
+   * Verifica si una circunscripción está seleccionada completamente
    */
   isCircunscripcionSelected(circunscripcion: string): boolean {
-    return this.seleccionesCircunscripciones.some(s => 
-      s.circunscripcion === circunscripcion && s.esCompleta
-    );
-  }
-
-  /**
-   * Verifica si una circunscripción completa está seleccionada (para Segunda Circunscripción)
-   */
-  isCircunscripcionCompletaSelected(circunscripcion: string): boolean {
     return this.seleccionesCircunscripciones.some(s => 
       s.circunscripcion === circunscripcion && s.esCompleta
     );
@@ -285,6 +261,7 @@ export class FinalStepValidationComponent implements OnInit {
       // Remover circunscripción
       this.removerSeleccionCircunscripcion(circunscripcion);
     }
+    this.actualizarValidacionCircunscripciones();
   }
 
   /**
@@ -300,6 +277,7 @@ export class FinalStepValidationComponent implements OnInit {
       // Remover la selección completa
       this.removerSeleccionCircunscripcion(circunscripcion);
     }
+    this.actualizarValidacionCircunscripciones();
   }
 
   /**
@@ -313,13 +291,7 @@ export class FinalStepValidationComponent implements OnInit {
     } else {
       this.removerDepartamento(circunscripcion, departamentoId);
     }
-  }
-
-  /**
-   * Maneja el cambio del centro de vida
-   */
-  onCentroDeVidaChange(value: string): void {
-    this.validationForm.patchValue({ centroDeVida: value });
+    this.actualizarValidacionCircunscripciones();
   }
 
   // ===== MÉTODOS PRIVADOS PARA MANEJO DE SELECCIONES =====
@@ -374,6 +346,11 @@ export class FinalStepValidationComponent implements OnInit {
         this.removerSeleccionCircunscripcion(circunscripcion);
       }
     }
+  }
+
+  private actualizarValidacionCircunscripciones(): void {
+    // Forzar actualización de la validación del formulario
+    this.validationForm.updateValueAndValidity();
   }
 
   private convertirCircunscripcionesDelBackend(circunscripciones: string[]): SeleccionCircunscripcion[] {
