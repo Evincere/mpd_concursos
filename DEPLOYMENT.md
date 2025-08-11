@@ -182,3 +182,63 @@ Para problemas con el deployment, revisar:
 2. Logs de Docker Compose
 3. Logs específicos de cada servicio
 4. Estado de la red y conectividad
+
+## Despliegue sin downtime (SSL) usando override de imágenes
+
+Para minimizar interrupciones en producción, en lugar de reconstruir imágenes con `--build` y hacer `down`, fijamos imágenes por tag con un archivo de override y actualizamos servicios de forma aislada.
+
+### Archivo de override
+Crea/usa `docker-compose.ssl.override.yml` con el siguiente contenido mínimo:
+
+```
+services:
+  backend:
+    image: mpd_concursos_backend:fix-circunscripciones
+    build: null
+  frontend:
+    image: mpd_concursos-frontend:latest
+    build: null
+```
+
+- Reemplaza los tags por los que quieras desplegar en cada release.
+- `build: null` evita que Compose intente reconstruir.
+
+### Rollout backend primero
+```
+docker compose -f docker-compose.ssl.yml -f docker-compose.ssl.override.yml up -d --no-deps --force-recreate backend
+```
+Verificar health del backend (Spring Actuator):
+```
+curl -k -f https://$DOMAIN/api/actuator/health
+```
+
+### Rollout frontend luego
+```
+docker compose -f docker-compose.ssl.yml -f docker-compose.ssl.override.yml up -d --no-deps --force-recreate frontend
+```
+Verificar frontend:
+```
+curl -k -f https://$DOMAIN/
+```
+
+### Notas
+- Nginx (reverse proxy) y MySQL permanecen activos, por lo que el tráfico sigue fluyendo durante los reemplazos.
+- Los volúmenes `mpd_concursos_mysql_data_prod` y `mpd_concursos_storage_data_prod` preservan datos.
+
+### Rollback inmediato
+Para revertir el backend a una imagen anterior (ej: pre-fix):
+```
+# Edita docker-compose.ssl.override.yml
+services:
+  backend:
+    image: mpd_concursos_backend:pre-fix-20250811
+    build: null
+
+# Reaplica sólo backend
+
+docker compose -f docker-compose.ssl.yml -f docker-compose.ssl.override.yml up -d --no-deps --force-recreate backend
+```
+
+Sugerencias:
+- Taguea también el frontend (p. ej. con fecha) para permitir rollback simétrico.
+- Evita usar scripts que hagan `down` y `--build` para releases de mínimo impacto.
