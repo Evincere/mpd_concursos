@@ -17,7 +17,7 @@
     <div class="validation-issues">
       <div class="alert-header">
         <mat-icon class="warning-icon">warning</mat-icon>
-        <h3>⚠️ Información Requerida Faltante</h3>
+        <h3>Información Requerida Faltante</h3>
       </div>
       <p class="alert-description">
         Para completar tu inscripción, necesitamos que proporciones la siguiente información requerida.
@@ -34,7 +34,7 @@
         </div>
 
         <div class="missing-item" *ngIf="validationResult?.missingCircunscripciones">
-          <mat-icon class="missing-icon">gavel</mat-icon>
+          <mat-icon class="missing-icon">how_to_vote</mat-icon>
           <div class="missing-content">
             <strong>Circunscripciones Judiciales</strong>
             <span>Debes seleccionar al menos una circunscripción donde deseas postularte</span>
@@ -52,7 +52,7 @@
         <h4>Completar Información</h4>
       </div>
 
-      <form [formGroup]="validationForm" (ngSubmit)="onSubsanar()">
+      <div [formGroup]="validationForm">
 
         <!-- Centro de Vida -->
         <div class="form-section" *ngIf="validationResult?.missingCentroVida">
@@ -158,22 +158,8 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-          <button mat-raised-button color="primary" type="submit" [disabled]="isLoading || validationForm.invalid || !hasSelectedCircunscripciones()"
-            class="primary-action">
-            <mat-icon>save</mat-icon>
-            <span *ngIf="!isLoading">Guardar y Continuar</span>
-            <span *ngIf="isLoading">Guardando...</span>
-          </button>
 
-          <button mat-stroked-button type="button" (click)="resetForm()" [disabled]="isLoading"
-            class="secondary-action">
-            <mat-icon>refresh</mat-icon>
-            Limpiar Formulario
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 </div>

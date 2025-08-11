@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -17,7 +17,6 @@ import {
   DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION, 
   CIRCUNSCRIPCIONES_JUDICIALES,
   SeleccionCircunscripcion,
-  DepartamentoCircunscripcion,
   convertirSeleccionAFormato
 } from '@shared/constants/circunscripciones.constants';
 
@@ -50,6 +49,8 @@ export class FinalStepValidationComponent implements OnInit {
   @Input() inscriptionId!: string;
   @Output() validationComplete = new EventEmitter<boolean>();
   @Output() dataUpdated = new EventEmitter<void>();
+  @Output() centroDeVidaChanged = new EventEmitter<string>();
+  @Output() circunscripcionesChanged = new EventEmitter<string[]>();
 
   validationForm!: FormGroup;
   validationResult: any = null;
@@ -75,6 +76,13 @@ export class FinalStepValidationComponent implements OnInit {
   private createForm() {
     this.validationForm = this.fb.group({
       centroDeVida: ['', [Validators.required, Validators.minLength(10)]]
+    });
+
+    // Escuchar cambios en centro de vida
+    this.validationForm.get('centroDeVida')?.valueChanges.subscribe(value => {
+      if (value && value.length >= 10) {
+        this.centroDeVidaChanged.emit(value);
+      }
     });
   }
 
@@ -123,64 +131,7 @@ export class FinalStepValidationComponent implements OnInit {
     }
   }
 
-  onSubsanar() {
-    if (this.validationForm.invalid || !this.hasSelectedCircunscripciones()) {
-      this.markFormGroupTouched();
-      if (!this.hasSelectedCircunscripciones()) {
-        this.notificationService.error('Debe seleccionar al menos una circunscripción');
-      }
-      return;
-    }
 
-    this.isLoading = true;
-    const formValue = this.validationForm.value;
-
-    // Preparar datos para enviar
-    const updateData = {
-      centroDeVida: formValue.centroDeVida,
-      selectedCircunscripciones: convertirSeleccionAFormato(this.seleccionesCircunscripciones)
-    };
-
-    // Actualizar datos de la inscripción
-    this.updateInscriptionData(updateData);
-  }
-
-  private updateInscriptionData(data: any) {
-    // Actualizar centro de vida
-    this.http.put(`/api/inscriptions/${this.inscriptionId}/centro-vida`, {
-      centroDeVida: data.centroDeVida
-    }).subscribe({
-      next: () => {
-        // Actualizar circunscripciones
-        this.updateCircunscripciones(data.selectedCircunscripciones);
-      },
-      error: (error) => {
-        console.error('Error actualizando centro de vida:', error);
-        this.isLoading = false;
-        this.notificationService.error('Error actualizando datos. Intenta nuevamente.');
-      }
-    });
-  }
-
-  private updateCircunscripciones(selectedCircunscripciones: string[]) {
-    this.http.put(`/api/inscriptions/${this.inscriptionId}/circunscripciones`, {
-      circunscripciones: selectedCircunscripciones
-    }).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.notificationService.success('Datos actualizados correctamente');
-        
-        // Volver a validar
-        this.validateInscription();
-        this.dataUpdated.emit();
-      },
-      error: (error) => {
-        console.error('Error actualizando circunscripciones:', error);
-        this.isLoading = false;
-        this.notificationService.error('Error actualizando circunscripciones. Intenta nuevamente.');
-      }
-    });
-  }
 
   private markFormGroupTouched() {
     Object.keys(this.validationForm.controls).forEach(key => {
@@ -351,6 +302,13 @@ export class FinalStepValidationComponent implements OnInit {
   private actualizarValidacionCircunscripciones(): void {
     // Forzar actualización de la validación del formulario
     this.validationForm.updateValueAndValidity();
+    
+    // Emitir cambios de circunscripciones al componente padre
+    const circunscripcionesFormateadas = convertirSeleccionAFormato(this.seleccionesCircunscripciones);
+    this.circunscripcionesChanged.emit(circunscripcionesFormateadas);
+    
+    // Emitir actualización de datos
+    this.dataUpdated.emit();
   }
 
   private convertirCircunscripcionesDelBackend(circunscripciones: string[]): SeleccionCircunscripcion[] {
