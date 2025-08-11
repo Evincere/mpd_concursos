@@ -3185,4 +3185,47 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
       ).subscribe();
     }
   }
+
+  /**
+   * Maneja cambios en el centro de vida desde el componente de validación
+   */
+  onCentroDeVidaChanged(centroDeVida: string): void {
+    this.loggingService.debug('[InscripcionProcess] Centro de vida changed from validation component:', { centroDeVida }, 'InscripcionProcessPage');
+    
+    // Actualizar el formulario principal
+    this.centroDeVidaControl.setValue(centroDeVida);
+    this.centroDeVidaControl.markAsTouched();
+    this.centroDeVidaControl.updateValueAndValidity();
+    
+    // Actualizar addressData para consistencia
+    this.addressData = {
+      formattedAddress: centroDeVida,
+      placeId: '',
+      coordinates: { lat: 0, lng: 0 },
+      components: {}
+    };
+    
+    // Forzar actualización de propiedades computadas
+    this.updateComputedProperties();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Maneja cambios en las circunscripciones desde el componente de validación
+   */
+  onCircunscripcionesChanged(circunscripciones: string[]): void {
+    this.loggingService.debug('[InscripcionProcess] Circunscripciones changed from validation component:', { circunscripciones }, 'InscripcionProcessPage');
+    
+    // Actualizar el formulario principal
+    this.selectedCircunscripcionesControl.setValue(circunscripciones);
+    this.selectedCircunscripcionesControl.markAsTouched();
+    this.selectedCircunscripcionesControl.updateValueAndValidity();
+    
+    // Actualizar selecciones internas
+    this.seleccionesCircunscripciones = convertirFormatoASeleccion(circunscripciones);
+    
+    // Forzar actualización de propiedades computadas
+    this.updateComputedProperties();
+    this.cdr.detectChanges();
+  }
 }

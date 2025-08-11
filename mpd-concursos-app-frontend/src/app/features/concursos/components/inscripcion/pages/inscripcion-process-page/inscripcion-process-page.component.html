@@ -346,6 +346,8 @@
             [inscriptionId]="inscriptionId"
             (validationComplete)="onFinalValidationComplete($event)"
             (dataUpdated)="onValidationDataUpdated()"
+            (centroDeVidaChanged)="onCentroDeVidaChanged($event)"
+            (circunscripcionesChanged)="onCircunscripcionesChanged($event)"
             *ngIf="inscriptionId"
             class="final-validation-component">
           </app-final-step-validation>
