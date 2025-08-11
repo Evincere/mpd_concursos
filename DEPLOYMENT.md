@@ -277,3 +277,6 @@ Una vez que haya una ventana de baja actividad y se acepte un breve corte de ser
 Notas
 - Los volúmenes `mpd_concursos_mysql_data_prod` y `mpd_concursos_storage_data_prod` preservan datos en todos los casos.
 - Si se requiere cero-downtime en el futuro, mantener el enfoque de override por tags y actualizar servicio por servicio con `--no-deps --force-recreate`.
+
+
+> Nota: Para pasos rápidos de normalización post-deploy durante ventana de mantenimiento, ver scripts/README-normalizacion-post-deploy.md.
