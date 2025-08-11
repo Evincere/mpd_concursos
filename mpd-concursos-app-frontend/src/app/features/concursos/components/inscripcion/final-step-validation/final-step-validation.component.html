@@ -1,0 +1,187 @@
+<div class="final-step-validation-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Validando datos de inscripción...</p>
+  </div>
+
+  <!-- Validation Complete - No Issues -->
+  <div *ngIf="!isLoading && validationResult?.complete" class="validation-success">
+    <mat-icon class="success-icon">check_circle</mat-icon>
+    <h3>✅ Inscripción Lista para Finalizar</h3>
+    <p>Todos los datos requeridos están completos.</p>
+  </div>
+
+  <!-- Validation Issues - Show Subsanacion Form -->
+  <div *ngIf="!isLoading && !validationResult?.complete && showSubsanacionForm" class="subsanacion-container">
+    <div class="validation-issues">
+      <div class="alert-header">
+        <mat-icon class="warning-icon">warning</mat-icon>
+        <h3>⚠️ Información Requerida Faltante</h3>
+      </div>
+      <p class="alert-description">
+        Para completar tu inscripción, necesitamos que proporciones la siguiente información requerida. 
+        Completa los campos faltantes directamente en este formulario.
+      </p>
+      
+      <div class="missing-data-summary">
+        <div class="missing-item" *ngIf="validationResult?.missingCentroVida">
+          <mat-icon class="missing-icon">location_off</mat-icon>
+          <div class="missing-content">
+            <strong>Centro de Vida</strong>
+            <span>Debes especificar tu domicilio principal donde realizas tu vida cotidiana</span>
+          </div>
+        </div>
+        
+        <div class="missing-item" *ngIf="validationResult?.missingCircunscripciones">
+          <mat-icon class="missing-icon">gavel</mat-icon>
+          <div class="missing-content">
+            <strong>Circunscripciones Judiciales</strong>
+            <span>Debes seleccionar al menos una circunscripción donde deseas postularte</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider class="section-divider"></mat-divider>
+
+    <!-- Manual Correction Form -->
+    <div class="manual-correction-section">
+      <div class="section-header">
+        <mat-icon>edit</mat-icon>
+        <h4>Completar Información</h4>
+      </div>
+      
+      <form [formGroup]="validationForm" (ngSubmit)="onSubsanar()">
+        
+        <!-- Centro de Vida -->
+        <div class="form-section" *ngIf="validationResult?.missingCentroVida">
+          <div class="field-header">
+            <mat-icon class="field-icon">home</mat-icon>
+            <h5>Centro de Vida</h5>
+            <span class="required-badge">Requerido</span>
+          </div>
+          <p class="field-description">
+            Especifica tu domicilio principal donde realizas tu vida cotidiana. 
+            Esta información es necesaria para determinar tu jurisdicción.
+          </p>
+          
+          <mat-form-field class="full-width" appearance="outline">
+            <mat-label>Domicilio Centro de Vida</mat-label>
+            <input matInput 
+                   formControlName="centroDeVida"
+                   placeholder="Ej: Av. San Martín 1234, Ciudad, Provincia"
+                   maxlength="200">
+            <mat-icon matSuffix>location_on</mat-icon>
+            <mat-error>{{ getFieldError('centroDeVida') }}</mat-error>
+            <mat-hint>Incluye calle, número, ciudad y provincia</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- Circunscripciones -->
+        <div class="form-section" *ngIf="validationResult?.missingCircunscripciones">
+          <div class="field-header">
+            <mat-icon class="field-icon">gavel</mat-icon>
+            <h5>Circunscripciones Judiciales</h5>
+            <span class="required-badge">Requerido</span>
+          </div>
+          <p class="field-description">
+            Selecciona al menos una circunscripción judicial donde deseas postularte. 
+            Puedes elegir múltiples opciones para aumentar tus oportunidades.
+          </p>
+          
+          <div class="circunscripciones-container">
+            <div class="selection-summary" *ngIf="getSelectedCircunscripciones().length > 0">
+              <mat-icon class="summary-icon">check_circle</mat-icon>
+              <span>{{ getSelectedCircunscripciones().length }} circunscripción(es) seleccionada(s)</span>
+            </div>
+            
+            <div class="circunscripciones-grid" formArrayName="circunscripciones">
+              <mat-card *ngFor="let circ of availableCircunscripciones; let i = index" 
+                        class="circunscripcion-card"
+                        [class.selected]="circunscripcionesArray.at(i).value">
+                <mat-checkbox [formControlName]="i" class="circunscripcion-checkbox">
+                  <div class="circunscripcion-content">
+                    <strong>{{ circ }}</strong>
+                    <span class="circunscripcion-description">
+                      {{ getCircunscripcionDescription(circ) }}
+                    </span>
+                  </div>
+                </mat-checkbox>
+              </mat-card>
+            </div>
+
+            <div *ngIf="!hasSelectedCircunscripciones() && validationForm.get('circunscripciones')?.touched" 
+                 class="validation-error">
+              <mat-icon class="error-icon">error</mat-icon>
+              <span>Debes seleccionar al menos una circunscripción judicial</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  [disabled]="isLoading || validationForm.invalid"
+                  class="primary-action">
+            <mat-icon>save</mat-icon>
+            <span *ngIf="!isLoading">Guardar y Continuar</span>
+            <span *ngIf="isLoading">Guardando...</span>
+          </button>
+          
+          <button mat-stroked-button 
+                  type="button"
+                  (click)="resetForm()"
+                  [disabled]="isLoading"
+                  class="secondary-action">
+            <mat-icon>refresh</mat-icon>
+            Limpiar Formulario
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Current Data Summary -->
+  <div *ngIf="!isLoading && validationResult" class="current-data-summary">
+    <div class="summary-header">
+      <mat-icon>assignment</mat-icon>
+      <h5>Estado Actual de tu Inscripción</h5>
+    </div>
+    
+    <div class="summary-grid">
+      <div class="summary-item" [class.complete]="validationResult.centroDeVida" [class.incomplete]="!validationResult.centroDeVida">
+        <div class="item-header">
+          <mat-icon class="status-icon">{{ validationResult.centroDeVida ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+          <strong>Centro de Vida</strong>
+        </div>
+        <div class="item-content">
+          <span *ngIf="validationResult.centroDeVida" class="data-value">{{ validationResult.centroDeVida }}</span>
+          <span *ngIf="!validationResult.centroDeVida" class="data-missing">Pendiente de completar</span>
+        </div>
+      </div>
+      
+      <div class="summary-item" [class.complete]="getCircunscripcionesCount() > 0" [class.incomplete]="getCircunscripcionesCount() === 0">
+        <div class="item-header">
+          <mat-icon class="status-icon">{{ getCircunscripcionesCount() > 0 ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+          <strong>Circunscripciones Judiciales</strong>
+        </div>
+        <div class="item-content">
+          <span *ngIf="getCircunscripcionesCount() > 0" class="data-value">
+            {{ getCircunscripcionesCount() }} seleccionada(s)
+          </span>
+          <span *ngIf="getCircunscripcionesCount() === 0" class="data-missing">
+            Ninguna seleccionada
+          </span>
+          <div *ngIf="validationResult.selectedCircunscripciones?.length > 0" class="selected-list">
+            <span *ngFor="let circ of validationResult.selectedCircunscripciones; let last = last" class="selected-item">
+              {{ circ }}<span *ngIf="!last">, </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

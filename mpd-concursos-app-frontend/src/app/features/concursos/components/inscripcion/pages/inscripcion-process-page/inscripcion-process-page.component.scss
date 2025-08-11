@@ -2382,3 +2382,85 @@ app-custom-button[variant="secondary"] {
 }
 
 /* ===== FIN NUEVOS ESTILOS PARA PERÍODO DE GRACIA ===== */
+
+/* ===== ESTILOS PARA PERÍODO DE REGULARIZACIÓN ===== */
+
+.deadline-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--border-radius-md);
+  color: #dc2626;
+  font-weight: 600;
+
+  .deadline-text {
+    font-size: 0.95rem;
+  }
+
+  i {
+    color: #dc2626;
+    font-size: 1.1rem;
+  }
+}
+
+.context-instructions {
+  margin-top: var(--spacing-md);
+
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    line-height: 1.5;
+
+    i {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    &.alert-info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #1e40af;
+
+      i {
+        color: #3b82f6;
+      }
+    }
+
+    &.alert-danger {
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      color: #dc2626;
+
+      i {
+        color: #dc2626;
+      }
+    }
+  }
+}
+
+.disabled-checkbox {
+  opacity: 0.7;
+  pointer-events: none;
+
+  .checkbox-label {
+    color: var(--color-text-secondary) !important;
+    font-style: italic;
+  }
+}
+
+.provisional-alert {
+  .alert-header {
+    span {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+  }
+}

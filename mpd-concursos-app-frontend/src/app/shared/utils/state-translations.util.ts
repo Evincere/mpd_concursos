@@ -1,6 +1,7 @@
 /**
  * Utilidades para traducir estados de concursos e inscripciones
  * Centraliza todas las traducciones para mantener consistencia
+ * ACTUALIZADO: Corregidas traducciones duplicadas para mayor claridad
  */
 
 /**
@@ -37,17 +38,18 @@ export function translateContestStatus(status: string | undefined | null): strin
  * Traduce estados de inscripciones de inglés a español
  * @param status Estado de la inscripción en inglés
  * @returns Estado traducido al español
+ * ACTUALIZADO: Corregidas traducciones duplicadas para mayor claridad
  */
 export function translateInscriptionStatus(status: string | undefined | null): string {
   if (!status) return 'Desconocido';
 
   const estados: Record<string, string> = {
-    // Estados estándar (únicos válidos)
+    // Estados estándar (únicos válidos) - CORREGIDOS para evitar duplicados
     'ACTIVE': 'En Proceso',
-    'PENDING': 'Pendiente Validación',
-    'COMPLETED_WITH_DOCS': 'Pendiente Validación',
-    'COMPLETED_PENDING_DOCS': 'Documentación Pendiente',
-    'FROZEN': 'Congelada',
+    'PENDING': 'Inscripción Finalizada - Pendiente de Validación', // ✅ CORREGIDO: Más específico
+    'COMPLETED_WITH_DOCS': 'Documentación Completa - Pendiente de Validación', // ✅ CORREGIDO: Diferenciado de PENDING
+    'COMPLETED_PENDING_DOCS': 'Documentación Pendiente - 3 Días Hábiles', // ✅ CORREGIDO: Más claro sobre el plazo
+    'FROZEN': 'Congelada - Plazo Vencido',
     'APPROVED': 'Aprobada',
     'REJECTED': 'Rechazada',
     'CANCELLED': 'Cancelada',
@@ -94,8 +96,8 @@ export function getInscriptionStatusClass(status: string): string {
   const clases: Record<string, string> = {
     // Estados estándar (únicos válidos)
     'ACTIVE': 'status-in-process',
-    'PENDING': 'status-pending',
-    'COMPLETED_WITH_DOCS': 'status-completed-with-docs',
+    'PENDING': 'status-pending-validation',        // ✅ CORREGIDO: Clase específica
+    'COMPLETED_WITH_DOCS': 'status-completed-with-docs', // ✅ CORREGIDO: Clase diferenciada
     'COMPLETED_PENDING_DOCS': 'status-pending-docs',
     'FROZEN': 'status-frozen',
     'APPROVED': 'status-approved',
@@ -117,18 +119,19 @@ export function getInscriptionStatusClass(status: string): string {
  * Obtiene un mensaje descriptivo para el estado de una inscripción
  * @param status Estado de la inscripción
  * @returns Mensaje descriptivo para el usuario
+ * ACTUALIZADO: Mensajes más claros y diferenciados
  */
 export function getInscriptionStatusMessage(status: string): string {
   const mensajes: Record<string, string> = {
     'ACTIVE': 'Tu inscripción está en proceso. Puedes continuar completando los pasos pendientes.',
-    'PENDING': 'Tu inscripción está completa y pendiente de validación administrativa.',
-    'COMPLETED_WITH_DOCS': 'Tu inscripción está completa con toda la documentación. Pendiente de validación administrativa.',
-    'COMPLETED_PENDING_DOCS': 'Tu inscripción está completa pero faltan documentos. Tienes 3 días hábiles para completar la documentación.',
-    'FROZEN': 'Tu inscripción ha sido congelada por vencimiento del plazo de documentación.',
-    'APPROVED': 'Tu inscripción ha sido aprobada. ¡Felicitaciones!',
-    'REJECTED': 'Tu inscripción ha sido rechazada. Revisa los comentarios del administrador.',
-    'CANCELLED': 'Tu inscripción ha sido cancelada.'
+    'PENDING': 'Tu inscripción ha sido finalizada exitosamente. Está pendiente de validación administrativa. No se requieren acciones adicionales de tu parte.',
+    'COMPLETED_WITH_DOCS': 'Tu inscripción está completa con toda la documentación requerida. Está pendiente de validación administrativa. El proceso de revisión iniciará pronto.',
+    'COMPLETED_PENDING_DOCS': 'Tu inscripción está registrada pero falta completar la documentación. Tienes 3 días hábiles para cargar todos los documentos requeridos.',
+    'FROZEN': 'Tu inscripción ha sido congelada por vencimiento del plazo de documentación. Contacta al administrador si consideras que es un error.',
+    'APPROVED': '¡Felicitaciones! Tu inscripción ha sido aprobada. Recibirás notificaciones sobre los próximos pasos del concurso.',
+    'REJECTED': 'Tu inscripción ha sido rechazada. Revisa los comentarios del administrador para obtener más información.',
+    'CANCELLED': 'Tu inscripción ha sido cancelada y no será considerada en este concurso.'
   };
 
-  return mensajes[status] || 'Estado de inscripción desconocido.';
+  return mensajes[status] || 'Estado de inscripción desconocido. Contacta al soporte técnico.';
 }

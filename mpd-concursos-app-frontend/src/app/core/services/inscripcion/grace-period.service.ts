@@ -68,7 +68,7 @@ export class GracePeriodService {
 
     const info: GracePeriodInfo = {
       isInGracePeriod: !!isInGracePeriod,
-      !!isContestClosed,
+      isContestClosed: !!isContestClosed,
       documentationDeadline,
       hoursRemaining,
       daysRemaining,

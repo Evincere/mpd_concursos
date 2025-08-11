@@ -289,46 +289,50 @@
 
 
 
-          <!-- UNIFICADO: Checkbox para inscripción provisional cuando hay documentos pendientes -->
+          <!-- ✅ CORREGIDO: Sección de inscripción provisional mejorada -->
           <div class="provisional-inscription-section" *ngIf="!shouldHideProvisionalSection()">
             <div class="provisional-alert">
               <div class="alert-header">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span style="color: #f59e0b;">{{ getGracePeriodMessage().title }}</span>
+                <i class="fas fa-exclamation-triangle" *ngIf="!isInGracePeriod()"></i>
+                <i class="fas fa-clock" *ngIf="isInGracePeriod()"></i>
+                <span [style.color]="isInGracePeriod() ? '#dc2626' : '#f59e0b'">{{ getGracePeriodMessage().title }}</span>
               </div>
               <p>
                 {{ getGracePeriodMessage().description }}
               </p>
-              <div class="warning-note">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>⚠️ CRÍTICO: Quedan pocos días. Complete la documentación antes del miércoles 13/08/2025 23:59 o su inscripción será rechazada automáticamente.</span>
+
+              <!-- Fecha límite específica para período de regularización -->
+              <div class="deadline-notice" *ngIf="isInGracePeriod()">
+                <i class="fas fa-calendar-times"></i>
+                <span class="deadline-text">{{ getRegularizationDeadlineMessage() }}</span>
               </div>
 
-              <!-- Checkbox integrado en el banner - SOLO mostrar si NO está en período de gracia -->
-              <div class="provisional-acceptance" *ngIf="!isInGracePeriod()">
+              <!-- Checkbox de conformidad - comportamiento diferente según el contexto -->
+              <div class="provisional-acceptance">
                 <app-custom-checkbox
                   formControlName="documentosCompletos"
-                  label="Acepto proceder con inscripción provisional y completar la documentación durante el período de gracia"
-                  class="provisional-checkbox">
+                  [label]="getProvisionalCheckboxLabel()"
+                  [disabled]="isProvisionalCheckboxDisabled()"
+                  class="provisional-checkbox"
+                  [class.disabled-checkbox]="isProvisionalCheckboxDisabled()">
                 </app-custom-checkbox>
               </div>
 
-              <!-- Mensaje específico para período de gracia activo -->
-              <div class="grace-period-notice" *ngIf="isInGracePeriod()">
-                <div class="alert alert-warning">
-                  <i class="fas fa-clock"></i>
-                  <strong>Período de gracia activo:</strong> Para continuar, debe cargar TODOS los documentos obligatorios pendientes.
+              <!-- Instrucciones específicas según el contexto -->
+              <div class="context-instructions">
+                <div class="alert alert-info" *ngIf="!isInGracePeriod()">
+                  <i class="fas fa-info-circle"></i>
+                  <strong>Inscripción provisional:</strong> Podrá completar la documentación durante los 3 días hábiles posteriores al cierre de inscripciones.
+                </div>
+                <div class="alert alert-danger" *ngIf="isInGracePeriod()">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <strong>Período de regularización:</strong> Debe completar TODOS los documentos obligatorios para continuar. No podrá avanzar con documentación incompleta.
                 </div>
               </div>
-              </div>
-
-              <!-- Mensaje específico para período de gracia activo -->
-              <div class="grace-period-notice" *ngIf="isInGracePeriod()">
-                <div class="alert alert-warning">
-                  <i class="fas fa-clock"></i>
-                  <strong>Período de gracia activo:</strong> Para continuar, debe cargar TODOS los documentos obligatorios pendientes.
-                </div>
-              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Paso 4: Confirmación -->
       <div class="step-content" *ngIf="isStep4()" @fadeInOut>
         <div class="content-section">
@@ -336,6 +340,21 @@
           <p class="section-description">
             Por favor, revise la información proporcionada antes de finalizar su inscripción.
           </p>
+
+          <!-- Componente de Validación Final -->
+          <app-final-step-validation
+            [inscriptionId]="inscriptionId"
+            (validationComplete)="onFinalValidationComplete($event)"
+            (dataUpdated)="onValidationDataUpdated()"
+            *ngIf="inscriptionId"
+            class="final-validation-component">
+          </app-final-step-validation>
+
+          <!-- Mensaje de error si no hay inscriptionId -->
+          <div class="alert alert-danger" *ngIf="!inscriptionId">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Error:</strong> No se encontró el ID de inscripción. Por favor, reinicie el proceso.
+          </div>
 
           <div class="confirmation-summary">
             <!-- Información del Concurso -->

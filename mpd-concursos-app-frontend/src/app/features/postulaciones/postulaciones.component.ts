@@ -310,9 +310,10 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         // Si la inscripción está completa pero faltan documentos, ir al paso 3 (documentación)
         return 3;
       case 'ACTIVE':
-        // Para inscripciones activas, ir al paso 2 (circunscripción) por defecto
-        // El componente de inscripción determinará el paso exacto basado en el estado guardado
-        return 2;
+        // ✅ CORRECCIÓN: Para inscripciones activas, ir al paso 3 (documentación) 
+        // ya que el paso 2 (circunscripción) probablemente ya está completo
+        // El componente de inscripción ajustará automáticamente si es necesario
+        return 3;
       case 'PENDING':
       case 'COMPLETED_WITH_DOCS':
         // Para estados completos, ir al paso 4 (confirmación/resumen)

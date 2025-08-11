@@ -59,4 +59,4 @@ export class NotificationService {
    */
   disableNotifications(): void {
     // Esta función es un placeholder para mantener compatibilidad con ExamenNotificationService
-    // Logging implementado con LoggingService
+    // Logging implementado con LoggingService}

@@ -35,6 +35,8 @@ import { Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { DocumentosEmbebidosComponent } from '../../documentos-embebidos/documentos-embebidos.component';
 import { CustomAddressAutocompleteComponent } from '@shared/components/custom-address-autocomplete/custom-address-autocomplete.component';
+    FinalStepValidationComponent
+import { FinalStepValidationComponent } from '../../final-step-validation/final-step-validation.component';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { IInscriptionUpdateRequest, IInscriptionStepRequest } from '@shared/interfaces/inscripcion/inscription.interface';
@@ -74,7 +76,8 @@ import {
     CustomButtonComponent,
     CustomCheckboxComponent,
     DocumentosEmbebidosComponent,
-    CustomAddressAutocompleteComponent
+    CustomAddressAutocompleteComponent,
+    FinalStepValidationComponent,
   ],
   templateUrl: './inscripcion-process-page.component.html',
   styleUrls: ['./inscripcion-process-page.component.scss'],
@@ -352,6 +355,14 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
    * @param isResume Indica si es una recuperación de proceso interrumpido
    */
   private initializeInscriptionProcess(isResume: boolean = false): void {
+    console.log('[InscripcionProcess] 🚀 INICIANDO initializeInscriptionProcess:', {
+      isResume,
+      inscriptionId: this.inscriptionId,
+      requestedStepFromUrl: this.requestedStepFromUrl,
+      currentStep: this.currentStep,
+      contestId: this.contestId
+    });
+
     this.loggingService.debug('[InscripcionProcess] initializeInscriptionProcess llamado:', {
       isResume,
       inscriptionId: this.inscriptionId,
@@ -362,13 +373,66 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     // Cargar datos del concurso
     this.cargarDatosConcurso();
 
-    // CRITICAL FIX: SIEMPRE consultar backend cuando hay inscriptionId para permitir navegación directa
+    // ✅ SOLUCIÓN DIRECTA: Cargar datos desde backend cuando hay inscriptionId
+    console.log('[InscripcionProcess] 🔍 VERIFICANDO CONDICIONES:', {
+      inscriptionId: this.inscriptionId,
+      isResume: isResume,
+      contestId: this.contestId
+    });
+
     if (this.inscriptionId) {
-      // Determinar paso basado en estado del backend (funciona para resume Y navegación directa)
-      this.determinarPasoInicialBasadoEnEstado();
+      console.log('[InscripcionProcess] ✅ CARGANDO DATOS DIRECTAMENTE DESDE BACKEND');
+      // Cargar datos directamente desde el backend
+      this.inscriptionService.getInscriptionDetails(this.inscriptionId).pipe(
+        takeUntil(this.destroy$),
+        tap(inscriptionDetails => {
+          console.log('[InscripcionProcess] 🎯 DATOS RECIBIDOS DEL BACKEND:', inscriptionDetails);
+
+          // ✅ NUEVO: Actualizar el estado de inscripción para detectar período de regularización
+          if (inscriptionDetails.estado) {
+            this.currentInscriptionState = inscriptionDetails.estado;
+            console.log('[InscripcionProcess] 📊 Estado de inscripción actualizado:', this.currentInscriptionState);
+          }
+
+          // Aplicar centro de vida si existe
+          if (inscriptionDetails.centroDeVida) {
+            this.centroDeVidaControl.setValue(inscriptionDetails.centroDeVida);
+            this.centroDeVidaControl.markAsTouched();
+            this.centroDeVidaControl.updateValueAndValidity();
+            console.log('[InscripcionProcess] ✅ Centro de vida aplicado:', inscriptionDetails.centroDeVida);
+          }
+
+          // Aplicar circunscripciones si existen
+          if (inscriptionDetails.circunscripciones && Array.isArray(inscriptionDetails.circunscripciones)) {
+            this.selectedCircunscripcionesControl.setValue(inscriptionDetails.circunscripciones);
+            this.selectedCircunscripcionesControl.markAsTouched();
+            this.selectedCircunscripcionesControl.updateValueAndValidity();
+            console.log('[InscripcionProcess] ✅ Circunscripciones aplicadas:', inscriptionDetails.circunscripciones);
+          }
+
+          // Marcar términos como aceptados
+          this.termsAcceptedControl.setValue(true);
+          this.termsAcceptedControl.markAsTouched();
+          this.termsAcceptedControl.updateValueAndValidity();
+
+          // Forzar validación después de cargar datos
+          setTimeout(() => {
+            this.forceValidationUpdate();
+            console.log('[InscripcionProcess] 🔄 Validación forzada completada');
+          }, 200);
+        }),
+        catchError(error => {
+          console.error('[InscripcionProcess] ❌ Error cargando datos desde backend:', error);
+          // Continuar con el flujo normal si hay error
+          return of(null);
+        })
+      ).subscribe();
     } else if (isResume) {
+      console.log('[InscripcionProcess] 🔄 LLAMANDO recuperarProcesoInterrumpido');
       // CRITICAL FIX: Si es una recuperación pero no hay inscriptionId, buscar en localStorage
       this.recuperarProcesoInterrumpido();
+    } else {
+      console.log('[InscripcionProcess] ⚠️ NO SE EJECUTA NINGÚN MÉTODO DE CARGA DE DATOS');
     }
 
     // Cargar centro de vida desde el perfil si existe
@@ -388,9 +452,14 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     // Inicializar selecciones de circunscripciones
     this.inicializarSeleccionesCircunscripciones();
 
+    // ✅ SOLUCIÓN: Configurar suscripciones para actualización automática
+    this.configurarSuscripcionesFormulario();
+
     // ✅ CORRECCIÓN: Forzar validación después de inicializar todo
     setTimeout(() => {
       this.forceValidationUpdate();
+      // ✅ NUEVO: Inicializar checkbox de conformidad según el contexto
+      this.initializeProvisionalCheckbox();
     }, 500);
   }
 
@@ -416,6 +485,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
       canProceed: this.canProceed()
     }, 'InscripcionProcessPage');
   }
+
+
 
   ngOnDestroy(): void {
     // ✅ SOLUCIÓN PROBLEMA 9: Solo guardar estado, NO cancelar automáticamente
@@ -1300,32 +1371,54 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
    * Especialmente importante para inscripciones con documentación pendiente
    */
   private determinarPasoInicialBasadoEnEstado(): void {
+    console.log('[InscripcionProcess] 🚀 MÉTODO determinarPasoInicialBasadoEnEstado EJECUTADO', {
+      inscriptionId: this.inscriptionId,
+      contestId: this.contestId
+    });
+
     if (!this.inscriptionId || !this.contestId) {
+      console.error('[InscripcionProcess] ❌ No inscription ID or contest ID available for state determination');
       this.loggingService.error('[InscripcionProcess] No inscription ID or contest ID available for state determination', undefined, 'InscripcionProcessPage');
       return;
     }
 
-    // Obtener el estado actual de la inscripción desde el backend
-    this.inscriptionService.getUserInscriptions(0, 100).pipe(
+    console.log('[InscripcionProcess] ✅ Llamando a getInscriptionDetails con ID:', this.inscriptionId);
+    this.loggingService.debug('[InscripcionProcess] Determinando paso inicial basado en estado del backend', {
+      inscriptionId: this.inscriptionId,
+      contestId: this.contestId
+    }, 'InscripcionProcessPage');
+
+    // ✅ SOLUCIÓN: Cargar datos específicos directamente desde el endpoint de detalles
+    this.inscriptionService.getInscriptionDetails(this.inscriptionId).pipe(
       takeUntil(this.destroy$),
-      map(page => page.content.find(ins => ins.id === this.inscriptionId)),
-      switchMap((inscription: any) => {
-        if (inscription) {
-          // ✅ SOLUCIÓN: Cargar datos específicos de la inscripción desde el backend
-          return this.cargarDatosInscripcionDesdeBackend(inscription).pipe(
-            map(() => inscription)
-          );
-        }
-        return of(inscription);
+      tap(inscriptionDetails => {
+        this.loggingService.debug('[InscripcionProcess] Detalles de inscripción obtenidos:', inscriptionDetails, 'InscripcionProcessPage');
+
+        // Aplicar datos al formulario
+        this.aplicarDatosDeInscripcionAlFormulario(inscriptionDetails);
+
+        // Forzar validación después de cargar datos
+        setTimeout(() => {
+          this.forceValidationUpdate();
+        }, 100);
+      }),
+      switchMap(inscriptionDetails => {
+        // También obtener el estado general de la inscripción
+        return this.inscriptionService.getUserInscriptions(0, 100).pipe(
+          map(page => page.content.find(ins => ins.id === this.inscriptionId)),
+          map(inscription => ({ inscription, inscriptionDetails })),
+          catchError(() => of({ inscription: { estado: 'ACTIVE' }, inscriptionDetails }))
+        );
       }),
       catchError(error => {
-        this.loggingService.error('[InscripcionProcess] Error retrieving inscription state:', error, 'InscripcionProcessPage');
+        this.loggingService.error('[InscripcionProcess] Error retrieving inscription details:', error, 'InscripcionProcessPage');
         // Si hay error, cargar estado guardado como fallback
         this.cargarEstadoGuardado();
         return of(null);
       })
-    ).subscribe((inscription: any) => {
-      if (inscription) {
+    ).subscribe((result: any) => {
+      if (result && result.inscription) {
+        const inscription = result.inscription;
         this.loggingService.debug('[InscripcionProcess] Current inscription state:', inscription.estado, 'InscripcionProcessPage');
 
         // Determinar el paso inicial basado en el estado
@@ -1585,6 +1678,79 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
         }, 'InscripcionProcessPage');
       })
     );
+  }
+
+  /**
+   * ✅ SOLUCIÓN: Aplica los datos de inscripción obtenidos del backend al formulario
+   */
+  private aplicarDatosDeInscripcionAlFormulario(inscriptionDetails: any): void {
+    console.log('[InscripcionProcess] 🎯 APLICANDO DATOS AL FORMULARIO:', inscriptionDetails);
+
+    if (!inscriptionDetails) {
+      console.warn('[InscripcionProcess] ⚠️ No hay datos de inscripción para aplicar');
+      return;
+    }
+
+    this.loggingService.debug('[InscripcionProcess] Aplicando datos de inscripción al formulario:', inscriptionDetails, 'InscripcionProcessPage');
+
+    // Aplicar centro de vida
+    if (inscriptionDetails.centroDeVida || inscriptionDetails.centro_de_vida || inscriptionDetails.direccion) {
+      const centroDeVida = inscriptionDetails.centroDeVida || inscriptionDetails.centro_de_vida || inscriptionDetails.direccion;
+
+      this.centroDeVidaControl.setValue(centroDeVida);
+      this.centroDeVidaControl.markAsTouched();
+      this.centroDeVidaControl.updateValueAndValidity();
+
+      // Actualizar addressData para consistencia
+      this.addressData = {
+        formattedAddress: centroDeVida,
+        placeId: '',
+        coordinates: { lat: 0, lng: 0 },
+        components: {}
+      };
+
+      this.loggingService.debug('[InscripcionProcess] Centro de vida aplicado:', {
+        centroDeVida: centroDeVida,
+        controlValid: this.centroDeVidaControl.valid
+      }, 'InscripcionProcessPage');
+    }
+
+    // Aplicar circunscripciones
+    if (inscriptionDetails.circunscripciones || inscriptionDetails.selectedCircunscripciones || inscriptionDetails.preferencias) {
+      const circunscripciones = inscriptionDetails.circunscripciones ||
+        inscriptionDetails.selectedCircunscripciones ||
+        inscriptionDetails.preferencias || [];
+
+      let circunscripcionesFormateadas = [];
+      if (Array.isArray(circunscripciones)) {
+        circunscripcionesFormateadas = circunscripciones;
+      } else if (typeof circunscripciones === 'string') {
+        circunscripcionesFormateadas = circunscripciones.split(',').map(c => c.trim()).filter(c => c);
+      }
+
+      if (circunscripcionesFormateadas.length > 0) {
+        this.selectedCircunscripcionesControl.setValue(circunscripcionesFormateadas);
+        this.selectedCircunscripcionesControl.markAsTouched();
+        this.selectedCircunscripcionesControl.updateValueAndValidity();
+
+        // Actualizar selecciones internas
+        this.seleccionesCircunscripciones = convertirFormatoASeleccion(circunscripcionesFormateadas);
+
+        this.loggingService.debug('[InscripcionProcess] Circunscripciones aplicadas:', {
+          circunscripcionesOriginales: circunscripciones,
+          circunscripcionesFormateadas: circunscripcionesFormateadas,
+          seleccionesInternas: this.seleccionesCircunscripciones,
+          controlValid: this.selectedCircunscripcionesControl.valid
+        }, 'InscripcionProcessPage');
+      }
+    }
+
+    // Marcar términos como aceptados si la inscripción existe
+    this.inscriptionForm.patchValue({
+      termsAccepted: true
+    }, { emitEvent: false });
+
+    this.loggingService.debug('[InscripcionProcess] Datos de inscripción aplicados completamente al formulario', undefined, 'InscripcionProcessPage');
   }
 
   /**
@@ -2589,6 +2755,39 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   }
 
   /**
+   * ✅ SOLUCIÓN: Configura suscripciones para actualización automática de datos
+   */
+  private configurarSuscripcionesFormulario(): void {
+    if (!this.inscriptionId) return;
+
+    // Suscribirse a cambios en centro de vida
+    this.centroDeVidaControl.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(1000), // Esperar 1 segundo después del último cambio
+      distinctUntilChanged()
+    ).subscribe(value => {
+      if (value && value.trim()) {
+        this.loggingService.debug('[InscripcionProcess] Centro de vida cambiado, actualizando backend', { value }, 'InscripcionProcessPage');
+        this.actualizarDatosInscripcionEnBackend();
+      }
+    });
+
+    // Suscribirse a cambios en circunscripciones
+    this.selectedCircunscripcionesControl.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(500), // Esperar 500ms después del último cambio
+      distinctUntilChanged()
+    ).subscribe(value => {
+      if (value && Array.isArray(value) && value.length > 0) {
+        this.loggingService.debug('[InscripcionProcess] Circunscripciones cambiadas, actualizando backend', { value }, 'InscripcionProcessPage');
+        this.actualizarDatosInscripcionEnBackend();
+      }
+    });
+  }
+
+
+
+  /**
    * CRITICAL FIX: Creates inscription when advancing from step 1 to step 2
    * This ensures inscription is only created when user actually progresses beyond terms acceptance
    */
@@ -2824,19 +3023,19 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   }
 
   /**
-   * NUEVO: Obtiene mensaje contextual apropiado para el período de gracia
-   * Distingue entre inscripción provisional nueva vs período de gracia activo
+   * ✅ CORREGIDO: Obtiene mensaje contextual apropiado para el período de regularización
+   * Distingue entre inscripción provisional nueva vs período de regularización activo
    */
   getGracePeriodMessage(): { title: string, description: string, isGracePeriod: boolean } {
     if (this.isInGracePeriod()) {
       return {
-        title: '⏰ Período de Gracia Activo',
-        description: 'Usted eligió anteriormente realizar una inscripción provisional. Como resultado de esa decisión, ahora cuenta con un plazo de gracia para completar la documentación pendiente. Debe cargar todos los documentos requeridos antes del miércoles 13/08/2025 23:59 para evitar que su inscripción sea rechazada automáticamente.',
+        title: '🚨 Período de Regularización de Documentación',
+        description: 'Usted se encuentra en el período de regularización de documentación (3 días hábiles posteriores al cierre de inscripciones). Debe completar la carga de TODOS los documentos obligatorios antes del vencimiento del plazo para evitar que su inscripción sea rechazada automáticamente.',
         isGracePeriod: true
       };
     } else {
       return {
-        title: '⏰ Período de Gracia - Completar Documentación',
+        title: '⏰ Documentación Pendiente',
         description: 'Si no puede completar toda la documentación ahora, puede proceder con una inscripción provisional. Tendrá 3 días hábiles después del cierre de inscripciones para completar la documentación pendiente.',
         isGracePeriod: false
       };
@@ -2844,16 +3043,31 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   }
 
   /**
-   * NUEVO: Determina si el botón "Siguiente" debe estar habilitado
-   * En período de gracia, solo permite avanzar si todos los documentos están completos
+   * ✅ CORREGIDO: Determina si el botón "Siguiente" debe estar habilitado
+   * En período de regularización, solo permite avanzar si todos los documentos están completos
    */
   canProceedFromDocumentationStep(): boolean {
     if (this.isInGracePeriod()) {
-      // En período de gracia, DEBE tener todos los documentos obligatorios completados
-      return this.allRequiredDocumentsUploaded();
+      // En período de regularización, DEBE tener todos los documentos obligatorios completados
+      const allDocsComplete = this.allRequiredDocumentsUploaded();
+
+      this.loggingService.debug('[InscripcionProcess] Validación período de regularización:', {
+        isInGracePeriod: true,
+        allRequiredDocumentsUploaded: allDocsComplete,
+        canProceed: allDocsComplete
+      }, 'InscripcionProcessPage');
+
+      return allDocsComplete;
     } else {
       // En inscripción normal, puede proceder con documentos completos O inscripción provisional
-      return this.canProceedWithDocumentation();
+      const canProceed = this.canProceedWithDocumentation();
+
+      this.loggingService.debug('[InscripcionProcess] Validación inscripción normal:', {
+        isInGracePeriod: false,
+        canProceedWithDocumentation: canProceed
+      }, 'InscripcionProcessPage');
+
+      return canProceed;
     }
   }
 
@@ -2866,13 +3080,54 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
   }
 
   /**
+   * ✅ NUEVO: Determina si el checkbox de conformidad debe estar deshabilitado y pre-marcado
+   * Durante el período de regularización, el usuario ya prestó conformidad anteriormente
+   */
+  isProvisionalCheckboxDisabled(): boolean {
+    return this.isInGracePeriod();
+  }
+
+  /**
+   * ✅ NUEVO: Obtiene el texto explicativo para el checkbox de conformidad
+   */
+  getProvisionalCheckboxLabel(): string {
+    if (this.isInGracePeriod()) {
+      return 'Usted prestó conformidad para inscripción provisional al momento de inscribirse';
+    } else {
+      return 'Acepto proceder con inscripción provisional y completar la documentación durante el período de gracia';
+    }
+  }
+
+  /**
+   * ✅ NUEVO: Inicializa el estado del checkbox según el contexto
+   */
+  private initializeProvisionalCheckbox(): void {
+    if (this.isInGracePeriod()) {
+      // En período de regularización, marcar como aceptado y deshabilitar
+      this.documentosCompletosControl.setValue(true);
+      this.documentosCompletosControl.disable();
+    }
+  }
+
+  /**
+   * ✅ NUEVO: Obtiene mensaje de fecha límite específico para el período de regularización
+   */
+  getRegularizationDeadlineMessage(): string {
+    if (this.isInGracePeriod()) {
+      // TODO: Calcular fecha real basada en el cierre de inscripciones + 3 días hábiles
+      return 'Fecha límite: miércoles 13/08/2025 23:59';
+    }
+    return '';
+  }
+
+  /**
    * NUEVO: Guarda el progreso actual y regresa al dashboard
    */
   saveAndExit(): void {
     this.guardarEstadoActual();
 
     if (this.isInGracePeriod()) {
-      this.notificationService.info('Su progreso ha sido guardado. Recuerde completar la documentación antes del vencimiento del período de gracia.');
+      this.notificationService.info('Su progreso ha sido guardado. Recuerde completar la documentación antes del vencimiento del período de regularización.');
     } else {
       this.notificationService.info('Su progreso ha sido guardado. Puede continuar más tarde desde donde lo dejó.');
     }
@@ -2886,5 +3141,48 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
     }, 500);
   }
 
+  /**
+   * Maneja la validación completa del componente final-step-validation
+   */
+  onFinalValidationComplete(isValid: boolean): void {
+    this.loggingService.debug('[InscripcionProcess] Final validation complete:', { isValid }, 'InscripcionProcessPage');
+    
+    if (isValid) {
+      // Marcar que todos los datos están listos para finalizar
+      this.confirmedPersonalDataControl.setValue(true);
+      
+      // Forzar actualización de propiedades computadas
+      this.updateComputedProperties();
+      
+      // Forzar detección de cambios
+      this.cdr.detectChanges();
+    }
+  }
 
+  /**
+   * Maneja las actualizaciones de datos del componente de validación
+   */
+  onValidationDataUpdated(): void {
+    this.loggingService.debug('[InscripcionProcess] Validation data updated - refreshing form data', undefined, 'InscripcionProcessPage');
+    
+    // Recargar datos de la inscripción desde el backend
+    if (this.inscriptionId) {
+      this.inscriptionService.getInscriptionDetails(this.inscriptionId).pipe(
+        takeUntil(this.destroy$),
+        tap(inscriptionDetails => {
+          // Aplicar datos actualizados al formulario
+          this.aplicarDatosDeInscripcionAlFormulario(inscriptionDetails);
+          
+          // Forzar validación
+          setTimeout(() => {
+            this.forceValidationUpdate();
+          }, 200);
+        }),
+        catchError(error => {
+          this.loggingService.error('[InscripcionProcess] Error refreshing inscription data after validation update:', error, 'InscripcionProcessPage');
+          return of(null);
+        })
+      ).subscribe();
+    }
+  }
 }
