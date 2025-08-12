@@ -1,7 +1,0 @@
-services:
-  backend:
-    image: mpd_concursos_backend:fix-circunscripciones
-    build: null
-  frontend:
-    image: mpd_concursos-frontend:latest
-    build: null
