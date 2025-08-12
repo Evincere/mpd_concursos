@@ -166,3 +166,7 @@ dev-setup/
 # Archivos de prueba con datos sensibles  
 test-data-sensitive/
 user-test-*
+
+# Allow example configuration files
+!docker-compose.ssl.example.yml
+!.env.production.example
