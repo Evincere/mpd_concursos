@@ -66,13 +66,23 @@ testem.log
 /typingslogs/*.log
 
 # =============================================================================
-# ARCHIVOS DE BACKUP Y RECUPERACIÓN
+# ARCHIVOS DE BACKUP Y RECUPERACIÓN - SEGURIDAD CRÍTICA
 # =============================================================================
-# Carpetas de backup
+# Carpetas de backup y recuperación
 backups/
 backup_*/
 *_backup/
 backup-*/
+backup*/
+BACKUP*/
+RECOVERY*/
+recovery_*/
+*_recovery/
+*recovery*/
+
+# Plan de recuperación específico
+RECOVERY_PLAN_DEFINITIVO/
+temp_recovery_commands.*
 
 # Archivos de backup individuales
 *.backup
@@ -81,14 +91,82 @@ backup-*/
 *.bak
 *.sql.backup
 *.tar.gz.backup
+*.orig
+*.old
 
-# Archivos de recuperación
-recovery_*/
-*_recovery/
-RECOVERY_*/
+# Backups específicos por fecha
+backup_*_20*
+*_backup_20*
+backup_pre_*
+backup_post_*
 
+# Scripts y archivos de limpieza
+cleanup_old_backups.sh
+verificar-integridad-backups.*
+*-checksums.md5
+*checksums*.md5
+
+# =============================================================================
+# CONFIGURACIONES SENSIBLES Y CERTIFICADOS SSL
+# =============================================================================
+# Archivos de entorno con información sensible
+.env.production
+.env.ssl
+.env.local
+.env.development
+
+# Configuraciones Docker sensibles
+docker-compose.ssl.*
+docker-compose.prod.*
+docker-compose.*.backup*
+docker-compose.ssl.image-template.yml
+docker-compose.ssl.override.yml
+
+# Setup y certificados SSL
+ssl-setup/
+certificates/
+certs/
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# =============================================================================
+# ARCHIVOS TEMPORALES Y LOGS DE SISTEMA
+# =============================================================================
 # Logs de sistema
 logs/
+*.log
+log-monitor.*
 
-# Environment files with sensitive data
-.env.production
+# Archivos temporales
+temp/
+tmp/
+temporary/
+*.tmp
+*.temp
+
+# Dumps de base de datos
+*.sql
+*.dump
+backup_*.sql
+
+# =============================================================================
+# EXCLUSIONES ESPECÍFICAS DEL PROYECTO
+# =============================================================================
+# Scripts de monitoreo
+scripts/monitor/
+mpd-monitor-*
+
+# Archivos de configuración de desarrollo local
+local-config/
+dev-setup/
+
+# Archivos de prueba con datos sensibles  
+test-data-sensitive/
+user-test-*
+
+# Allow example configuration files
+!docker-compose.ssl.example.yml
+!.env.production.example

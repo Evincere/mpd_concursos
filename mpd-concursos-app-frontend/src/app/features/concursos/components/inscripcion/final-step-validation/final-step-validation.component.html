@@ -17,13 +17,13 @@
     <div class="validation-issues">
       <div class="alert-header">
         <mat-icon class="warning-icon">warning</mat-icon>
-        <h3>⚠️ Información Requerida Faltante</h3>
+        <h3>Información Requerida Faltante</h3>
       </div>
       <p class="alert-description">
-        Para completar tu inscripción, necesitamos que proporciones la siguiente información requerida. 
+        Para completar tu inscripción, necesitamos que proporciones la siguiente información requerida.
         Completa los campos faltantes directamente en este formulario.
       </p>
-      
+
       <div class="missing-data-summary">
         <div class="missing-item" *ngIf="validationResult?.missingCentroVida">
           <mat-icon class="missing-icon">location_off</mat-icon>
@@ -32,9 +32,9 @@
             <span>Debes especificar tu domicilio principal donde realizas tu vida cotidiana</span>
           </div>
         </div>
-        
+
         <div class="missing-item" *ngIf="validationResult?.missingCircunscripciones">
-          <mat-icon class="missing-icon">gavel</mat-icon>
+          <mat-icon class="missing-icon">how_to_vote</mat-icon>
           <div class="missing-content">
             <strong>Circunscripciones Judiciales</strong>
             <span>Debes seleccionar al menos una circunscripción donde deseas postularte</span>
@@ -51,9 +51,9 @@
         <mat-icon>edit</mat-icon>
         <h4>Completar Información</h4>
       </div>
-      
-      <form [formGroup]="validationForm" (ngSubmit)="onSubsanar()">
-        
+
+      <div [formGroup]="validationForm">
+
         <!-- Centro de Vida -->
         <div class="form-section" *ngIf="validationResult?.missingCentroVida">
           <div class="field-header">
@@ -62,16 +62,14 @@
             <span class="required-badge">Requerido</span>
           </div>
           <p class="field-description">
-            Especifica tu domicilio principal donde realizas tu vida cotidiana. 
+            Especifica tu domicilio principal donde realizas tu vida cotidiana.
             Esta información es necesaria para determinar tu jurisdicción.
           </p>
-          
+
           <mat-form-field class="full-width" appearance="outline">
             <mat-label>Domicilio Centro de Vida</mat-label>
-            <input matInput 
-                   formControlName="centroDeVida"
-                   placeholder="Ej: Av. San Martín 1234, Ciudad, Provincia"
-                   maxlength="200">
+            <input matInput formControlName="centroDeVida" placeholder="Ej: Av. San Martín 1234, Ciudad, Provincia"
+              maxlength="200">
             <mat-icon matSuffix>location_on</mat-icon>
             <mat-error>{{ getFieldError('centroDeVida') }}</mat-error>
             <mat-hint>Incluye calle, número, ciudad y provincia</mat-hint>
@@ -86,32 +84,73 @@
             <span class="required-badge">Requerido</span>
           </div>
           <p class="field-description">
-            Selecciona al menos una circunscripción judicial donde deseas postularte. 
+            Selecciona al menos una circunscripción judicial donde deseas postularte.
             Puedes elegir múltiples opciones para aumentar tus oportunidades.
           </p>
-          
+
           <div class="circunscripciones-container">
             <div class="selection-summary" *ngIf="getSelectedCircunscripciones().length > 0">
               <mat-icon class="summary-icon">check_circle</mat-icon>
               <span>{{ getSelectedCircunscripciones().length }} circunscripción(es) seleccionada(s)</span>
             </div>
             
-            <div class="circunscripciones-grid" formArrayName="circunscripciones">
-              <mat-card *ngFor="let circ of availableCircunscripciones; let i = index" 
-                        class="circunscripcion-card"
-                        [class.selected]="circunscripcionesArray.at(i).value">
-                <mat-checkbox [formControlName]="i" class="circunscripcion-checkbox">
-                  <div class="circunscripcion-content">
-                    <strong>{{ circ }}</strong>
-                    <span class="circunscripcion-description">
-                      {{ getCircunscripcionDescription(circ) }}
-                    </span>
-                  </div>
-                </mat-checkbox>
-              </mat-card>
+            <!-- Primera Circunscripción -->
+            <div class="circunscripcion-item">
+              <app-custom-checkbox
+                [checked]="isCircunscripcionSelected('Primera')"
+                (change)="onCircunscripcionChange($event, 'Primera')"
+                label="Primera Circunscripción"
+                class="circunscripcion-checkbox">
+              </app-custom-checkbox>
             </div>
 
-            <div *ngIf="!hasSelectedCircunscripciones() && validationForm.get('circunscripciones')?.touched" 
+            <!-- Segunda Circunscripción con departamentos -->
+            <div class="circunscripcion-item circunscripcion-con-departamentos">
+              <app-custom-checkbox
+                [checked]="isCircunscripcionSelected('Segunda')"
+                (change)="onCircunscripcionCompletaChange($event, 'Segunda')"
+                label="Segunda Circunscripción (Completa)"
+                class="circunscripcion-checkbox">
+              </app-custom-checkbox>
+
+              <div class="departamentos-container" *ngIf="!isCircunscripcionSelected('Segunda')">
+                <div class="departamentos-header">
+                  <span class="departamentos-label">O selecciona departamentos específicos:</span>
+                </div>
+                <div class="departamentos-grid">
+                  <div *ngFor="let dept of departamentosSegundaCircunscripcion" class="departamento-item">
+                    <app-custom-checkbox
+                      [checked]="isDepartamentoSelected('Segunda', dept.id)"
+                      (change)="onDepartamentoChange($event, 'Segunda', dept.id)"
+                      [label]="dept.nombre"
+                      class="departamento-checkbox">
+                    </app-custom-checkbox>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tercera Circunscripción -->
+            <div class="circunscripcion-item">
+              <app-custom-checkbox
+                [checked]="isCircunscripcionSelected('Tercera')"
+                (change)="onCircunscripcionChange($event, 'Tercera')"
+                label="Tercera Circunscripción"
+                class="circunscripcion-checkbox">
+              </app-custom-checkbox>
+            </div>
+
+            <!-- Cuarta Circunscripción -->
+            <div class="circunscripcion-item">
+              <app-custom-checkbox
+                [checked]="isCircunscripcionSelected('Cuarta')"
+                (change)="onCircunscripcionChange($event, 'Cuarta')"
+                label="Cuarta Circunscripción"
+                class="circunscripcion-checkbox">
+              </app-custom-checkbox>
+            </div>
+
+            <div *ngIf="!hasSelectedCircunscripciones()" 
                  class="validation-error">
               <mat-icon class="error-icon">error</mat-icon>
               <span>Debes seleccionar al menos una circunscripción judicial</span>
@@ -119,68 +158,7 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-          <button mat-raised-button 
-                  color="primary" 
-                  type="submit"
-                  [disabled]="isLoading || validationForm.invalid"
-                  class="primary-action">
-            <mat-icon>save</mat-icon>
-            <span *ngIf="!isLoading">Guardar y Continuar</span>
-            <span *ngIf="isLoading">Guardando...</span>
-          </button>
-          
-          <button mat-stroked-button 
-                  type="button"
-                  (click)="resetForm()"
-                  [disabled]="isLoading"
-                  class="secondary-action">
-            <mat-icon>refresh</mat-icon>
-            Limpiar Formulario
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  <!-- Current Data Summary -->
-  <div *ngIf="!isLoading && validationResult" class="current-data-summary">
-    <div class="summary-header">
-      <mat-icon>assignment</mat-icon>
-      <h5>Estado Actual de tu Inscripción</h5>
-    </div>
-    
-    <div class="summary-grid">
-      <div class="summary-item" [class.complete]="validationResult.centroDeVida" [class.incomplete]="!validationResult.centroDeVida">
-        <div class="item-header">
-          <mat-icon class="status-icon">{{ validationResult.centroDeVida ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-          <strong>Centro de Vida</strong>
-        </div>
-        <div class="item-content">
-          <span *ngIf="validationResult.centroDeVida" class="data-value">{{ validationResult.centroDeVida }}</span>
-          <span *ngIf="!validationResult.centroDeVida" class="data-missing">Pendiente de completar</span>
-        </div>
-      </div>
-      
-      <div class="summary-item" [class.complete]="getCircunscripcionesCount() > 0" [class.incomplete]="getCircunscripcionesCount() === 0">
-        <div class="item-header">
-          <mat-icon class="status-icon">{{ getCircunscripcionesCount() > 0 ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-          <strong>Circunscripciones Judiciales</strong>
-        </div>
-        <div class="item-content">
-          <span *ngIf="getCircunscripcionesCount() > 0" class="data-value">
-            {{ getCircunscripcionesCount() }} seleccionada(s)
-          </span>
-          <span *ngIf="getCircunscripcionesCount() === 0" class="data-missing">
-            Ninguna seleccionada
-          </span>
-          <div *ngIf="validationResult.selectedCircunscripciones?.length > 0" class="selected-list">
-            <span *ngFor="let circ of validationResult.selectedCircunscripciones; let last = last" class="selected-item">
-              {{ circ }}<span *ngIf="!last">, </span>
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
