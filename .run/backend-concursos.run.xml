@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="run-concursos" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+  <configuration default="false" name="backend-concursos" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="dev" />
     <additionalParameters>
       <param>

@@ -290,68 +290,10 @@
                 [label]="'Cuarta Circunscripción'"
                 [checked]="isCircunscripcionSelected('Cuarta')"
                 (change)="onCircunscripcionChange($event, 'Cuarta')">
-
-            <!-- Primera Circunscripción -->
-            <div class="circunscripcion-item">
-              <app-custom-checkbox
-                [label]="'Primera Circunscripción'"
-                [checked]="isCircunscripcionSelected('Primera')"
-                (change)="onCircunscripcionChange($event, 'Primera')">
-              </app-custom-checkbox>
-            </div>
-
-            <!-- Segunda Circunscripción con departamentos -->
-            <div class="circunscripcion-item circunscripcion-con-departamentos">
-              <app-custom-checkbox
-                [label]="'Segunda Circunscripción (completa)'"
-                [checked]="isCircunscripcionCompletaSelected('Segunda')"
-                (change)="onCircunscripcionCompletaChange($event, 'Segunda')">
-              </app-custom-checkbox>
-
-              <!-- Departamentos de la Segunda Circunscripción -->
-              <div class="departamentos-container" *ngIf="!isCircunscripcionCompletaSelected('Segunda')">
-                <div class="departamentos-header">
-                  <span class="departamentos-label">O seleccione departamentos específicos:</span>
-                </div>
-                <div class="departamentos-grid">
-                  <div class="departamento-item" *ngFor="let departamento of departamentosSegundaCircunscripcion">
-                    <app-custom-checkbox
-                      [label]="departamento.nombre"
-                      [checked]="isDepartamentoSelected('Segunda', departamento.id)"
-                      (change)="onDepartamentoChange($event, 'Segunda', departamento.id)">
-                    </app-custom-checkbox>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tercera Circunscripción -->
-            <div class="circunscripcion-item">
-              <app-custom-checkbox
-                [label]="'Tercera Circunscripción'"
-                [checked]="isCircunscripcionSelected('Tercera')"
-                (change)="onCircunscripcionChange($event, 'Tercera')">
-              </app-custom-checkbox>
-            </div>
-
-            <!-- Cuarta Circunscripción -->
-            <div class="circunscripcion-item">
-              <app-custom-checkbox
-                [label]="'Cuarta Circunscripción'"
-                [checked]="isCircunscripcionSelected('Cuarta')"
-                (change)="onCircunscripcionChange($event, 'Cuarta')">
-              </app-custom-checkbox>
               </app-custom-checkbox>
             </div>
           </div>
 
-          <div class="info-box">
-            <i class="fas fa-info-circle"></i>
-            <span>Para la Segunda Circunscripción puede seleccionar toda la circunscripción o departamentos específicos (San Rafael, General Alvear, Malargüe).</span>
-          </div>
-
-          <div class="error-message" *ngIf="selectedCircunscripcionesControl.invalid && selectedCircunscripcionesControl.touched">
-            Debe seleccionar al menos una circunscripción o departamento
           <div class="info-box">
             <i class="fas fa-info-circle"></i>
             <span>Para la Segunda Circunscripción puede seleccionar toda la circunscripción o departamentos específicos (San Rafael, General Alvear, Malargüe).</span>
@@ -606,6 +548,7 @@
         label="Atrás"
         icon="arrow-left"
         (buttonClick)="previousStep()">
+      </app-custom-button>
 
       <!-- NUEVO: Botón Guardar y Salir -->
       <app-custom-button
