@@ -48,6 +48,7 @@ import { CanComponentDeactivate } from '../../guards/inscription-deactivate.guar
 import {
   DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION,
   CIRCUNSCRIPCIONES_JUDICIALES,
+  DEPARTAMENTOS_MAP,
   SeleccionCircunscripcion,
   convertirSeleccionAFormato,
   convertirFormatoASeleccion,
@@ -1212,7 +1213,72 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy, CanCo
 
   getSelectedCircunscripcionesValue(): string {
     const value = this.selectedCircunscripcionesControl?.value;
-    return Array.isArray(value) ? value.join(', ') : '';
+    if (!Array.isArray(value) || value.length === 0) {
+      return '';
+    }
+
+    // Convertir a selecciones estructuradas para formateo
+    const selecciones = convertirFormatoASeleccion(value);
+
+    // Formatear para visualización humana
+    return this.formatearCircunscripcionesParaVisualizacion(selecciones);
+  }
+
+  /**
+   * ✅ NUEVO MÉTODO: Formatea las circunscripciones para visualización legible por el usuario
+   * Convierte formato técnico a formato amigable para mostrar en el paso 4
+   */
+  private formatearCircunscripcionesParaVisualizacion(selecciones: SeleccionCircunscripcion[]): string {
+    const resultado: string[] = [];
+
+    // Agrupar selecciones por circunscripción para manejo de departamentos
+    const agrupadas = new Map<string, SeleccionCircunscripcion[]>();
+
+    selecciones.forEach(seleccion => {
+      const key = seleccion.circunscripcion;
+      if (!agrupadas.has(key)) {
+        agrupadas.set(key, []);
+      }
+      agrupadas.get(key)!.push(seleccion);
+    });
+
+    // Formatear cada circunscripción
+    agrupadas.forEach((seleccionesCirc, circunscripcion) => {
+      const seleccionCompleta = seleccionesCirc.find(s => s.esCompleta);
+
+      if (seleccionCompleta) {
+        // Circunscripción completa seleccionada
+        resultado.push(`${circunscripcion} Circunscripción`);
+      } else {
+        // Solo departamentos específicos seleccionados
+        const todosDepartamentos: string[] = [];
+
+        seleccionesCirc.forEach(seleccion => {
+          if (seleccion.departamentos && seleccion.departamentos.length > 0) {
+            seleccion.departamentos.forEach(deptId => {
+              const departamento = DEPARTAMENTOS_MAP[deptId];
+              if (departamento && !todosDepartamentos.includes(departamento.nombre)) {
+                todosDepartamentos.push(departamento.nombre);
+              }
+            });
+          }
+        });
+
+        if (todosDepartamentos.length > 0) {
+          resultado.push(`${circunscripcion} Circunscripción (${todosDepartamentos.join(', ')})`);
+        }
+      }
+    });
+
+    const resultadoFormateado = resultado.join(', ');
+
+    // Log para debugging
+    this.loggingService.debug('[InscripcionProcess] Circunscripciones formateadas para visualización:', {
+      seleccionesOriginales: selecciones,
+      resultadoFormateado: resultadoFormateado
+    }, 'InscripcionProcessPage');
+
+    return resultadoFormateado;
   }
 
   // ✅ MÉTODO CRÍTICO: Verificar si realmente todos los documentos obligatorios están completos

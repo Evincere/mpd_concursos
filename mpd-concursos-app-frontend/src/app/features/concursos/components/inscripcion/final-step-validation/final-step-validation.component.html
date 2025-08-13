@@ -16,7 +16,7 @@
   <div *ngIf="!isLoading && !validationResult?.complete && showSubsanacionForm" class="subsanacion-container">
     <div class="validation-issues">
       <div class="alert-header">
-        <mat-icon class="warning-icon">warning</mat-icon>
+        <i class="fas fa-exclamation-triangle warning-icon"></i>
         <h3>Información Requerida Faltante</h3>
       </div>
       <p class="alert-description">
@@ -25,16 +25,16 @@
       </p>
 
       <div class="missing-data-summary">
-        <div class="missing-item" *ngIf="validationResult?.missingCentroVida">
-          <mat-icon class="missing-icon">location_off</mat-icon>
+        <div class="missing-item" *ngIf="hasMissingCentroDeVida()">
+          <i class="fas fa-map-marker-alt missing-icon"></i>
           <div class="missing-content">
             <strong>Centro de Vida</strong>
             <span>Debes especificar tu domicilio principal donde realizas tu vida cotidiana</span>
           </div>
         </div>
 
-        <div class="missing-item" *ngIf="validationResult?.missingCircunscripciones">
-          <mat-icon class="missing-icon">how_to_vote</mat-icon>
+        <div class="missing-item" *ngIf="hasMissingCircunscripciones()">
+          <i class="fas fa-gavel missing-icon"></i>
           <div class="missing-content">
             <strong>Circunscripciones Judiciales</strong>
             <span>Debes seleccionar al menos una circunscripción donde deseas postularte</span>
@@ -48,16 +48,16 @@
     <!-- Manual Correction Form -->
     <div class="manual-correction-section">
       <div class="section-header">
-        <mat-icon>edit</mat-icon>
+        <i class="fas fa-edit"></i>
         <h4>Completar Información</h4>
       </div>
 
       <div [formGroup]="validationForm">
 
         <!-- Centro de Vida -->
-        <div class="form-section" *ngIf="validationResult?.missingCentroVida">
+        <div class="form-section" *ngIf="hasMissingCentroDeVida()">
           <div class="field-header">
-            <mat-icon class="field-icon">home</mat-icon>
+            <i class="fas fa-home field-icon"></i>
             <h5>Centro de Vida</h5>
             <span class="required-badge">Requerido</span>
           </div>
@@ -70,16 +70,16 @@
             <mat-label>Domicilio Centro de Vida</mat-label>
             <input matInput formControlName="centroDeVida" placeholder="Ej: Av. San Martín 1234, Ciudad, Provincia"
               maxlength="200">
-            <mat-icon matSuffix>location_on</mat-icon>
+            <i class="fas fa-map-marker-alt" matSuffix></i>
             <mat-error>{{ getFieldError('centroDeVida') }}</mat-error>
             <mat-hint>Incluye calle, número, ciudad y provincia</mat-hint>
           </mat-form-field>
         </div>
 
         <!-- Circunscripciones -->
-        <div class="form-section" *ngIf="validationResult?.missingCircunscripciones">
+        <div class="form-section" *ngIf="hasMissingCircunscripciones()">
           <div class="field-header">
-            <mat-icon class="field-icon">gavel</mat-icon>
+            <i class="fas fa-gavel field-icon"></i>
             <h5>Circunscripciones Judiciales</h5>
             <span class="required-badge">Requerido</span>
           </div>
@@ -90,10 +90,10 @@
 
           <div class="circunscripciones-container">
             <div class="selection-summary" *ngIf="getSelectedCircunscripciones().length > 0">
-              <mat-icon class="summary-icon">check_circle</mat-icon>
+              <i class="fas fa-check-circle summary-icon"></i>
               <span>{{ getSelectedCircunscripciones().length }} circunscripción(es) seleccionada(s)</span>
             </div>
-            
+
             <!-- Primera Circunscripción -->
             <div class="circunscripcion-item">
               <app-custom-checkbox
@@ -150,14 +150,32 @@
               </app-custom-checkbox>
             </div>
 
-            <div *ngIf="!hasSelectedCircunscripciones()" 
+            <div *ngIf="!hasSelectedCircunscripciones()"
                  class="validation-error">
-              <mat-icon class="error-icon">error</mat-icon>
+              <i class="fas fa-exclamation-circle error-icon"></i>
               <span>Debes seleccionar al menos una circunscripción judicial</span>
             </div>
           </div>
         </div>
 
+        <!-- Botón de Guardar Cambios -->
+        <div class="form-actions" *ngIf="showSubsanacionForm">
+          <button mat-raised-button
+                  color="primary"
+                  class="save-button"
+                  [disabled]="validationForm.invalid || (!hasMissingCentroDeVida() && !hasSelectedCircunscripciones())"
+                  (click)="saveCorrections()">
+            <i class="fas fa-save"></i>
+            Guardar Correcciones
+          </button>
+
+          <button mat-button
+                  class="reset-button"
+                  (click)="resetForm()">
+            <i class="fas fa-undo"></i>
+            Restablecer
+          </button>
+        </div>
 
       </div>
     </div>

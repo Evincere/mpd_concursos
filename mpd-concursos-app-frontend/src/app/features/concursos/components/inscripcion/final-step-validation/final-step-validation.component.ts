@@ -13,8 +13,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { CustomCheckboxComponent } from '@shared/components/custom-form/custom-checkbox/custom-checkbox.component';
 import { NotificationService } from '@shared/services/notification.service';
-import { 
-  DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION, 
+import {
+  DEPARTAMENTOS_SEGUNDA_CIRCUNSCRIPCION,
   CIRCUNSCRIPCIONES_JUDICIALES,
   SeleccionCircunscripcion,
   convertirSeleccionAFormato
@@ -90,12 +90,19 @@ export class FinalStepValidationComponent implements OnInit {
 
   validateInscription() {
     this.isLoading = true;
-    
+
     this.http.get(`/api/inscriptions/validation/${this.inscriptionId}/completeness`)
       .subscribe({
         next: (result: any) => {
+          console.log('🔍 [FinalStepValidation] Resultado de validación:', result);
           this.validationResult = result;
           this.isLoading = false;
+
+          // Debug: verificar detección de problemas
+          console.log('🔍 [FinalStepValidation] Faltan circunscripciones:', this.hasMissingCircunscripciones());
+          console.log('🔍 [FinalStepValidation] Falta centro de vida:', this.hasMissingCentroDeVida());
+          console.log('🔍 [FinalStepValidation] Issues:', result.issues);
+          console.log('🔍 [FinalStepValidation] Selected circunscripciones:', result.selectedCircunscripciones);
 
           if (result.complete) {
             // Todo está completo, puede finalizar
@@ -161,6 +168,46 @@ export class FinalStepValidationComponent implements OnInit {
     return this.validationResult?.issues?.some((issue: string) => issue.includes(issueType)) || false;
   }
 
+  /**
+   * Verifica si faltan circunscripciones basándose en los issues
+   */
+  hasMissingCircunscripciones(): boolean {
+    // Verificar si hay un issue específico sobre circunscripciones
+    const hasCircunscripcionIssue = this.hasIssueType('circunscripción');
+    // Verificar si el array está vacío
+    const hasEmptyCircunscripciones = !this.validationResult?.selectedCircunscripciones ||
+                                     this.validationResult.selectedCircunscripciones.length === 0;
+
+    console.log('🔍 [FinalStepValidation] hasMissingCircunscripciones:', {
+      hasCircunscripcionIssue,
+      hasEmptyCircunscripciones,
+      selectedCircunscripciones: this.validationResult?.selectedCircunscripciones,
+      issues: this.validationResult?.issues
+    });
+
+    return hasCircunscripcionIssue || hasEmptyCircunscripciones;
+  }
+
+  /**
+   * Verifica si falta centro de vida basándose en los issues
+   */
+  hasMissingCentroDeVida(): boolean {
+    // Verificar si hay un issue específico sobre centro de vida
+    const hasCentroDeVidaIssue = this.hasIssueType('centro de vida');
+    // Verificar si el campo está vacío o nulo
+    const hasEmptyCentroDeVida = !this.validationResult?.centroDeVida ||
+                                this.validationResult.centroDeVida.trim() === '';
+
+    console.log('🔍 [FinalStepValidation] hasMissingCentroDeVida:', {
+      hasCentroDeVidaIssue,
+      hasEmptyCentroDeVida,
+      centroDeVida: this.validationResult?.centroDeVida,
+      issues: this.validationResult?.issues
+    });
+
+    return hasCentroDeVidaIssue || hasEmptyCentroDeVida;
+  }
+
   getCircunscripcionesCount(): number {
     return this.seleccionesCircunscripciones.length;
   }
@@ -178,13 +225,58 @@ export class FinalStepValidationComponent implements OnInit {
     this.prefillFormWithCurrentData();
   }
 
+  /**
+   * Guarda las correcciones realizadas por el usuario
+   */
+  saveCorrections(): void {
+    if (this.validationForm.invalid) {
+      this.markFormGroupTouched();
+      this.notificationService.warning('Por favor, completa todos los campos requeridos correctamente.');
+      return;
+    }
+
+    const corrections: any = {};
+
+    // Agregar centro de vida si fue modificado
+    if (this.hasMissingCentroDeVida() && this.validationForm.get('centroDeVida')?.value) {
+      corrections.centroDeVida = this.validationForm.get('centroDeVida')?.value;
+    }
+
+    // Agregar circunscripciones si fueron seleccionadas
+    if (this.hasMissingCircunscripciones() && this.seleccionesCircunscripciones.length > 0) {
+      corrections.selectedCircunscripciones = convertirSeleccionAFormato(this.seleccionesCircunscripciones);
+    }
+
+    console.log('🔧 [FinalStepValidation] Guardando correcciones:', corrections);
+
+    // Emitir los cambios al componente padre
+    if (corrections.centroDeVida) {
+      this.centroDeVidaChanged.emit(corrections.centroDeVida);
+    }
+
+    if (corrections.selectedCircunscripciones) {
+      this.circunscripcionesChanged.emit(corrections.selectedCircunscripciones);
+    }
+
+    // Emitir que los datos fueron actualizados
+    this.dataUpdated.emit();
+
+    // Mostrar mensaje de éxito
+    this.notificationService.success('Correcciones guardadas exitosamente. Los cambios se aplicarán al finalizar la inscripción.');
+
+    // Re-validar después de guardar
+    setTimeout(() => {
+      this.validateInscription();
+    }, 500);
+  }
+
   // ===== MÉTODOS PARA MANEJO DE CIRCUNSCRIPCIONES =====
 
   /**
    * Verifica si una circunscripción está seleccionada completamente
    */
   isCircunscripcionSelected(circunscripcion: string): boolean {
-    return this.seleccionesCircunscripciones.some(s => 
+    return this.seleccionesCircunscripciones.some(s =>
       s.circunscripcion === circunscripcion && s.esCompleta
     );
   }
@@ -193,7 +285,7 @@ export class FinalStepValidationComponent implements OnInit {
    * Verifica si un departamento específico está seleccionado
    */
   isDepartamentoSelected(circunscripcion: string, departamentoId: string): boolean {
-    const seleccion = this.seleccionesCircunscripciones.find(s => 
+    const seleccion = this.seleccionesCircunscripciones.find(s =>
       s.circunscripcion === circunscripcion && !s.esCompleta
     );
     return seleccion?.departamentos?.includes(departamentoId) || false;
@@ -250,7 +342,7 @@ export class FinalStepValidationComponent implements OnInit {
   private agregarSeleccionCircunscripcion(circunscripcion: string, esCompleta: boolean): void {
     // Remover selección existente de esta circunscripción
     this.removerSeleccionCircunscripcion(circunscripcion);
-    
+
     // Agregar nueva selección
     this.seleccionesCircunscripciones.push({
       circunscripcion,
@@ -266,7 +358,7 @@ export class FinalStepValidationComponent implements OnInit {
   }
 
   private agregarDepartamento(circunscripcion: string, departamentoId: string): void {
-    let seleccion = this.seleccionesCircunscripciones.find(s => 
+    let seleccion = this.seleccionesCircunscripciones.find(s =>
       s.circunscripcion === circunscripcion && !s.esCompleta
     );
 
@@ -285,13 +377,13 @@ export class FinalStepValidationComponent implements OnInit {
   }
 
   private removerDepartamento(circunscripcion: string, departamentoId: string): void {
-    const seleccion = this.seleccionesCircunscripciones.find(s => 
+    const seleccion = this.seleccionesCircunscripciones.find(s =>
       s.circunscripcion === circunscripcion && !s.esCompleta
     );
 
     if (seleccion && seleccion.departamentos) {
       seleccion.departamentos = seleccion.departamentos.filter(d => d !== departamentoId);
-      
+
       // Si no quedan departamentos, remover la selección completa
       if (seleccion.departamentos.length === 0) {
         this.removerSeleccionCircunscripcion(circunscripcion);
@@ -302,18 +394,18 @@ export class FinalStepValidationComponent implements OnInit {
   private actualizarValidacionCircunscripciones(): void {
     // Forzar actualización de la validación del formulario
     this.validationForm.updateValueAndValidity();
-    
+
     // Emitir cambios de circunscripciones al componente padre
     const circunscripcionesFormateadas = convertirSeleccionAFormato(this.seleccionesCircunscripciones);
     this.circunscripcionesChanged.emit(circunscripcionesFormateadas);
-    
+
     // Emitir actualización de datos
     this.dataUpdated.emit();
   }
 
   private convertirCircunscripcionesDelBackend(circunscripciones: string[]): SeleccionCircunscripcion[] {
     const seleccionesMap = new Map<string, SeleccionCircunscripcion>();
-    
+
     circunscripciones.forEach(valor => {
       if (valor.includes(':')) {
         // Formato "Circunscripción:Departamento"
@@ -321,7 +413,7 @@ export class FinalStepValidationComponent implements OnInit {
         const deptId = this.departamentosSegundaCircunscripcion.find(
           d => d.nombre === departamento
         )?.id;
-        
+
         if (deptId) {
           if (!seleccionesMap.has(circunscripcion)) {
             seleccionesMap.set(circunscripcion, {
@@ -340,7 +432,7 @@ export class FinalStepValidationComponent implements OnInit {
         });
       }
     });
-    
+
     return Array.from(seleccionesMap.values());
   }
 }
