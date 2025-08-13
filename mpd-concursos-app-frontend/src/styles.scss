@@ -59,10 +59,10 @@
 
 /* === LEGACY IMPORTS === */
 /* Mantener solo las importaciones necesarias que no están en el sistema unificado */
-@import './styles/responsive';
-@import './styles/touch';
+@import './styles/_responsive';
+@import './styles/_touch';
 @import './styles/dialog-styles';
-@import './styles/global';
+@import './styles/_global';
 @import './styles/fix-styles';
 
 /* === PDF VIEWER GLOBAL STYLES === */

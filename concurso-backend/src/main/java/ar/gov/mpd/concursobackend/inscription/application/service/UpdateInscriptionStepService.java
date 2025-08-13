@@ -87,9 +87,31 @@ public class UpdateInscriptionStepService implements UpdateInscriptionStepUseCas
         if (hasPreferencesData(request)) {
             log.info("🔧 [UpdateInscriptionStep] Actualizando preferencias - Estado antes: {}", inscription.getState());
 
+            java.util.Set<String> mergedCircunscripciones = null;
+            try {
+                java.util.Set<String> current = null;
+                if (inscription.getPreferences() != null &&
+                    inscription.getPreferences().getSelectedCircunscripciones() != null) {
+                    current = new java.util.HashSet<>(inscription.getPreferences().getSelectedCircunscripciones());
+                }
+                if (request.getSelectedCircunscripciones() != null) {
+                    if (current != null && !current.isEmpty()) {
+                        mergedCircunscripciones = new java.util.HashSet<>(current);
+                        mergedCircunscripciones.addAll(request.getSelectedCircunscripciones());
+                    } else {
+                        mergedCircunscripciones = new java.util.HashSet<>(request.getSelectedCircunscripciones());
+                    }
+                } else if (current != null) {
+                    mergedCircunscripciones = new java.util.HashSet<>(current);
+                }
+            } catch (Exception e) {
+                log.warn("[UpdateInscriptionStep] No se pudo unificar circunscripciones, se utilizará el payload de la request: {}", e.getMessage());
+                mergedCircunscripciones = request.getSelectedCircunscripciones();
+            }
+
             var preferences = InscriptionPreferences.builder()
                     .centroDeVida(request.getCentroDeVida())
-                    .selectedCircunscripciones(request.getSelectedCircunscripciones())
+                    .selectedCircunscripciones(mergedCircunscripciones)
                     .acceptedTerms(Boolean.TRUE.equals(request.getAcceptedTerms()))
                     .confirmedPersonalData(Boolean.TRUE.equals(request.getConfirmedPersonalData()))
                     .termsAcceptanceDate(request.getAcceptedTerms() ? LocalDateTime.now() : null)

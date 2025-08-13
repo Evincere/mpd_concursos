@@ -1,16 +1,22 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-custom-checkbox',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   template: `
-    <div class="custom-checkbox-container" [class.disabled]="disabled">
-      <label class="custom-checkbox" (click)="onLabelClick($event)">
+    <div class="custom-checkbox-container">
+      <label 
+        class="checkbox-wrapper" 
+        [class.disabled]="disabled"
+        [attr.for]="checkboxId"
+      >
         <input
+          [id]="checkboxId"
           type="checkbox"
+          class="checkbox-input"
           [checked]="value"
           [disabled]="disabled"
           [attr.aria-checked]="value"
@@ -18,11 +24,10 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
           [attr.aria-label]="label"
           (change)="onInputChange($event)"
           (blur)="onTouched()"
-          (keydown.space)="toggleCheckbox($event)"
-          (click)="onInputClick($event)"
+          (click)="$event.stopPropagation()"
         />
         <span class="checkmark" (click)="onCheckmarkClick($event)"></span>
-        <span class="checkbox-label" (click)="onLabelTextClick($event)">{{ label }}</span>
+        <span class="checkbox-label" (click)="onLabelClick($event)">{{ label }}</span>
       </label>
     </div>
   `,
@@ -31,129 +36,113 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
       margin-bottom: 0.5rem;
     }
 
-    .custom-checkbox {
+    .checkbox-wrapper {
       display: flex;
-      align-items: center;
-      position: relative;
-      padding-left: 30px;
+      align-items: flex-start;
       cursor: pointer;
-      font-size: 14px;
       user-select: none;
-      
-      /* 🔧 FIX: Asegurar máxima clickeabilidad */
-      z-index: 10;
-      pointer-events: auto;
-      
-      /* 🔧 FIX: Aumentar área clickeable */
-      min-height: 44px; /* Área mínima recomendada para touch */
-      padding: 8px 8px 8px 30px;
-      margin: -8px;
+      padding: 0.75rem 0.5rem;
+      border-radius: 6px;
+      transition: background-color 0.15s ease;
+      position: relative;
+      /* ✅ CRÍTICO: Evitar efectos de pulsación inesperados */
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }
 
-    .custom-checkbox input {
+    .checkbox-wrapper:hover:not(.disabled) {
+      background-color: rgba(59, 130, 246, 0.08);
+    }
+
+    .checkbox-wrapper.disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .checkbox-input {
       position: absolute;
       opacity: 0;
       cursor: pointer;
-      
-      /* 🔧 FIX: Aumentar área clickeable del input oculto */
-      height: 44px;
-      width: 100%;
-      left: 0;
-      top: 0;
-      
-      /* 🔧 FIX: Asegurar máxima prioridad de eventos */
-      z-index: 15;
-      pointer-events: auto;
+      height: 0;
+      width: 0;
+      /* ✅ CRÍTICO: Input completamente oculto pero funcional */
+      pointer-events: none;
+      z-index: -1;
     }
 
     .checkmark {
-      position: absolute;
-      left: 8px; /* Ajustado por el nuevo padding */
-      top: 50%;
-      transform: translateY(-50%);
       height: 20px;
       width: 20px;
-      background-color: #f5f5f5;
-      border: 1px solid #ccc;
-      border-radius: 3px;
+      background-color: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      border-radius: 4px;
+      margin-right: 12px;
+      margin-top: 2px;
+      flex-shrink: 0;
       transition: all 0.2s ease;
-      
-      /* 🔧 FIX: Asegurar que el checkmark sea clickeable */
-      z-index: 12;
-      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      /* ✅ CRÍTICO: Área de clic clara y estable */
+      box-sizing: border-box;
     }
 
-    .custom-checkbox:hover input ~ .checkmark {
-      background-color: #eee;
+    .checkbox-wrapper:hover .checkmark:not(.disabled) {
+      border-color: #3b82f6;
+      background-color: rgba(59, 130, 246, 0.1);
     }
 
-    .custom-checkbox input:checked ~ .checkmark {
-      background-color: var(--color-primary, #3f51b5);
-      border-color: var(--color-primary, #3f51b5);
+    .checkbox-input:checked ~ .checkmark {
+      background-color: #3b82f6;
+      border-color: #3b82f6;
     }
 
-    .checkmark:after {
+    .checkbox-input:checked ~ .checkmark:after {
       content: "";
       position: absolute;
-      display: none;
-    }
-
-    .custom-checkbox input:checked ~ .checkmark:after {
       display: block;
-    }
-
-    .custom-checkbox .checkmark:after {
-      left: 7px;
-      top: 3px;
-      width: 5px;
-      height: 10px;
-      border: solid white;
+      left: 6px;
+      top: 2px;
+      width: 6px;
+      height: 12px;
+      border: solid #ffffff;
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
     }
 
     .checkbox-label {
-      margin-left: 5px;
-      color: #ffffff; /* ✅ UX/UI: Color blanco por defecto para labels */
-      
-      /* 🔧 FIX: Asegurar que el label sea clickeable */
-      position: relative;
-      z-index: 12;
-      pointer-events: auto;
+      color: #ffffff;
+      font-size: 0.9rem;
+      line-height: 1.5;
       cursor: pointer;
-      
-      /* 🔧 FIX: Mejorar área clickeable del texto */
-      padding: 4px;
-      margin: -4px -4px -4px 1px;
+      flex: 1;
+      /* ✅ CRÍTICO: Evitar selección de texto */
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }
 
-    .disabled {
-      opacity: 0.6;
+    .disabled .checkbox-label {
+      color: rgba(255, 255, 255, 0.6);
       cursor: not-allowed;
     }
 
-    .disabled .custom-checkbox {
+    .disabled .checkmark {
+      border-color: rgba(255, 255, 255, 0.4);
       cursor: not-allowed;
     }
 
-    @media (prefers-color-scheme: dark) {
-      .checkmark {
-        background-color: #333;
-        border-color: #555;
-      }
-
-      .custom-checkbox:hover input ~ .checkmark {
-        background-color: #444;
-      }
-
-      .custom-checkbox input:checked ~ .checkmark {
-        background-color: var(--color-primary-dark, #7986cb);
-        border-color: var(--color-primary-dark, #7986cb);
-      }
-
-      .checkbox-label {
-        color: #ffffff !important; /* ✅ UX/UI: Color blanco para tema oscuro */
-      }
+    /* ✅ CRÍTICO: Estados de focus mejorados */
+    .checkbox-input:focus ~ .checkmark {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
     }
   `],
   providers: [
@@ -167,6 +156,10 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
 export class CustomCheckboxComponent implements ControlValueAccessor {
   @Input() label = '';
   @Input() disabled = false;
+  
+  // ✅ CRÍTICO: Output para comunicar cambios directamente
+  @Output() change = new EventEmitter<boolean>();
+  
   @Input() set checked(val: boolean) {
     this.value = val;
   }
@@ -175,108 +168,93 @@ export class CustomCheckboxComponent implements ControlValueAccessor {
   }
 
   value = false;
-
-  onChange: (value: boolean) => void = () => {
-    // Este método será reemplazado por el framework
-  };
-  onTouched: () => void = () => {
-    // Este método será reemplazado por el framework
-  };
+  
+  // ✅ CRÍTICO: ID único para asociar label con input
+  checkboxId = `checkbox-${Math.random().toString(36).substr(2, 9)}`;
+  
+  // ✅ CRÍTICO: Control de múltiples clicks
+  private isToggling = false;
+  
+  // Control Value Accessor
+  onChange = (value: boolean) => {};
+  onTouched = () => {};
 
   writeValue(value: boolean): void {
-    this.value = value;
-    // No emitir evento de cambio aquí para evitar ciclos infinitos
+    this.value = !!value;
   }
 
   registerOnChange(fn: (value: boolean) => void): void {
     this.onChange = fn;
   }
 
-  onInputChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.value = target.checked;
-    this.onChange(this.value);
-  }
-
-  registerOnTouched(fn: unknown): void {
-    this.onTouched = fn as () => void;
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
   }
 
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
   }
 
-  toggleCheckbox(event: Event): void {
-    const keyboardEvent = event as KeyboardEvent;
-    if (this.disabled) return;
+  /**
+   * ✅ CRÍTICO: Manejo principal del cambio a través del input
+   */
+  onInputChange(event: Event): void {
+    if (this.disabled || this.isToggling) return;
+    
+    const target = event.target as HTMLInputElement;
+    this.updateValue(target.checked);
+  }
 
+  /**
+   * ✅ CRÍTICO: Manejo de clic en el checkmark (icono)
+   */
+  onCheckmarkClick(event: MouseEvent): void {
+    if (this.disabled || this.isToggling) return;
+    
+    // ✅ CRITICAL FIX: Evitar propagación y comportamiento por defecto
+    event.stopPropagation();
     event.preventDefault();
-    this.value = !this.value;
+    
+    // Alternar valor directamente
+    this.updateValue(!this.value);
+  }
 
-    // No necesitamos simular un evento de cambio para el input
-    // ya que estamos manejando directamente el cambio de valor
+  /**
+   * ✅ CRÍTICO: Manejo de clic en el label de texto
+   */
+  onLabelClick(event: MouseEvent): void {
+    if (this.disabled || this.isToggling) return;
+    
+    // ✅ CRITICAL FIX: Evitar propagación y comportamiento por defecto
+    event.stopPropagation();
+    event.preventDefault();
+    
+    // Alternar valor directamente
+    this.updateValue(!this.value);
+  }
 
-    // Llamar a los métodos de control de formulario
+  /**
+   * ✅ CRÍTICO: Método centralizado para actualizar valor
+   * Previene múltiples actualizaciones simultáneas
+   */
+  private updateValue(newValue: boolean): void {
+    if (this.isToggling || this.disabled || this.value === newValue) return;
+    
+    this.isToggling = true;
+    this.value = newValue;
+    
+    // Notificar cambios
     this.onChange(this.value);
     this.onTouched();
-  }
-
-  /**
-   * 🔧 FIX: Manejo específico de clic en el label principal
-   */
-  onLabelClick(event: Event): void {
-    if (this.disabled) return;
     
-    // Prevenir propagación para evitar conflictos
-    event.stopPropagation();
+    // ✅ CRÍTICO: Emitir evento personalizado para componentes padre
+    this.change.emit(this.value);
     
-    // Solo procesar si el clic no fue en el input (que ya maneja su propio evento)
-    const target = event.target as HTMLElement;
-    if (target.tagName.toLowerCase() !== 'input') {
-      this.toggleValue();
-    }
-  }
-
-  /**
-   * 🔧 FIX: Manejo específico de clic en el input
-   */
-  onInputClick(event: Event): void {
-    if (this.disabled) return;
+    console.log(`✅ CustomCheckbox value updated: ${this.label} = ${this.value}`);
     
-    // Asegurar que el evento se procese correctamente
-    event.stopPropagation();
-  }
-
-  /**
-   * 🔧 FIX: Manejo específico de clic en el checkmark
-   */
-  onCheckmarkClick(event: Event): void {
-    if (this.disabled) return;
-    
-    event.preventDefault();
-    event.stopPropagation();
-    this.toggleValue();
-  }
-
-  /**
-   * 🔧 FIX: Manejo específico de clic en el texto del label
-   */
-  onLabelTextClick(event: Event): void {
-    if (this.disabled) return;
-    
-    event.preventDefault();
-    event.stopPropagation();
-    this.toggleValue();
-  }
-
-  /**
-   * 🔧 FIX: Método centralizado para cambiar el valor
-   */
-  private toggleValue(): void {
-    if (this.disabled) return;
-    
-    this.value = !this.value;
-    this.onChange(this.value);
-    this.onTouched();
+    // Resetear flag después de un pequeño delay
+    setTimeout(() => {
+      this.isToggling = false;
+    }, 100);
   }
 }
