@@ -95,10 +95,18 @@ public class JwtProvider {
             String userId = claims.get("userId", String.class);
             logger.info("=== DEBUG JwtProvider: ID de usuario extraído del token: '{}'", userId);
             logger.info("=== DEBUG JwtProvider: Claims completos: {}", claims);
+            
+            // Si no hay userId, retornar null en lugar de lanzar excepción
+            if (userId == null || userId.isEmpty()) {
+                logger.warn("Token no contiene userId, usando fallback a username");
+                return null;
+            }
+            
             return userId;
         } catch (Exception e) {
             logger.error("Error al extraer userId del token: {}", e.getMessage());
-            throw e;
+            // En lugar de lanzar excepción, retornar null para permitir fallback
+            return null;
         }
     }
 

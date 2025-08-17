@@ -85,19 +85,41 @@ public class AdminInscriptionController {
 
     @PatchMapping("/{id}/state")
     @Operation(summary = "Cambia el estado de una inscripción")
-    public ResponseEntity<AdminInscriptionDTO> changeInscriptionState(
+    public ResponseEntity<?> changeInscriptionState(
             @PathVariable String id,
             @RequestBody InscriptionStateChangeDTO stateChangeDTO
     ) {
         try {
+            System.out.println("🔧 AdminInscriptionController - Cambiando estado de inscripción " + id + " a " + stateChangeDTO.getNewState());
+            System.out.println("🔧 Request body completo: " + stateChangeDTO);
+            
             Inscription updatedInscription = adminInscriptionService.changeInscriptionState(
                     id,
                     stateChangeDTO.getNewState(),
                     stateChangeDTO.getNote()
             );
+            
+            System.out.println("✅ Estado cambiado exitosamente para inscripción " + id);
             return ResponseEntity.ok(adminInscriptionMapper.toAdminDTO(updatedInscription));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            System.err.println("❌ Error de validación al cambiar estado de inscripción " + id + ": " + e.getMessage());
+            Map<String, Object> errorResponse = Map.of(
+                "error", e.getMessage(),
+                "inscriptionId", id,
+                "requestedState", stateChangeDTO.getNewState() != null ? stateChangeDTO.getNewState().toString() : "null",
+                "timestamp", java.time.LocalDateTime.now().toString()
+            );
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            System.err.println("❌ Error inesperado al cambiar estado de inscripción " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            Map<String, Object> errorResponse = Map.of(
+                "error", "Error interno del servidor",
+                "details", e.getMessage(),
+                "inscriptionId", id,
+                "timestamp", java.time.LocalDateTime.now().toString()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 

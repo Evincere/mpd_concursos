@@ -27,16 +27,37 @@ public class SecurityService {
             String token = getTokenFromRequest();
             logger.info("=== DEBUG SecurityService: token obtenido: '{}'", token != null ? "TOKEN_PRESENTE" : "TOKEN_NULL");
             if (token != null) {
-                String userIdStr = jwtProvider.getUserIdFromToken(token);
-                logger.info("=== DEBUG SecurityService: userIdStr del token: '{}'", userIdStr);
-                UUID userId = UUID.fromString(userIdStr);
-                logger.info("=== DEBUG SecurityService: UUID final: '{}'", userId);
-                return userId;
+                try {
+                    String userIdStr = jwtProvider.getUserIdFromToken(token);
+                    logger.info("=== DEBUG SecurityService: userIdStr del token: '{}'", userIdStr);
+                    if (userIdStr != null && !userIdStr.isEmpty()) {
+                        UUID userId = UUID.fromString(userIdStr);
+                        logger.info("=== DEBUG SecurityService: UUID final: '{}'", userId);
+                        return userId;
+                    }
+                } catch (Exception e) {
+                    logger.warn("No se pudo obtener userId del token, intentando con username: {}", e.getMessage());
+                }
+                
+                // Si no se pudo obtener userId del token, intentar con username
+                try {
+                    String username = jwtProvider.getUsernameFromToken(token);
+                    logger.info("=== DEBUG SecurityService: username del token: '{}'", username);
+                    if (username != null) {
+                        User user = userService.getByUsername(new UserUsername(username))
+                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con username: " + username));
+                        logger.info("=== DEBUG SecurityService: Usuario encontrado por username: '{}', ID: '{}'", username, user.getId().value());
+                        return user.getId().value();
+                    }
+                } catch (Exception e) {
+                    logger.warn("No se pudo obtener username del token: {}", e.getMessage());
+                }
             }
             
             // Si no hay token, intentar obtener el ID del usuario del contexto de seguridad
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getName() != null) {
+                logger.info("=== DEBUG SecurityService: Obteniendo usuario del contexto de seguridad: '{}'", authentication.getName());
                 User user = userService.getByUsername(new UserUsername(authentication.getName()))
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
                 return user.getId().value();

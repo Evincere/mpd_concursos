@@ -22,9 +22,15 @@ public class DocumentMapper {
             return null;
         }
 
+        // Validación defensiva para evitar NullPointerException
+        String documentTypeId = null;
+        if (document.getDocumentType() != null && document.getDocumentType().getId() != null) {
+            documentTypeId = document.getDocumentType().getId().value().toString();
+        }
+
         return DocumentDto.builder()
                 .id(document.getId().value().toString())
-                .tipoDocumentoId(document.getDocumentType().getId().value().toString())
+                .tipoDocumentoId(documentTypeId)
                 .tipoDocumento(toTypeDto(document.getDocumentType()))
                 .nombreArchivo(document.getFileName().value())
                 .contentType(document.getContentType())
@@ -42,14 +48,25 @@ public class DocumentMapper {
             return null;
         }
 
+        // Validación defensiva para evitar NullPointerException
+        String documentTypeId = null;
+        if (documentType.getId() != null) {
+            documentTypeId = documentType.getId().value().toString();
+        }
+
+        String parentId = null;
+        if (documentType.getParent() != null && documentType.getParent().getId() != null) {
+            parentId = documentType.getParent().getId().value().toString();
+        }
+
         return DocumentTypeDto.builder()
-                .id(documentType.getId().value().toString())
+                .id(documentTypeId)
                 .code(documentType.getCode())
                 .nombre(documentType.getName())
                 .descripcion(documentType.getDescription())
                 .requerido(documentType.isRequired())
                 .orden(documentType.getOrder())
-                .parentId(documentType.getParent() != null ? documentType.getParent().getId().value().toString() : null)
+                .parentId(parentId)
                 .activo(documentType.isActive())
                 .build();
     }

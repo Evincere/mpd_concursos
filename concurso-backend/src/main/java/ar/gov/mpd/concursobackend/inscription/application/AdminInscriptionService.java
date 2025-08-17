@@ -1,5 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.application;
 
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,13 @@ public class AdminInscriptionService {
     private final IDocumentRepository documentRepository;
     private final NotificationService notificationService;
     private final InscriptionStateMachine stateMachine;
+
+    // Configuración de notificaciones
+    @Value("${app.notifications.enabled:true}")
+    private boolean notificationsEnabled;
+    
+    @Value("${app.notifications.state-change.enabled:true}")
+    private boolean stateChangeNotificationsEnabled;
 
     /**
      * Obtiene todas las inscripciones con filtros y paginación
@@ -101,7 +110,7 @@ public class AdminInscriptionService {
             }
 
             if (state != null) {
-                predicates.add(cb.equal(root.get("state"), state));
+                predicates.add(cb.equal(root.get("status"), state));
             }
 
             if (startDate != null) {
@@ -153,12 +162,22 @@ public class AdminInscriptionService {
         // Guardar inscripción
         Inscription updatedInscription = inscriptionRepository.save(inscription);
 
+        // SOLUCIÓN ALTERNATIVA: En lugar de volver a cargar toda la inscripción,
+        // asegurémonos de que las entidades relacionadas estén correctas en la instancia actual
+        // El usuario y contest ya deberían estar cargados de la primera llamada a getInscriptionById
+        
+        // Validar que el usuario esté presente antes de enviar notificación
+        if (updatedInscription.getUser() == null) {
+            log.warn("🔄 Usuario no presente en inscripción, recargando...");
+            loadRelatedEntities(updatedInscription);
+        }
+
         // Agregar nota si se proporcionó
         if (noteText != null && !noteText.trim().isEmpty()) {
             addNote(id, noteText);
         }
 
-        // Enviar notificación al usuario
+        // Enviar notificación al usuario usando la instancia actualizada
         sendStateChangeNotification(updatedInscription);
 
         return updatedInscription;
@@ -289,19 +308,43 @@ public class AdminInscriptionService {
      * Carga entidades relacionadas para una inscripción
      */
     private void loadRelatedEntities(Inscription inscription) {
-        // Cargar usuario
-        userRepository.findById(inscription.getUserId().getValue())
-                .ifPresent(inscription::setUser);
+        log.info("📊 [loadRelatedEntities] Cargando entidades para inscripción: {}", inscription.getId().getValue());
+        log.info("📊 [loadRelatedEntities] UserId: {}", inscription.getUserId().getValue());
+        
+        // Cargar usuario (con validación explícita)
+        try {
+            log.info("🔍 [loadRelatedEntities] Buscando usuario con ID: {}", inscription.getUserId().getValue());
+            
+            // DEBUG: Verificar si el repository está funcionando
+            boolean userExists = userRepository.findById(inscription.getUserId().getValue()).isPresent();
+            log.info("🔍 [loadRelatedEntities] ¿Usuario existe en BD?: {}", userExists);
+            
+            User user = userRepository.findById(inscription.getUserId().getValue())
+                    .orElseThrow(() -> {
+                        log.error("❌ [loadRelatedEntities] Usuario no encontrado con ID: {}", inscription.getUserId().getValue());
+                        return new IllegalArgumentException("User not found for inscription ID: " + inscription.getId().getValue() + ", UserId: " + inscription.getUserId().getValue());
+                    });
+            
+            log.debug("✅ [loadRelatedEntities] Usuario encontrado: {} ({})", user.getUsername().value(), user.getId().value());
+            inscription.setUser(user);
+            log.debug("✅ [loadRelatedEntities] Usuario asignado correctamente a la inscripción");
+            
+        } catch (Exception e) {
+            log.error("❌ [loadRelatedEntities] Error al cargar usuario para inscripción {}: {}", inscription.getId().getValue(), e.getMessage(), e);
+            throw e;
+        }
 
         // Cargar concurso
         contestRepository.findById(inscription.getContestId().getValue())
                 .ifPresent(contest -> {
+                    log.debug("✅ [loadRelatedEntities] Concurso cargado: {}", contest.getTitle());
                     // El modelo Inscription ahora usa directamente el modelo legacy Contest
                     inscription.setContest(contest);
                 });
 
         // Cargar notas
         inscription.setNotes(noteRepository.findByInscriptionId(inscription.getId().getValue()));
+        log.debug("✅ [loadRelatedEntities] Entidades cargadas completamente para inscripción: {}", inscription.getId().getValue());
     }
 
     /**
@@ -449,29 +492,52 @@ public class AdminInscriptionService {
      * Envía una notificación al usuario sobre el cambio de estado
      */
     private void sendStateChangeNotification(Inscription inscription) {
-        String userId = inscription.getUserId().getValue().toString();
-        String contestTitle = inscription.getContest() != null ?
-                inscription.getContest().getTitle() : "Concurso";
-
-        String message;
-        NotificationType type;
-
-        switch (inscription.getState()) {
-            case APPROVED:  // REFACTORING: Usar estado estándar
-                message = "Tu inscripción al concurso " + contestTitle + " ha sido aprobada.";
-                type = NotificationType.INSCRIPTION;
-                break;
-            case REJECTED:
-                message = "Tu inscripción al concurso " + contestTitle + " ha sido rechazada.";
-                type = NotificationType.INSCRIPTION;
-                break;
-            default:
-                message = "El estado de tu inscripción al concurso " + contestTitle +
-                        " ha cambiado a " + inscription.getState().name() + ".";
-                type = NotificationType.INSCRIPTION;
+        // Verificar si las notificaciones están habilitadas
+        if (!notificationsEnabled || !stateChangeNotificationsEnabled) {
+            log.info("🚫 Notificaciones deshabilitadas para cambio de estado. Inscripción: {} | General: {} | StateChange: {}", 
+                    inscription.getId().getValue(), notificationsEnabled, stateChangeNotificationsEnabled);
+            return;
         }
+        
+        try {
+            // SOLUCIÓN DEFINITIVA: Cargar el usuario directamente desde la base de datos
+            // para evitar problemas con el estado de la sesión de Hibernate
+            User user = userRepository.findById(inscription.getUserId().getValue())
+                    .orElseThrow(() -> new IllegalStateException(
+                        "User not found for notification. Inscription ID: " + inscription.getId().getValue() + 
+                        ", User ID: " + inscription.getUserId().getValue()));
 
-        notificationService.createNotification(userId, message, type);
+            String username = user.getUsername().value();
+            String contestTitle = inscription.getContest() != null ?
+                    inscription.getContest().getTitle() : "Concurso";
+
+            String message;
+            NotificationType type;
+
+            switch (inscription.getState()) {
+                case APPROVED:  // REFACTORING: Usar estado estándar
+                    message = "Tu inscripción al concurso " + contestTitle + " ha sido aprobada.";
+                    type = NotificationType.INSCRIPTION;
+                    break;
+                case REJECTED:
+                    message = "Tu inscripción al concurso " + contestTitle + " ha sido rechazada.";
+                    type = NotificationType.INSCRIPTION;
+                    break;
+                default:
+                    message = "El estado de tu inscripción al concurso " + contestTitle +
+                            " ha cambiado a " + inscription.getState().name() + ".";
+                    type = NotificationType.INSCRIPTION;
+            }
+
+            log.info("📧 Enviando notificación a usuario: {} (ID: {})", username, user.getId().value());
+            notificationService.createNotification(username, message, type);
+            log.info("✅ Notificación enviada exitosamente para inscripción: {}", inscription.getId().getValue());
+            
+        } catch (Exception e) {
+            // En caso de error en las notificaciones, logear pero no fallar el cambio de estado
+            log.error("❌ Error al enviar notificación para inscripción {}: {}. El cambio de estado se completó exitosamente.", 
+                    inscription.getId().getValue(), e.getMessage(), e);
+        }
     }
 
     /**

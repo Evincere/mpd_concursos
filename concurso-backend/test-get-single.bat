@@ -1,0 +1,1 @@
+curl -X GET "http://localhost:8080/api/admin/inscriptions/189cf45e-00b7-40ee-9842-6b70eb3b3fe7" -H "Content-Type: application/json" -H "Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc1NTM5MDk1OCwiZXhwIjoxNzU1NDc3MzU4fQ.D1QkSw8D-HXka9kyqhsOOmxd8Rb-kCG4UBvLR7MGM8ymM7dPPz6UC1c2FXB0ngdH2z8ouJuSYl_cnPUGZX3mgg"

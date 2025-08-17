@@ -34,8 +34,8 @@ public class InscriptionStateMachine {
             InscriptionState.CANCELLED
         ),
         InscriptionState.FROZEN, Set.of(InscriptionState.REJECTED),
-        InscriptionState.APPROVED, Set.of(), // Final state
-        InscriptionState.REJECTED, Set.of(), // Final state
+        InscriptionState.APPROVED, Set.of(InscriptionState.PENDING), // Allow reversion for eventualidades
+        InscriptionState.REJECTED, Set.of(InscriptionState.PENDING), // Allow reversion for eventualidades
         InscriptionState.CANCELLED, Set.of() // Final state
     );
 
