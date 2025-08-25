@@ -1,0 +1,39 @@
+# ARCHIVOS MPD-MONITOR DISPONIBLES PARA DESCARGA
+Generado: Fri Aug 15 08:41:53 AM -03 2025
+Ubicación: /opt/mpd-monitor/backups/
+Total espacio: 5.9GB
+
+4096	.	/opt/mpd-monitor/backups/.
+4096	..	/opt/mpd-monitor/backups/..
+1710	backup_report_20250811_020001.txt	/opt/mpd-monitor/backups/backup_report_20250811_020001.txt
+1678	backup_report_20250812_020001.txt	/opt/mpd-monitor/backups/backup_report_20250812_020001.txt
+1678	backup_report_20250813_020001.txt	/opt/mpd-monitor/backups/backup_report_20250813_020001.txt
+1678	backup_report_20250814_020001.txt	/opt/mpd-monitor/backups/backup_report_20250814_020001.txt
+1678	backup_report_20250815_020001.txt	/opt/mpd-monitor/backups/backup_report_20250815_020001.txt
+0	db_backup_20250811_020001.sql	/opt/mpd-monitor/backups/db_backup_20250811_020001.sql
+796925	db_backup_20250812_020001.sql.gz	/opt/mpd-monitor/backups/db_backup_20250812_020001.sql.gz
+949773	db_backup_20250813_020001.sql.gz	/opt/mpd-monitor/backups/db_backup_20250813_020001.sql.gz
+55810	db_backup_20250814_020001.sql.gz	/opt/mpd-monitor/backups/db_backup_20250814_020001.sql.gz
+1004258	db_backup_20250815_020001.sql.gz	/opt/mpd-monitor/backups/db_backup_20250815_020001.sql.gz
+1179814903	files_backup_20250811_020001.tar.gz	/opt/mpd-monitor/backups/files_backup_20250811_020001.tar.gz
+1204360783	files_backup_20250812_020001.tar.gz	/opt/mpd-monitor/backups/files_backup_20250812_020001.tar.gz
+1241630313	files_backup_20250813_020001.tar.gz	/opt/mpd-monitor/backups/files_backup_20250813_020001.tar.gz
+1311943349	files_backup_20250814_020001.tar.gz	/opt/mpd-monitor/backups/files_backup_20250814_020001.tar.gz
+1311943349	files_backup_20250815_020001.tar.gz	/opt/mpd-monitor/backups/files_backup_20250815_020001.tar.gz
+
+# COMANDOS SCP PARA DESCARGA:
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250811_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250812_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250813_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250814_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250815_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250811_020001.sql ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250812_020001.sql.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250813_020001.sql.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250814_020001.sql.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250815_020001.sql.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250811_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250812_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250813_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250814_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250815_020001.tar.gz ./

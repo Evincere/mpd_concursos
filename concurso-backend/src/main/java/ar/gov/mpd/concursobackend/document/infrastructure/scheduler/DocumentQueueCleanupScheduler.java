@@ -25,10 +25,14 @@ public class DocumentQueueCleanupScheduler {
     /**
      * Limpia entradas antiguas de la cola de documentos cada hora.
      */
-    @Scheduled(fixedRate = 3600000) // Ejecutar cada hora
+    // @Scheduled(fixedRate = 3600000) // DESHABILITADO POR SEGURIDAD - NO ACTIVAR SIN REVISIÓN DEL EQUIPO // Ejecutar cada hora
     public void cleanupOldQueueEntries() {
-        log.debug("Iniciando limpieza programada de entradas antiguas en la cola de documentos");
-        documentQueueService.cleanupOldEntries(maxAgeMs);
-        log.debug("Limpieza de cola de documentos completada");
+        log.error("🚨 LIMPIEZA DE COLA DESHABILITADA - DocumentQueueCleanupScheduler NO DEBE EJECUTARSE");
+        log.error("🚨 Este proceso fue deshabilitado por seguridad");
+        return; // Salir inmediatamente
+        //         
+        //         log.debug("Iniciando limpieza programada de entradas antiguas en la cola de documentos");
+        //         documentQueueService.cleanupOldEntries(maxAgeMs);
+        //         log.debug("Limpieza de cola de documentos completada");
     }
 }

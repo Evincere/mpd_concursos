@@ -2,7 +2,8 @@
 
 # Script de deployment para producción - MPD Concursos
 # Autor: Sistema de deployment automatizado
-# Fecha: 2025-07-31
+# Fecha: 2025-08-18
+# Modificado para usar solo Nginx del sistema (sin nginx-proxy de Docker)
 
 set -e  # Salir si cualquier comando falla
 
@@ -31,12 +32,12 @@ error() {
 }
 
 # Verificar que estamos en el directorio correcto
-if [ ! -f "docker compose.prod.yml" ]; then
-    error "docker compose.prod.yml no encontrado. Ejecuta este script desde el directorio raíz del proyecto."
+if [ ! -f "docker-compose.ssl.yml" ]; then
+    error "docker-compose.ssl.yml no encontrado. Ejecuta este script desde el directorio raíz del proyecto."
     exit 1
 fi
 
-log "🚀 Iniciando deployment de producción..."
+log "🚀 Iniciando deployment de producción (usando Nginx del sistema)..."
 
 # 1. Verificar Git status
 log "📋 Verificando estado de Git..."
@@ -62,7 +63,7 @@ fi
 
 # 4. Parar servicios existentes
 log "🛑 Parando servicios existentes..."
-docker compose -f docker compose.prod.yml down --remove-orphans || true
+docker compose -f docker-compose.ssl.yml down --remove-orphans || true
 
 # 5. Limpiar recursos Docker no utilizados
 log "🧹 Limpiando recursos Docker no utilizados..."
@@ -70,7 +71,7 @@ docker system prune -f
 
 # 6. Construir e iniciar servicios
 log "🔨 Construyendo e iniciando servicios..."
-docker compose -f docker compose.prod.yml up -d --build
+docker compose -f docker-compose.ssl.yml up -d --build
 
 # 7. Esperar a que los servicios estén listos
 log "⏳ Esperando a que los servicios estén listos..."
@@ -78,28 +79,28 @@ sleep 30
 
 # 8. Verificar estado de los servicios
 log "🔍 Verificando estado de los servicios..."
-docker compose -f docker compose.prod.yml ps
+docker compose -f docker-compose.ssl.yml ps
 
 # 9. Verificar health checks
 log "🏥 Verificando health checks..."
 sleep 10
 
 # Verificar MySQL
-if docker compose -f docker compose.prod.yml ps mysql | grep -q "Up (healthy)"; then
+if docker compose -f docker-compose.ssl.yml ps mysql | grep -q "Up (healthy)"; then
     success "MySQL está funcionando correctamente"
 else
     warning "MySQL no está completamente listo"
 fi
 
 # Verificar Backend
-if docker compose -f docker compose.prod.yml ps backend | grep -q "Up (healthy)"; then
+if docker compose -f docker-compose.ssl.yml ps backend | grep -q "Up (healthy)"; then
     success "Backend está funcionando correctamente"
 else
     warning "Backend no está completamente listo"
 fi
 
 # Verificar Frontend
-if docker compose -f docker compose.prod.yml ps frontend | grep -q "Up"; then
+if docker compose -f docker-compose.ssl.yml ps frontend | grep -q "Up"; then
     success "Frontend está funcionando correctamente"
 else
     warning "Frontend no está completamente listo"
@@ -121,9 +122,9 @@ fi
 
 # 11. Mostrar logs recientes si hay errores
 log "📋 Verificando logs por errores..."
-if docker compose -f docker compose.prod.yml logs --tail=20 | grep -i "error\|exception\|failed" > /dev/null; then
+if docker compose -f docker-compose.ssl.yml logs --tail=20 | grep -i "error\|exception\|failed" > /dev/null; then
     warning "Se encontraron algunos errores en los logs. Revisa los logs completos con:"
-    echo "docker compose -f docker compose.prod.yml logs backend"
+    echo "docker compose -f docker-compose.ssl.yml logs backend"
 fi
 
 # 12. Configurar backups automáticos
@@ -138,14 +139,23 @@ else
     warning "Script de backup no encontrado. Configúralos manualmente."
 fi
 
-# 13. Mostrar información final
+# 13. Verificar Nginx del sistema
+log "🌐 Verificando Nginx del sistema..."
+if systemctl is-active --quiet nginx; then
+    success "Nginx del sistema está funcionando"
+    log "📋 Recuerda verificar que la configuración SSL incluya proxy para dashboard-monitor"
+else
+    warning "Nginx del sistema no está funcionando. Verificar configuración."
+fi
+
+# 14. Mostrar información final
 echo ""
 success "Deployment completado!"
 echo ""
 log "📊 Servicios disponibles en:"
-echo "  - Frontend: http://$(hostname -I | awk '{print $1}'):8000"
-echo "  - Backend:  http://$(hostname -I | awk '{print $1}'):8080"
-echo "  - API:      http://$(hostname -I | awk '{print $1}'):8080/api"
+echo "  - Frontend: http://$(hostname -I | awk '{print $1}'):8000 (via Nginx: https://${DOMAIN:-vps-4778464-x.dattaweb.com})"
+echo "  - Backend:  http://$(hostname -I | awk '{print $1}'):8080 (via Nginx: https://${DOMAIN:-vps-4778464-x.dattaweb.com}/api)"
+echo "  - Dashboard Monitor: https://${DOMAIN:-vps-4778464-x.dattaweb.com}/dashboard-monitor"
 echo ""
 log "📁 Directorios de almacenamiento:"
 echo "  - Documentos: ./storage (mapeado a /app/document-storage)"
@@ -153,7 +163,8 @@ echo "  - Logs:       ./logs"
 echo "  - Backups:    Docker volume backup_data_prod"
 echo ""
 log "🔧 Comandos útiles:"
-echo "  - Ver logs:     docker compose -f docker compose.prod.yml logs -f"
-echo "  - Reiniciar:    docker compose -f docker compose.prod.yml restart"
-echo "  - Parar:        docker compose -f docker compose.prod.yml down"
+echo "  - Ver logs:     docker compose -f docker-compose.ssl.yml logs -f"
+echo "  - Reiniciar:    docker compose -f docker-compose.ssl.yml restart"
+echo "  - Parar:        docker compose -f docker-compose.ssl.yml down"
+echo "  - Nginx logs:   sudo tail -f /var/log/nginx/access.log"
 echo ""

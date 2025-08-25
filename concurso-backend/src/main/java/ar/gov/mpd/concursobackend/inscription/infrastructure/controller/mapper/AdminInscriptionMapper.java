@@ -63,6 +63,17 @@ public class AdminInscriptionMapper {
                     .collect(Collectors.toList()));
         }
 
+
+        // ====================================================================
+        // MAPEO DE CIRCUNSCRIPCIONES AGREGADO - 2025-08-19
+        // ====================================================================
+        
+        // Mapear centro de vida si está disponible en las preferencias
+        if (inscription.getPreferences() != null) {
+            dto.setCentroDeVida(inscription.getPreferences().getCentroDeVida());
+            dto.setSelectedCircunscripciones(inscription.getPreferences().getSelectedCircunscripciones());
+        }
+
         return dto;
     }
 

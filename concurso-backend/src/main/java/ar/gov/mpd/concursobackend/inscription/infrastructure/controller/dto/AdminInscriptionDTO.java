@@ -66,4 +66,20 @@ public class AdminInscriptionDTO {
         private Long fileSize;
         private String downloadUrl;
     }
+
+    
+    // ====================================================================
+    // CAMPOS AGREGADOS PARA CIRCUNSCRIPCIONES - 2025-08-19
+    // ====================================================================
+    
+    /**
+     * Centro de vida seleccionado por el usuario durante la inscripción
+     */
+    private String centroDeVida;
+    
+    /**
+     * Circunscripciones seleccionadas por el usuario
+     */
+    private java.util.Set<String> selectedCircunscripciones;
+
 }

@@ -1,0 +1,69 @@
+# ========================================================
+# RESPALDOS MPD-MONITOR DISPONIBLES PARA DESCARGA
+# Fecha: 15/08/2025 08:41 UTC
+# Ubicación servidor: /opt/mpd-monitor/backups/
+# Espacio total: 5.9GB
+# ========================================================
+
+## ARCHIVOS ORGANIZADOS POR FECHA:
+
+### 11 Agosto 2025:
+- backup_report_20250811_020001.txt (1.7KB)
+- db_backup_20250811_020001.sql (0 bytes - archivo vacío)
+- files_backup_20250811_020001.tar.gz (1.1GB)
+
+### 12 Agosto 2025:
+- backup_report_20250812_020001.txt (1.7KB)
+- db_backup_20250812_020001.sql.gz (778KB)
+- files_backup_20250812_020001.tar.gz (1.2GB)
+
+### 13 Agosto 2025:
+- backup_report_20250813_020001.txt (1.7KB)
+- db_backup_20250813_020001.sql.gz (928KB)
+- files_backup_20250813_020001.tar.gz (1.2GB)
+
+### 14 Agosto 2025:
+- backup_report_20250814_020001.txt (1.7KB)
+- db_backup_20250814_020001.sql.gz (55KB)
+- files_backup_20250814_020001.tar.gz (1.3GB)
+
+### 15 Agosto 2025:
+- backup_report_20250815_020001.txt (1.7KB)
+- db_backup_20250815_020001.sql.gz (981KB)
+- files_backup_20250815_020001.tar.gz (1.3GB)
+
+## COMANDOS SCP PARA DESCARGA INDIVIDUAL:
+## (Reemplaza TU_SERVIDOR por la IP/hostname real)
+
+# Reportes (archivos pequeños - descargar primero)
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250811_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250812_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250813_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250814_020001.txt ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/backup_report_20250815_020001.txt ./
+
+# Backups de Base de Datos (tamaño medio)
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250811_020001.sql ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250812_020001.sql.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250813_020001.sql.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250814_020001.sql.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/db_backup_20250815_020001.sql.gz ./
+
+# Backups de Archivos (archivos grandes - descargar al final)
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250811_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250812_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250813_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250814_020001.tar.gz ./
+scp root@TU_SERVIDOR:/opt/mpd-monitor/backups/files_backup_20250815_020001.tar.gz ./
+
+## TOTAL A DESCARGAR: ~5.9GB
+## ARCHIVOS POR TIPO:
+## - Reportes: 5 archivos (~8KB total)
+## - DB backups: 5 archivos (~2.7MB total)
+## - Files backups: 5 archivos (~5.9GB total)
+
+## RECOMENDACIÓN DE DESCARGA:
+## 1. Descargar reportes y DB backups primero (rápido)
+## 2. Descargar files_backup uno por uno (pueden tomar tiempo)
+## 3. Una vez descargados todos, confirmar integridad
+## 4. Proceder a eliminar del servidor para liberar espacio

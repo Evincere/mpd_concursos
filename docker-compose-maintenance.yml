@@ -1,0 +1,83 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mpd-concursos-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mpd_concursos_mysql_data_prod:/var/lib/mysql
+      - ./concurso-backend/src/main/resources/db/schema:/docker-entrypoint-initdb.d:ro
+    networks:
+      - concursos_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./concurso-backend
+      dockerfile: Dockerfile
+    container_name: mpd-concursos-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+    networks:
+      - concursos_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./mpd-concursos-app-frontend
+      dockerfile: Dockerfile
+    container_name: mpd-concursos-frontend
+    ports:
+      - "80:80"    # Exponemos directamente el puerto 80
+      - "443:443"  # También el 443 por si hay redirects
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - concursos_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # nginx-proxy comentado durante mantenimiento
+  # nginx-proxy:
+  #   image: nginx:stable-alpine
+  #   container_name: mpd-concursos-nginx-proxy
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   depends_on:
+  #     frontend:
+  #       condition: service_healthy
+  #   networks:
+  #     - concursos_network
+  #   restart: unless-stopped
+
+volumes:
+  mpd_concursos_mysql_data_prod:
+    external: true
+
+networks:
+  concursos_network:
+    driver: bridge

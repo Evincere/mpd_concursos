@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.document.application.service;
 
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
+import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +28,7 @@ import java.util.stream.Collectors;
 public class DocumentConsistencyService {
 
     private final IDocumentRepository documentRepository;
-    
-    private static final String DOCUMENT_STORAGE_PATH = "document-storage";
+    private final StorageConfig storageConfig;
 
     /**
      * Verificación programada de consistencia cada 12 horas
@@ -85,6 +84,7 @@ public class DocumentConsistencyService {
             // 1. Obtener documentos de la BD
             List<Document> dbDocuments = documentRepository.findAll();
             log.debug("📊 [DocumentConsistency] Documentos en BD: {}", dbDocuments.size());
+            log.debug("📂 [DocumentConsistency] Usando ruta de almacenamiento: {}", storageConfig.getDocumentsPath());
 
             // 2. Verificar archivos faltantes
             List<String> missingFiles = findMissingFiles(dbDocuments);
@@ -140,8 +140,9 @@ public class DocumentConsistencyService {
         for (Document doc : documents) {
             String filePath = doc.getFilePath();
             if (filePath != null && !filePath.isEmpty()) {
-                Path path = Paths.get(filePath);
-                if (!Files.exists(path)) {
+                // Usar StorageConfig para obtener la ruta correcta
+                Path absolutePath = storageConfig.getDocumentFilePath(filePath);
+                if (!Files.exists(absolutePath)) {
                     missingFiles.add(filePath);
                     log.debug("📄 [DocumentConsistency] Archivo faltante: {}", filePath);
                 }
@@ -160,15 +161,15 @@ public class DocumentConsistencyService {
                 .filter(path -> path != null && !path.isEmpty())
                 .collect(Collectors.toSet());
 
-        Path storagePath = Paths.get(DOCUMENT_STORAGE_PATH);
-        if (!Files.exists(storagePath)) {
+        Path documentsPath = storageConfig.getDocumentsPath();
+        if (!Files.exists(documentsPath)) {
             return List.of();
         }
 
-        return Files.walk(storagePath)
+        return Files.walk(documentsPath)
                 .filter(Files::isRegularFile)
-                .map(Path::toString)
-                .filter(path -> !referencedFiles.contains(path))
+                .map(path -> documentsPath.relativize(path).toString())
+                .filter(relativePath -> !referencedFiles.contains(relativePath))
                 .collect(Collectors.toList());
     }
 
@@ -182,9 +183,8 @@ public class DocumentConsistencyService {
             String filePath = doc.getFilePath();
             if (filePath != null && !filePath.isEmpty()) {
                 // Verificar formato de ruta
-                if (!filePath.startsWith(DOCUMENT_STORAGE_PATH) || 
-                    !filePath.toLowerCase().endsWith(".pdf")) {
-                    invalidPaths.add(String.format("Document ID: %s, Path: %s", 
+                if (!filePath.toLowerCase().endsWith(".pdf")) {
+                    invalidPaths.add(String.format("Document ID: %s, Path: %s (invalid extension)", 
                             doc.getId().value(), filePath));
                 }
             } else if (!doc.isArchived()) {
@@ -230,6 +230,7 @@ public class DocumentConsistencyService {
     private void logConsistencyReport(ConsistencyReport report) {
         log.info("📋 [DocumentConsistency] === REPORTE DE CONSISTENCIA ===");
         log.info("🕐 Fecha: {}", report.getCheckTime());
+        log.info("📂 Ruta de almacenamiento: {}", storageConfig.getDocumentsPath());
         log.info("📊 Total documentos: {}", report.getTotalDocuments());
         log.info("✅ Documentos activos: {}", report.getActiveDocuments());
         log.info("📦 Documentos archivados: {}", report.getArchivedDocuments());

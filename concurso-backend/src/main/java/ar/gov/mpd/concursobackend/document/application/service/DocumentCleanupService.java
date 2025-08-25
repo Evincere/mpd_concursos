@@ -39,20 +39,25 @@ public class DocumentCleanupService {
     /**
      * Job programado que se ejecuta cada 6 horas para limpiar archivos huérfanos
      */
-    @Scheduled(fixedRate = 6 * 60 * 60 * 1000) // 6 horas en milisegundos
+    // @Scheduled(fixedRate = 6 * 60 * 60 * 1000) // DESHABILITADO POR SEGURIDAD - NO ACTIVAR SIN REVISIÓN DEL EQUIPO // 6 horas en milisegundos
     @Async
     public void cleanupOrphanFiles() {
-        log.info("🧹 [DocumentCleanup] Iniciando limpieza programada de archivos huérfanos");
-        
-        try {
-            CleanupResult result = performCleanup();
-            
-            log.info("✅ [DocumentCleanup] Limpieza completada: {} archivos eliminados, {} errores", 
-                    result.getFilesDeleted(), result.getErrors());
-                    
-        } catch (Exception e) {
-            log.error("❌ [DocumentCleanup] Error durante limpieza programada", e);
-        }
+        log.info("🚨 PROCESO DE LIMPIEZA DESHABILITADO - DocumentCleanupService.cleanupOrphanFiles() NO DEBE EJECUTARSE");
+        log.error("🚨 Este método fue deshabilitado por eliminación no autorizada de documentos");
+        log.error("🚨 Contactar al equipo de desarrollo antes de reactivar");
+        return; // Salir inmediatamente sin ejecutar limpieza
+        //         
+        //         log.info("🧹 [DocumentCleanup] Iniciando limpieza programada de archivos huérfanos");
+        //         
+        //         try {
+        //             CleanupResult result = performCleanup();
+        //             
+        //             log.info("✅ [DocumentCleanup] Limpieza completada: {} archivos eliminados, {} errores", 
+        //                     result.getFilesDeleted(), result.getErrors());
+        //                     
+        //         } catch (Exception e) {
+        //             log.error("❌ [DocumentCleanup] Error durante limpieza programada", e);
+        //         }
     }
 
     /**

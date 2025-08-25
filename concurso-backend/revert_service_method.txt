@@ -1,0 +1,17 @@
+
+    /**
+     * Revierte un documento a estado PENDING
+     */
+    @Transactional
+    public DocumentDto revertDocument(String documentId, UUID adminId) {
+        log.info("Revirtiendo documento {} a PENDING por admin {}", documentId, adminId);
+
+        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
+                .orElseThrow(() -> new DocumentException("Documento no encontrado: " + documentId));
+
+        document.revert(adminId);
+        Document savedDocument = documentRepository.save(document);
+
+        log.info("Documento {} revertido exitosamente a PENDING", documentId);
+        return documentMapper.toDto(savedDocument);
+    }

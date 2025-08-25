@@ -1,0 +1,7 @@
+
+    public void revert(UUID adminId) {
+        this.setStatus(DocumentStatus.PENDING);
+        this.validatedBy = null;
+        this.validatedAt = null;
+        this.rejectionReason = null;
+    }

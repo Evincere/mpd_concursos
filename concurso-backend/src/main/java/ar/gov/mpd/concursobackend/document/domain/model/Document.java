@@ -71,6 +71,13 @@ public class Document {
         this.rejectionReason = reason;
     }
 
+    public void revert(UUID adminId) {
+        this.setStatus(DocumentStatus.PENDING);
+        this.validatedBy = null;
+        this.validatedAt = null;
+        this.rejectionReason = null;
+    }
+
     // Métodos para manejo de estados de procesamiento
     public void startProcessing() {
         this.processingStatus = ProcessingStatus.PROCESSING;

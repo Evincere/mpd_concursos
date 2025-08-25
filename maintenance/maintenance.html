@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concursos MPD - Proceso Finalizado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #2a5298, #1e3c72, #2a5298);
+        }
+        
+        .logo-area {
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #2a5298;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .title {
+            color: #2a5298;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+        
+        .message-box {
+            background: #f8f9fa;
+            border-left: 4px solid #2a5298;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: left;
+            border-radius: 5px;
+        }
+        
+        .message-title {
+            color: #2a5298;
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .message-content {
+            color: #555;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+        
+        .contact-box {
+            background: #e8f4f8;
+            border: 1px solid #2a5298;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .contact-title {
+            color: #2a5298;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .email-link {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+            background: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: 2px solid #2a5298;
+        }
+        
+        .email-link:hover {
+            background: #2a5298;
+            color: white;
+        }
+        
+        .date-info {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .steps {
+            text-align: left;
+            margin: 1rem 0;
+        }
+        
+        .steps li {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-area">
+            <div class="logo">MPD</div>
+            <h1 class="title">Ministerio Público de la Defensa</h1>
+            <p class="subtitle">Sistema de Concursos</p>
+        </div>
+        
+        <div class="status-badge">
+            📋 Proceso Finalizado
+        </div>
+        
+        <div class="message-box">
+            <div class="message-title">
+                🗓️ Período de Regularización Concluido
+            </div>
+            <div class="message-content">
+                <p><strong>El proceso de tres (3) días hábiles para regularizar la carga de documentación ha finalizado.</strong></p>
+                
+                <p>Durante este período, se brindó la oportunidad a todos los postulantes de completar y subsanar la documentación requerida para su participación en el concurso.</p>
+            </div>
+        </div>
+        
+        <div class="message-box">
+            <div class="message-title">
+                📧 Próximos Pasos
+            </div>
+            <div class="message-content">
+                <ul class="steps">
+                    <li><strong>Los usuarios serán contactados en los próximos días</strong> para informarles sobre los siguientes pasos del proceso.</li>
+                    <li><strong>Es fundamental que mantenga atención a su correo electrónico</strong> registrado en la plataforma.</li>
+                    <li>Se recomienda revisar periódicamente su bandeja de entrada, incluyendo la carpeta de spam.</li>
+                    <li>Las comunicaciones oficiales se realizarán únicamente desde direcciones de correo institucionales.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="contact-box">
+            <div class="contact-title">
+                📞 Mesa de Ayuda
+            </div>
+            <p>Para consultas específicas sobre el proceso, puede contactar a:</p>
+            <br>
+            <a href="mailto:concursos_mdp_rrhh@jus.mendoza.gov.ar" class="email-link">
+                ✉️ concursos_mdp_rrhh@jus.mendoza.gov.ar
+            </a>
+        </div>
+        
+        <div class="date-info">
+            <p><strong>Fecha de finalización del período:</strong> 13 de Agosto de 2025 - 23:59 hs</p>
+            <p><strong>Estado:</strong> ✅ Proceso administrativo en curso</p>
+            <p><strong>Última actualización:</strong> <script>document.write(new Date().toLocaleString('es-AR'));</script></p>
+        </div>
+    </div>
+</body>
+</html>

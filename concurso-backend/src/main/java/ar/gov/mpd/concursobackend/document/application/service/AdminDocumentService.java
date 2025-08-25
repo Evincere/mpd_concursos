@@ -180,36 +180,77 @@ public class AdminDocumentService {
 
         // Aplicar filtros
         if (filters != null) {
+            log.debug("Aplicando filtros: estado={}, tipo={}, usuario={}, busqueda={}", 
+                     filters.getEstado(), filters.getTipoDocumentoId(), 
+                     filters.getUsuarioId(), filters.getBusqueda());
+            
             if (filters.getEstado() != null && !filters.getEstado().isEmpty() && !"ALL".equalsIgnoreCase(filters.getEstado())) {
-                jpql.append("AND d.status = :estado ");
-                parameters.put("estado", DocumentEntity.DocumentStatusEnum.valueOf(filters.getEstado().toUpperCase()));
+                try {
+                    DocumentEntity.DocumentStatusEnum statusEnum = DocumentEntity.DocumentStatusEnum.valueOf(filters.getEstado().toUpperCase());
+                    jpql.append("AND d.status = :estado ");
+                    parameters.put("estado", statusEnum);
+                    log.debug("Filtro de estado aplicado: {} -> {}", filters.getEstado(), statusEnum);
+                } catch (IllegalArgumentException e) {
+                    log.error("Error al convertir estado '{}' a enum: {}", filters.getEstado(), e.getMessage());
+                    // Continuar sin el filtro de estado
+                }
             }
 
             if (filters.getTipoDocumentoId() != null && !filters.getTipoDocumentoId().isEmpty()) {
-                jpql.append("AND dt.id = :tipoDocumentoId ");
-                parameters.put("tipoDocumentoId", UUID.fromString(filters.getTipoDocumentoId()));
+                try {
+                    UUID tipoId = UUID.fromString(filters.getTipoDocumentoId());
+                    jpql.append("AND dt.id = :tipoDocumentoId ");
+                    parameters.put("tipoDocumentoId", tipoId);
+                    log.debug("Filtro de tipo aplicado: {}", tipoId);
+                } catch (IllegalArgumentException e) {
+                    log.error("Error al convertir tipoDocumentoId '{}' a UUID: {}", filters.getTipoDocumentoId(), e.getMessage());
+                    // Continuar sin el filtro de tipo
+                }
             }
 
             if (filters.getUsuarioId() != null && !filters.getUsuarioId().isEmpty()) {
-                jpql.append("AND d.userId = :usuarioId ");
-                parameters.put("usuarioId", UUID.fromString(filters.getUsuarioId()));
+                String usuarioIdParam = filters.getUsuarioId().trim();
+                
+                try {
+                    // Intentar primero como UUID (comportamiento original para compatibilidad)
+                    UUID userId = UUID.fromString(usuarioIdParam);
+                    jpql.append("AND d.userId = :usuarioId ");
+                    parameters.put("usuarioId", userId);
+                    log.debug("Filtro de usuario por UUID aplicado: {}", userId);
+                } catch (IllegalArgumentException e) {
+                    // Si falla UUID, intentar como DNI (nuevo comportamiento)
+                    if (usuarioIdParam.matches("\\d+")) { // Solo números = posible DNI
+                        jpql.append("AND EXISTS (SELECT 1 FROM UserEntity u WHERE u.id = d.userId AND u.dni = :usuarioDni) ");
+                        parameters.put("usuarioDni", usuarioIdParam);
+                        log.debug("Filtro de usuario por DNI aplicado: {}", usuarioIdParam);
+                    } else {
+                        log.warn("usuarioId '{}' no es ni UUID válido ni DNI numérico válido - ignorando filtro", usuarioIdParam);
+                        // Continuar sin filtro (comportamiento actual preservado)
+                    }
+                }
             }
 
             if (filters.getFechaDesde() != null) {
                 jpql.append("AND d.uploadDate >= :fechaDesde ");
                 parameters.put("fechaDesde", filters.getFechaDesde());
+                log.debug("Filtro de fecha desde aplicado: {}", filters.getFechaDesde());
             }
 
             if (filters.getFechaHasta() != null) {
                 jpql.append("AND d.uploadDate <= :fechaHasta ");
                 parameters.put("fechaHasta", filters.getFechaHasta());
+                log.debug("Filtro de fecha hasta aplicado: {}", filters.getFechaHasta());
             }
 
             if (filters.getBusqueda() != null && !filters.getBusqueda().trim().isEmpty()) {
                 jpql.append("AND (LOWER(d.fileName) LIKE LOWER(:busqueda) OR LOWER(dt.name) LIKE LOWER(:busqueda)) ");
                 parameters.put("busqueda", "%" + filters.getBusqueda().trim() + "%");
+                log.debug("Filtro de búsqueda aplicado: {}", filters.getBusqueda());
             }
         }
+
+        log.debug("JPQL final: {}", jpql.toString());
+        log.debug("Parámetros: {}", parameters);
 
         jpql.append("ORDER BY d.").append(sortField).append(" ").append(sortDirection.name());
 
@@ -341,35 +382,103 @@ public class AdminDocumentService {
 
     /**
      * Aprueba un documento
+     * Usa operación directa en entidad para evitar problemas de optimistic locking
      */
     @Transactional
     public DocumentDto approveDocument(String documentId, UUID adminId) {
         log.info("Aprobando documento {} por admin {}", documentId, adminId);
 
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Documento no encontrado: " + documentId));
-
-        document.approve(adminId);
-        Document savedDocument = documentRepository.save(document);
+        // Usar operación directa en la entidad para evitar problemas de optimistic locking
+        UUID docUuid = UUID.fromString(documentId);
+        Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
+        
+        if (entityOpt.isEmpty()) {
+            throw new DocumentException("Documento no encontrado: " + documentId);
+        }
+        
+        DocumentEntity entity = entityOpt.get();
+        
+        // Actualizar campos directamente en la entidad
+        entity.setStatus(DocumentEntity.DocumentStatusEnum.APPROVED);
+        entity.setValidatedBy(adminId);
+        entity.setValidatedAt(LocalDateTime.now());
+        entity.setRejectionReason(null);
+        
+        // Guardar usando el repositorio Spring
+        DocumentEntity savedEntity = documentSpringRepository.save(entity);
+        
+        // Convertir de vuelta a dominio para el DTO de respuesta
+        Document domainDocument = documentMapper.toDomain(savedEntity);
 
         log.info("Documento {} aprobado exitosamente", documentId);
-        return documentMapper.toDto(savedDocument);
+        return documentMapper.toDto(domainDocument);
     }
 
     /**
      * Rechaza un documento
+     * Usa operación directa en entidad para evitar problemas de optimistic locking
      */
     @Transactional
     public DocumentDto rejectDocument(String documentId, String motivo, UUID adminId) {
         log.info("Rechazando documento {} por admin {} con motivo: {}", documentId, adminId, motivo);
 
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Documento no encontrado: " + documentId));
-
-        document.reject(adminId, motivo);
-        Document savedDocument = documentRepository.save(document);
+        // Usar operación directa en la entidad para evitar problemas de optimistic locking
+        UUID docUuid = UUID.fromString(documentId);
+        Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
+        
+        if (entityOpt.isEmpty()) {
+            throw new DocumentException("Documento no encontrado: " + documentId);
+        }
+        
+        DocumentEntity entity = entityOpt.get();
+        
+        // Actualizar campos directamente en la entidad
+        entity.setStatus(DocumentEntity.DocumentStatusEnum.REJECTED);
+        entity.setValidatedBy(adminId);
+        entity.setValidatedAt(LocalDateTime.now());
+        entity.setRejectionReason(motivo);
+        
+        // Guardar usando el repositorio Spring
+        DocumentEntity savedEntity = documentSpringRepository.save(entity);
+        
+        // Convertir de vuelta a dominio para el DTO de respuesta
+        Document domainDocument = documentMapper.toDomain(savedEntity);
 
         log.info("Documento {} rechazado exitosamente", documentId);
-        return documentMapper.toDto(savedDocument);
+        return documentMapper.toDto(domainDocument);
+    }
+
+    /**
+     * Revierte un documento a estado PENDING
+     * Usa operación directa en entidad para evitar problemas de optimistic locking
+     */
+    @Transactional
+    public DocumentDto revertDocument(String documentId, UUID adminId) {
+        log.info("Revirtiendo documento {} a PENDING por admin {}", documentId, adminId);
+
+        // Usar operación directa en la entidad para evitar problemas de optimistic locking
+        UUID docUuid = UUID.fromString(documentId);
+        Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
+        
+        if (entityOpt.isEmpty()) {
+            throw new DocumentException("Documento no encontrado: " + documentId);
+        }
+        
+        DocumentEntity entity = entityOpt.get();
+        
+        // Actualizar campos directamente en la entidad
+        entity.setStatus(DocumentEntity.DocumentStatusEnum.PENDING);
+        entity.setValidatedBy(null);
+        entity.setValidatedAt(null);
+        entity.setRejectionReason(null);
+        
+        // Guardar usando el repositorio Spring
+        DocumentEntity savedEntity = documentSpringRepository.save(entity);
+        
+        // Convertir de vuelta a dominio para el DTO de respuesta
+        Document domainDocument = documentMapper.toDomain(savedEntity);
+
+        log.info("Documento {} revertido exitosamente a PENDING", documentId);
+        return documentMapper.toDto(domainDocument);
     }
 }

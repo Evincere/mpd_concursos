@@ -297,6 +297,38 @@ public class AdminDocumentController {
         }
     }
 
+
+    /**
+     * Revierte un documento a estado PENDING
+     */
+    @PatchMapping("/{id}/revertir")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Revierte un documento a estado PENDING")
+    public ResponseEntity<DocumentDto> revertDocument(@PathVariable String id) {
+        try {
+            log.info("Revirtiendo documento: {}", id);
+
+            String currentUserIdStr = securityUtils.getCurrentUserId();
+            if (currentUserIdStr == null) {
+                log.error("Usuario no autenticado al intentar revertir documento");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UUID adminId = UUID.fromString(currentUserIdStr);
+            DocumentDto revertedDocument = adminDocumentService.revertDocument(id, adminId);
+
+            log.info("Documento {} revertido exitosamente por admin {}", id, adminId);
+            return ResponseEntity.ok(revertedDocument);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Documento no encontrado: {}", id, e);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error al revertir documento: {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     /**
      * Endpoint de salud para verificar que el controlador está funcionando
      */
