@@ -170,3 +170,8 @@ user-test-*
 # Allow example configuration files
 !docker-compose.ssl.example.yml
 !.env.production.example
+
+# Archivos JAR generados
+*.jar
+app.jar
+target/*.jar
