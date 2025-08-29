@@ -14,6 +14,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -326,6 +327,118 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
         } catch (IOException e) {
             log.error("Could not delete file: {}", filePath, e);
             throw new DocumentException("Could not delete file", e);
+        }
+    }
+
+    /**
+     * ✨ NUEVA IMPLEMENTACIÓN: Reemplaza un archivo existente manteniendo el mismo nombre y ubicación
+     */
+    @Override
+    public String replaceFile(String existingFilePath, InputStream newFileContent, String originalFileName, UUID documentId) {
+        log.info("🔄 [FileSystemStorage] INICIANDO REEMPLAZO DE ARCHIVO");
+        log.info("🔄 [FileSystemStorage] Archivo existente: {}", existingFilePath);
+        log.info("🔄 [FileSystemStorage] Documento ID: {}", documentId);
+        log.info("🔄 [FileSystemStorage] Archivo original: {}", originalFileName);
+
+        if (existingFilePath == null || existingFilePath.trim().isEmpty()) {
+            throw new DocumentException("La ruta del archivo existente no puede estar vacía");
+        }
+
+        if (newFileContent == null) {
+            throw new DocumentException("El contenido del nuevo archivo no puede ser nulo");
+        }
+
+        try {
+            // 1. Resolver la ruta completa del archivo existente
+            Path existingFile = storageConfig.getDocumentsPath().resolve(existingFilePath);
+            log.info("🔄 [FileSystemStorage] Ruta completa: {}", existingFile.toAbsolutePath());
+
+            // 2. Verificar que el archivo existe
+            if (!Files.exists(existingFile)) {
+                throw new DocumentException("El archivo a reemplazar no existe: " + existingFilePath);
+            }
+
+            // 3. Verificar que está dentro del directorio de almacenamiento (seguridad)
+            if (!existingFile.normalize().startsWith(storageConfig.getDocumentsPath().normalize())) {
+                throw new DocumentException("Ruta de archivo inválida por seguridad");
+            }
+
+            // 4. Crear backup temporal del archivo original
+            Path backupFile = existingFile.resolveSibling(existingFile.getFileName() + ".backup");
+            Files.copy(existingFile, backupFile, StandardCopyOption.REPLACE_EXISTING);
+            log.info("🔄 [FileSystemStorage] Backup creado: {}", backupFile);
+
+            // 5. Verificar el nuevo contenido
+            long availableBytes = 0;
+            try {
+                availableBytes = newFileContent.available();
+                log.info("🔄 [FileSystemStorage] Nuevo contenido disponible: {} bytes", availableBytes);
+            } catch (IOException e) {
+                log.warn("🔄 [FileSystemStorage] No se pudo determinar el tamaño del nuevo contenido: {}", e.getMessage());
+            }
+
+            try {
+                // 6. Reemplazar el archivo con el nuevo contenido
+                log.info("🔄 [FileSystemStorage] Reemplazando contenido del archivo...");
+                
+                // Usar buffer para mejor rendimiento
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                long totalBytesWritten = 0;
+                
+                try (InputStream bufferedInput = new BufferedInputStream(newFileContent);
+                     BufferedOutputStream bufferedOutput = new BufferedOutputStream(new FileOutputStream(existingFile.toFile()))) {
+                    
+                    while ((bytesRead = bufferedInput.read(buffer)) != -1) {
+                        bufferedOutput.write(buffer, 0, bytesRead);
+                        totalBytesWritten += bytesRead;
+                    }
+                    
+                    bufferedOutput.flush();
+                    log.info("🔄 [FileSystemStorage] Total de bytes escritos: {}", totalBytesWritten);
+                }
+
+                // 7. Verificar que el reemplazo fue exitoso
+                if (Files.exists(existingFile)) {
+                    long newFileSize = Files.size(existingFile);
+                    log.info("🔄 [FileSystemStorage] Verificación post-reemplazo: existe={}, tamaño={} bytes", 
+                            Files.exists(existingFile), newFileSize);
+
+                    if (newFileSize == 0) {
+                        throw new IOException("El archivo reemplazado tiene tamaño cero");
+                    }
+
+                    // 8. Si todo salió bien, eliminar backup
+                    Files.deleteIfExists(backupFile);
+                    log.info("✅ [FileSystemStorage] Reemplazo exitoso, backup eliminado");
+
+                } else {
+                    throw new IOException("El archivo no existe después del reemplazo");
+                }
+
+                log.info("✅ [FileSystemStorage] REEMPLAZO COMPLETADO EXITOSAMENTE");
+                return existingFilePath; // Devolver la misma ruta (no cambió)
+
+            } catch (IOException e) {
+                // 9. En caso de error, restaurar backup
+                log.error("❌ [FileSystemStorage] Error durante reemplazo: {}", e.getMessage(), e);
+                
+                try {
+                    if (Files.exists(backupFile)) {
+                        Files.move(backupFile, existingFile, StandardCopyOption.REPLACE_EXISTING);
+                        log.info("🔄 [FileSystemStorage] Archivo restaurado desde backup");
+                    }
+                } catch (IOException restoreException) {
+                    log.error("❌ [FileSystemStorage] CRÍTICO: No se pudo restaurar backup: {}", 
+                            restoreException.getMessage(), restoreException);
+                }
+                
+                throw new DocumentException("Error al reemplazar el archivo: " + e.getMessage(), e);
+            }
+
+        } catch (IOException e) {
+            log.error("❌ [FileSystemStorage] Error durante operación de reemplazo: {}", e.getMessage(), e);
+            throw new DocumentException("Error durante el reemplazo del archivo: " + e.getMessage(), e);
         }
     }
 

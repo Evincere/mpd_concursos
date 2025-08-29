@@ -1,0 +1,13 @@
+--- a/src/main/java/ar/gov/mpd/concursobackend/document/application/service/DocumentServiceImpl.java
++++ b/src/main/java/ar/gov/mpd/concursobackend/document/application/service/DocumentServiceImpl.java
+@@ -538,7 +538,9 @@
+         if (document.isArchived()) {
+             log.debug("🔄 [DocumentService] Documento archivado detectado: {}, buscando reemplazo activo", documentId);
+             
+-            Optional<Document> activeReplacement = documentRepository.findActiveReplacementFor(docId);
++            // Buscar documento activo del mismo tipo como reemplazo
++            Optional<Document> activeReplacement = documentRepository
++                    .findLatestActiveByUserAndType(userId, document.getDocumentType().getId());
+             if (activeReplacement.isPresent()) {
+                 Document replacement = activeReplacement.get();
+                 log.info("✅ [DocumentService] Documento reemplazo encontrado: {} -> {}", documentId, replacement.getId().value());

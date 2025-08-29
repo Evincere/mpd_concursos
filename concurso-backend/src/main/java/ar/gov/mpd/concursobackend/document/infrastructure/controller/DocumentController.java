@@ -5,6 +5,8 @@ import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentTypeService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentValidationService;
 import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
+import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
+import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentSpringRepository;
 import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/documentos")
@@ -44,7 +47,8 @@ public class DocumentController {
     private final DocumentValidationService documentValidationService;
     private final SecurityUtils securityUtils;
     private final StorageConfig storageConfig;
-
+    // ✨ NUEVA DEPENDENCIA: Para acceso directo a la base de datos en descarga
+    private final IDocumentSpringRepository documentSpringRepository;
     @GetMapping("/tipos")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<DocumentTypeDto>> getDocumentTypes() {
@@ -265,113 +269,81 @@ public class DocumentController {
         }
     }
 
+
     @GetMapping("/{id}/file")
     public ResponseEntity<Resource> getDocumentFile(@PathVariable("id") String documentId) {
-        log.debug("🔍 [DocumentController] Solicitando archivo de documento: {}", documentId);
+        log.info("🔍 [DocumentController] NUEVA IMPLEMENTACIÓN - Descarga de documento: {}", documentId);
 
         try {
-            // Intentar obtener ID del usuario actual (puede ser null si no está autenticado)
-            String currentUserIdStr = securityUtils.getCurrentUserId();
+            // ✨ NUEVA IMPLEMENTACIÓN: Usar siempre la base de datos como fuente de verdad
+            UUID docUuid = UUID.fromString(documentId);
+            Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
             
-            if (currentUserIdStr != null) {
-                // Usuario autenticado - usar método con verificación de permisos
-                try {
-                    UUID userId = UUID.fromString(currentUserIdStr);
-                    log.debug("🔍 [DocumentController] Usuario autenticado: {}", userId);
-
-                    // Obtener metadatos del documento
-                    DocumentDto document = documentService.getDocumentMetadata(documentId, userId);
-                    log.debug("🔍 [DocumentController] Metadatos del documento obtenidos: {}", document.getNombreArchivo());
-
-                    // Obtener el archivo
-                    InputStream fileStream = documentService.getDocumentFile(documentId, userId);
-                    InputStreamResource resource = new InputStreamResource(fileStream);
-                    log.debug("✅ [DocumentController] Archivo del documento obtenido exitosamente (autenticado)");
-
-                    return ResponseEntity.ok()
-                            .header(HttpHeaders.CONTENT_DISPOSITION,
-                                    "inline; filename=\"" + document.getNombreArchivo() + "\"")
-                            .contentType(MediaType.parseMediaType(document.getContentType()))
-                            .body(resource);
-                } catch (DocumentException e) {
-                    log.debug("🔍 [DocumentController] Error con método autenticado, intentando método público: {}", e.getMessage());
-                    // Continuar con método público
-                }
+            if (entityOpt.isEmpty()) {
+                log.warn("📄 [DocumentController] Documento no encontrado en BD: {}", documentId);
+                return ResponseEntity.notFound().build();
             }
             
-            // Usuario no autenticado o error con método autenticado - usar búsqueda directa en archivos
-            log.debug("🔍 [DocumentController] Buscando documento por ID sin autenticación: {}", documentId);
+            DocumentEntity docEntity = entityOpt.get();
             
-            // Buscar primero en documents/
-            Path documentsBase = storageConfig.getDocumentsPath();
-            if (Files.exists(documentsBase)) {
-                Path foundFile = Files.walk(documentsBase)
-                        .filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().startsWith(documentId))
-                        .findFirst()
-                        .orElse(null);
-                
-                if (foundFile != null) {
-                    Resource resource = new UrlResource(foundFile.toUri());
-                    
-                    if (resource.exists() && resource.isReadable()) {
-                        String filename = foundFile.getFileName().toString();
-                        String contentType = determineContentType(filename);
-                        
-                        log.debug("✅ [DocumentController] Documento encontrado en documents/: {}", foundFile);
-                        
-                        return ResponseEntity.ok()
-                                .contentType(MediaType.parseMediaType(contentType))
-                                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
-                                .body(resource);
-                    }
-                }
+            // ✨ CRÍTICO: Verificar que el documento NO esté archivado
+            if (docEntity.getIsArchived() != null && docEntity.getIsArchived()) {
+                log.warn("📦 [DocumentController] Documento archivado no disponible para descarga: {}", documentId);
+                return ResponseEntity.status(HttpStatus.GONE)
+                        .body(null);
             }
             
-            // Si no se encuentra en documents/, buscar en cv-documents/
-            Path cvDocumentsBase = storageConfig.getCvDocumentsPath();
-            if (Files.exists(cvDocumentsBase)) {
-                Path foundFile = Files.walk(cvDocumentsBase)
-                        .filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().startsWith(documentId))
-                        .findFirst()
-                        .orElse(null);
-                
-                if (foundFile != null) {
-                    Resource resource = new UrlResource(foundFile.toUri());
-                    
-                    if (resource.exists() && resource.isReadable()) {
-                        String filename = foundFile.getFileName().toString();
-                        String contentType = determineContentType(filename);
-                        
-                        log.debug("✅ [DocumentController] Documento encontrado en cv-documents/: {}", foundFile);
-                        
-                        return ResponseEntity.ok()
-                                .contentType(MediaType.parseMediaType(contentType))
-                                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
-                                .body(resource);
-                    }
-                }
+            // ✨ CRÍTICO: Usar la ruta exacta de la base de datos
+            String filePath = docEntity.getFilePath();
+            if (filePath == null || filePath.trim().isEmpty()) {
+                log.error("📄 [DocumentController] Documento sin ruta de archivo en BD: {}", documentId);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(null);
             }
             
-            log.warn("❌ [DocumentController] Documento no encontrado: {}", documentId);
-            return ResponseEntity.notFound().build();
+            log.info("📄 [DocumentController] Usando ruta exacta de BD: {}", filePath);
+            
+            // Resolver ruta completa del archivo
+            Path exactFile = storageConfig.getDocumentsPath().resolve(filePath);
+            
+            if (!Files.exists(exactFile)) {
+                log.error("📄 [DocumentController] Archivo físico no encontrado: {}", exactFile.toAbsolutePath());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(null);
+            }
+            
+            // Verificar permisos de seguridad
+            if (!exactFile.normalize().startsWith(storageConfig.getDocumentsPath().normalize())) {
+                log.error("🔒 [DocumentController] Ruta de archivo inválida por seguridad: {}", exactFile);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+            
+            Resource resource = new UrlResource(exactFile.toUri());
+            
+            if (!resource.exists() || !resource.isReadable()) {
+                log.error("📄 [DocumentController] Archivo no legible: {}", exactFile);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            }
+            
+            // Usar el nombre del archivo real del disco, no el de la BD
+            String actualFileName = exactFile.getFileName().toString();
+            String contentType = determineContentType(actualFileName);
+            
+            log.info("✅ [DocumentController] Descarga exitosa usando BD como fuente de verdad: {}", actualFileName);
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + actualFileName + "\"")
+                    .body(resource);
 
         } catch (IllegalArgumentException e) {
-            log.error("❌ [DocumentController] ID de documento inválido: {}", documentId, e);
-            return ResponseEntity.badRequest().build();
-        } catch (IOException e) {
-            log.error("❌ [DocumentController] Error de E/S al leer archivo: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("📄 [DocumentController] ID de documento inválido: {}", documentId, e);
+            return ResponseEntity.badRequest().body(null);
         } catch (Exception e) {
-            log.error("❌ [DocumentController] Error inesperado al obtener archivo de documento: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("❌ [DocumentController] Error inesperado al descargar documento: {}", documentId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
-    /**
-     * Determina el tipo de contenido basado en la extensión del archivo
-     */
     private String determineContentType(String filename) {
         String lowerFilename = filename.toLowerCase();
         
@@ -437,7 +409,7 @@ public class DocumentController {
     }
 
     @PostMapping("/{id}/replace")
-    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')") // MODIFICATION: Allow admins to replace documents
     public ResponseEntity<DocumentReplaceResponse> replaceDocument(
             @PathVariable("id") String documentId,
             @RequestParam("file") MultipartFile file,
@@ -465,7 +437,7 @@ public class DocumentController {
     }
 
     @PostMapping("/{id}/replace/check")
-    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')") // MODIFICATION: Allow admins to check replace documents
     public ResponseEntity<DocumentReplaceResponse> checkReplaceDocument(
             @PathVariable("id") String documentId,
             @RequestParam("file") MultipartFile file,

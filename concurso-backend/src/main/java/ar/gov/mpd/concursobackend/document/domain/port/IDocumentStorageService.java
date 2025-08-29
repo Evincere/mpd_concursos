@@ -14,4 +14,16 @@ public interface IDocumentStorageService {
      * Obtiene la ubicación base de almacenamiento de documentos
      */
     String getStorageLocation();
+
+    /**
+     * Reemplaza un archivo existente manteniendo el mismo nombre y ubicación.
+     * 
+     * @param existingFilePath Ruta del archivo actual a reemplazar
+     * @param newFileContent InputStream del nuevo contenido
+     * @param originalFileName Nombre del archivo original (para logging)
+     * @param documentId ID del documento (para logging)
+     * @return La nueva ruta del archivo (debería ser la misma que existingFilePath)
+     * @throws RuntimeException si el archivo original no existe o hay errores de E/S
+     */
+    String replaceFile(String existingFilePath, InputStream newFileContent, String originalFileName, UUID documentId);
 }

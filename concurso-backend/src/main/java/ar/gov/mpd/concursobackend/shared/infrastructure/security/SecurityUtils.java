@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,5 +40,26 @@ public class SecurityUtils {
         String token = authentication.getCredentials().toString();
         log.debug("Token obtenido de la autenticación: {}", token);
         return jwtProvider.getUsernameFromToken(token);
+    }
+
+    /**
+     * Verifica si el usuario actual tiene rol de administrador
+     * @return true si el usuario es admin, false en caso contrario
+     */
+    public boolean isCurrentUserAdmin() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                log.debug("No authenticated user found - not admin");
+                return false;
+            }
+
+            boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            log.debug("Current user admin status: {}", isAdmin);
+            return isAdmin;
+        } catch (Exception e) {
+            log.error("Error al verificar si el usuario actual es admin: {}", e.getMessage(), e);
+            return false;
+        }
     }
 }

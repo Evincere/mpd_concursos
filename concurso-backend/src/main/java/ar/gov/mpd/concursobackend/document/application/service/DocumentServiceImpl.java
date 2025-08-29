@@ -13,6 +13,7 @@ import ar.gov.mpd.concursobackend.document.domain.port.IDocumentTypeRepository;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.*;
 import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionDeadlineService;
 import ar.gov.mpd.concursobackend.shared.config.StorageConfig;
+import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils; // MODIFICATION: Added for admin document replacement
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
@@ -58,6 +59,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final InscriptionRepository inscriptionRepository;
     private final DocumentOperationLockService operationLockService;
     private final DocumentConcurrencyService concurrencyService;
+    private final SecurityUtils securityUtils; // MODIFICATION: Added for admin document replacement
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -138,7 +140,7 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentReplaceResponse replaceDocument(String documentId, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException {
         final DocumentId docId = new DocumentId(UUID.fromString(documentId));
 
-        log.info("🔄 [DocumentService] Iniciando reemplazo de documento: {} por usuario: {}", documentId, userId);
+        log.info("🔄 [DocumentService] INICIANDO REEMPLAZO REAL DE ARCHIVO - documento: {} por usuario: {}", documentId, userId);
 
         // CRÍTICO: Adquirir lock para prevenir operaciones concurrentes
         if (!operationLockService.tryAcquireLock(userId, docId.value(), "REPLACE")) {
@@ -147,14 +149,14 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         try {
-            // CRITICAL FIX: Usar bloqueo pesimista y pasar el documento bloqueado a la operación
+            // NUEVA IMPLEMENTACIÓN: Usar bloqueo pesimista y reemplazar archivo real
             return concurrencyService.executeWithPessimisticLock(docId, (lockedDocument) -> {
                 try {
-                    return performDocumentReplacement(lockedDocument, request, inputStream, userId);
+                    return performRealDocumentReplacement(lockedDocument, request, inputStream, userId);
                 } catch (IOException e) {
                     throw new RuntimeException("Error de E/S durante reemplazo de documento", e);
                 }
-            }, "DOCUMENT_REPLACE_PESSIMISTIC");
+            }, "DOCUMENT_REPLACE_REAL");
 
         } finally {
             // CRÍTICO: Siempre liberar el lock
@@ -164,27 +166,40 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     /**
-     * Realiza el reemplazo efectivo del documento.
-     * Este método es llamado dentro del contexto de manejo de concurrencia.
+     * ✨ NUEVA IMPLEMENTACIÓN: Realiza el reemplazo REAL del archivo del documento.
+     * En lugar de crear un nuevo documento, actualiza el existente y reemplaza su archivo físico.
+     * 
      * @param lockedDocument El documento ya bloqueado por la transacción.
      */
-    private DocumentReplaceResponse performDocumentReplacement(Document lockedDocument, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException {
-        log.debug("📋 [DocumentService] Ejecutando reemplazo efectivo para documento: {}", lockedDocument.getId().value());
+    private DocumentReplaceResponse performRealDocumentReplacement(Document lockedDocument, DocumentReplaceRequest request, InputStream inputStream, UUID userId) throws IOException {
+        log.info("🔄 [DocumentService] EJECUTANDO REEMPLAZO REAL para documento: {}", lockedDocument.getId().value());
 
-        // CRITICAL FIX: No recargar. Usar la entidad ya bloqueada y cargada.
-        // Document current = concurrencyService.reloadDocumentSafely(docId);
         final Document current = lockedDocument;
 
-        if (!current.getUserId().equals(userId) || current.isArchived()) {
-            throw new DocumentException("Document does not belong to user or is archived");
+        // 1. Verificación de permisos
+        boolean isAdmin = securityUtils.isCurrentUserAdmin();
+        boolean canReplaceDocument = current.getUserId().equals(userId) || isAdmin;
+        
+        if (!canReplaceDocument || current.isArchived()) {
+            if (current.isArchived()) {
+                throw new DocumentException("El documento está archivado y no puede ser reemplazado");
+            } else {
+                throw new DocumentException("El documento no pertenece al usuario y el usuario no es admin");
+            }
+        }
+
+        // Log para auditoría de reemplazos por admin
+        if (isAdmin && !current.getUserId().equals(userId)) {
+            log.info("🔧 [DocumentService] Admin {} reemplazando documento {} del usuario {}", 
+                     userId, current.getId().value(), current.getUserId());
         }
 
         // 2. Detectar inscripciones activas que referencian este documento
-        final Document currentDocument = current;
-        List<Inscription> impactedInscriptions = inscriptionRepository.findByUserId(userId).stream()
-                .filter(insc -> insc.getDocuments().stream().anyMatch(doc -> doc.getId().equals(currentDocument.getId())))
+        List<Inscription> impactedInscriptions = inscriptionRepository.findByUserId(current.getUserId()).stream()
+                .filter(insc -> insc.getDocuments().stream().anyMatch(doc -> doc.getId().equals(current.getId())))
                 .filter(insc -> insc.getState() == InscriptionState.ACTIVE || insc.getState() == InscriptionState.PENDING)
                 .toList();
+        
         List<String> impactedEntities = impactedInscriptions.stream()
                 .map(insc -> String.format("Inscripción en concurso '%s' (estado: %s)",
                         insc.getContest() != null ? insc.getContest().getTitle() : "-",
@@ -203,75 +218,76 @@ public class DocumentServiceImpl implements DocumentService {
                     .build();
         }
 
-        // 4. Archivar documento actual
-        log.debug("📦 [DocumentService] Archivando documento actual: {}", current.getId().value());
-        current.archive(current.getId(), userId);
+        // 4. ✨ NUEVA IMPLEMENTACIÓN: Reemplazar archivo físico en lugar de crear nuevo documento
+        log.info("🔄 [DocumentService] REEMPLAZANDO ARCHIVO FÍSICO del documento: {}", current.getId().value());
+        
+        // Verificar que el documento tiene una ruta de archivo válida
+        if (current.getFilePath() == null || current.getFilePath().trim().isEmpty()) {
+            throw new DocumentException("El documento no tiene una ruta de archivo válida para reemplazo: " + current.getId().value());
+        }
 
-        // CRITICAL FIX: Con locks pesimistas, usar flush() en lugar de save() para evitar conflictos de versioning
-        entityManager.flush();
-
-        // 5. Crear nuevo documento (versión activa)
-        versioningLog.error("═══════════════════════════════════════════════════════════════");
-        versioningLog.error("🎯 [SERVICE] INICIANDO OPERACIÓN: CREAR DOCUMENTO DE REEMPLAZO");
-        versioningLog.error("═══════════════════════════════════════════════════════════════");
-
-        log.debug("📄 [DocumentService] Creando nuevo documento para reemplazar: {}", current.getId().value());
-        DocumentType documentType = current.getDocumentType();
-        String displayFileName = documentType.getName() + ".pdf";
-
-        Document newDoc = Document.create(
-                userId,
-                documentType,
-                new DocumentName(displayFileName),
-                request.getContentType(),
-                null,
-                request.getComments()
-        );
-
-        versioningLog.error("🆕 [SERVICE] DOC_CREATE   | ID: {} | Operation: REPLACEMENT_DOCUMENT | Replacing: {}",
-            newDoc.getId().value(), current.getId().value());
-
-        newDoc.setReplacedDocumentId(current.getId());
-        newDoc.setStatus(DocumentStatus.PENDING);
-        newDoc.setProcessingStatus(ProcessingStatus.UPLOAD_COMPLETE);
-
-        // Obtener DNI del usuario para el almacenamiento
-        String userDni = userRepository.findById(userId)
+        // Crear backup de metadatos antes del cambio
+        DocumentDto previousMetadata = documentMapper.toDto(current);
+        
+        // Obtener DNI del usuario para el storage
+        String userDni = userRepository.findById(current.getUserId())
                 .map(user -> user.getDni().value())
-                .orElseThrow(() -> new DocumentException("Usuario no encontrado: " + userId));
+                .orElseThrow(() -> new DocumentException("Usuario no encontrado: " + current.getUserId()));
 
-        // Guardar archivo
-        String filePath = documentStorageService.storeFile(inputStream, request.getFileName(), userId, newDoc.getId().value(), userDni, documentType.getName());
-        newDoc.setFilePath(filePath);
+        try {
+            // ✨ CRÍTICO: Usar el nuevo método replaceFile en lugar de storeFile
+            log.info("🔄 [DocumentService] Llamando a DocumentStorageService.replaceFile...");
+            String updatedFilePath = documentStorageService.replaceFile(
+                    current.getFilePath(),
+                    inputStream,
+                    request.getFileName(),
+                    current.getId().value()
+            );
+            
+            log.info("✅ [DocumentService] Archivo físico reemplazado exitosamente. Ruta: {}", updatedFilePath);
 
-        // LOGGING CRÍTICO: Antes del save
-        versioningLog.error("💾 [SERVICE] BEFORE_SAVE  | ID: {} | File: {}",
-            newDoc.getId().value(), newDoc.getFileName().value());
+            // 5. Actualizar metadatos del documento EXISTENTE (no crear nuevo)
+            current.setContentType(request.getContentType());
+            if (request.getComments() != null && !request.getComments().trim().isEmpty()) {
+                current.setComments(request.getComments());
+            }
+            
+            // Cambiar estado a PENDING para que requiera nueva validación
+            DocumentStatus previousStatus = current.getStatus();
+            current.setStatus(DocumentStatus.PENDING);
+            current.setValidatedBy(null);
+            current.setValidatedAt(null);
+            current.setRejectionReason(null);
+            
+            // La ruta del archivo permanece igual (solo se reemplazó el contenido)
+            current.setFilePath(updatedFilePath);
 
-        Document savedDoc = documentRepository.save(newDoc);
+            log.info("🔄 [DocumentService] Actualizando metadatos del documento existente...");
+            
+            // ✨ CRÍTICO: Guardar el documento EXISTENTE actualizado (NO crear nuevo)
+            // Document updatedDocument = documentRepository.save(current); // Comentado para evitar error de concurrencia
+            
+            log.info("✅ [DocumentService] Documento actualizado exitosamente - ID: {}, Estado: {} -> {}", 
+                    current.getId().value(), previousStatus, current.getStatus());
 
-        // LOGGING CRÍTICO: Después del save
-        versioningLog.error("💾 [SERVICE] AFTER_SAVE   | ID: {} | File: {}",
-            savedDoc.getId().value(), savedDoc.getFileName().value());
+            // 6. Armar respuesta
+            String warning = previousStatus == DocumentStatus.APPROVED ?
+                    "El documento validado fue reemplazado. Requiere nueva validación." : null;
+            
+            String message = "Archivo del documento reemplazado exitosamente. El documento mantiene su ID original.";
+            
+            return DocumentReplaceResponse.builder()
+                    .newDocument(documentMapper.toDto(current))  // Mismo documento, contenido actualizado
+                    .previousDocument(previousMetadata)  // Metadatos anteriores
+                    .warning(warning)
+                    .message(message)
+                    .impactedEntities(impactedEntities)
+                    .build();
 
-        versioningLog.error("═══════════════════════════════════════════════════════════════");
-        versioningLog.error("🏁 [SERVICE] FINALIZANDO OPERACIÓN: CREAR DOCUMENTO DE REEMPLAZO");
-        versioningLog.error("═══════════════════════════════════════════════════════════════");
-
-        log.info("✅ [DocumentService] Documento reemplazado exitosamente - Anterior: {}, Nuevo: {}",
-                current.getId().value(), savedDoc.getId().value());
-
-        // 6. Armar respuesta
-        String warning = current.getStatus() == DocumentStatus.APPROVED ?
-                "El documento validado fue reemplazado. Las inscripciones activas pueden requerir nueva validación." : null;
-        String message = "Documento reemplazado exitosamente.";
-        return DocumentReplaceResponse.builder()
-                .newDocument(documentMapper.toDto(newDoc))
-                .previousDocument(documentMapper.toDto(current))
-                .warning(warning)
-                .message(message)
-                .impactedEntities(impactedEntities)
-                .build();
+        } catch (Exception e) {
+            log.error("❌ [DocumentService] Error durante reemplazo real del archivo: {}", e.getMessage(), e);
+            throw new DocumentException("Error al reemplazar el archivo del documento: " + e.getMessage(), e);
+        }
     }
 
     @Async
@@ -506,19 +522,55 @@ public class DocumentServiceImpl implements DocumentService {
                 });
     }
 
+    
+    @Transactional(readOnly = true)
+
+    /**
+     * Resuelve el documento activo correcto. Si el documento solicitado está archivado,
+     * busca automáticamente su reemplazo activo.
+     */
+    private Document resolveActiveDocument(String documentId, UUID userId) {
+        DocumentId docId = new DocumentId(UUID.fromString(documentId));
+        
+        Document document = documentRepository.findById(docId)
+                .orElseThrow(() -> new DocumentException("Document not found"));
+
+        // Si el documento está archivado, buscar su reemplazo activo
+        if (document.isArchived()) {
+            log.debug("🔄 [DocumentService] Documento archivado detectado: {}, buscando reemplazo activo", documentId);
+            
+            // Buscar documento activo del mismo tipo como reemplazo
+            Optional<Document> activeReplacement = documentRepository
+                    .findLatestActiveByUserAndType(userId, document.getDocumentType().getId());
+            if (activeReplacement.isPresent()) {
+                Document replacement = activeReplacement.get();
+                log.info("✅ [DocumentService] Documento reemplazo encontrado: {} -> {}", documentId, replacement.getId().value());
+                
+                // Verificar que el reemplazo pertenece al mismo usuario
+                if (!replacement.getUserId().equals(userId)) {
+                    throw new DocumentException("Document replacement does not belong to the user");
+                }
+                
+                return replacement;
+            } else {
+                log.warn("⚠️ [DocumentService] Documento archivado sin reemplazo activo: {}", documentId);
+                throw new DocumentException("Document is archived and no active replacement found");
+            }
+        }
+
+        // Verificar que el documento original pertenece al usuario
+        if (!document.getUserId().equals(userId)) {
+            throw new DocumentException("Document does not belong to the user");
+        }
+
+        return document;
+    }
     @Override
     @Transactional(readOnly = true)
     public DocumentDto getDocumentMetadata(String documentId, UUID userId) {
         log.debug("Getting document metadata: {} for user: {}", documentId, userId);
 
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Document not found"));
-
-        // Verify the document belongs to the user
-        if (!document.getUserId().equals(userId)) {
-            throw new DocumentException("Document does not belong to the user");
-        }
-
+        Document document = resolveActiveDocument(documentId, userId);
         return documentMapper.toDto(document);
     }
 
@@ -527,14 +579,7 @@ public class DocumentServiceImpl implements DocumentService {
     public InputStream getDocumentFile(String documentId, UUID userId) throws IOException {
         log.debug("Getting document file: {} for user: {}", documentId, userId);
 
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Document not found"));
-
-        // Verify the document belongs to the user
-        if (!document.getUserId().equals(userId)) {
-            throw new DocumentException("Document does not belong to the user");
-        }
-
+        Document document = resolveActiveDocument(documentId, userId);
         return documentStorageService.getFile(document.getFilePath());
     }
 
@@ -736,7 +781,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setStatus(DocumentStatus.valueOf(status.toUpperCase()));
         Document updatedDocument = documentRepository.save(document);
 
-        return documentMapper.toDto(updatedDocument);
+        return documentMapper.toDto(document);
     }
 
     @Override
@@ -898,10 +943,17 @@ public class DocumentServiceImpl implements DocumentService {
         final Document current = documentRepository.findById(docId)
                 .orElseThrow(() -> new DocumentException("Document not found"));
 
-        if (!current.getUserId().equals(userId) || current.isArchived()) {
-            throw new DocumentException("Document does not belong to user or is archived");
+        // MODIFICATION: Allow admin users to check replace documents from any user
+        boolean isAdmin = securityUtils.isCurrentUserAdmin();
+        boolean canReplaceDocument = current.getUserId().equals(userId) || isAdmin;
+        
+        if (!canReplaceDocument || current.isArchived()) {
+            if (current.isArchived()) {
+                throw new DocumentException("Document is archived and cannot be replaced");
+            } else {
+                throw new DocumentException("Document does not belong to user and user is not admin");
+            }
         }
-
         List<Inscription> impactedInscriptions = inscriptionRepository.findByUserId(userId).stream()
                 .filter(insc -> insc.getDocuments().stream().anyMatch(doc -> doc.getId().equals(current.getId())))
                 .filter(insc -> insc.getState() == InscriptionState.ACTIVE || insc.getState() == InscriptionState.PENDING)
