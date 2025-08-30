@@ -28,7 +28,7 @@ import java.util.UUID;
  * Proporciona endpoints específicos para administradores
  */
 @RestController
-@RequestMapping("/api/admin/documentos")
+@RequestMapping("/api/admin/documents")
 @CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com"}, allowCredentials = "true")
 @RequiredArgsConstructor
 @Slf4j
@@ -55,291 +55,172 @@ public class AdminDocumentController {
     }
 
     /**
-     * DTO para anotación de documento
-     */
-    public static class DocumentAnnotationRequest {
-        private String texto;
-        private double posicionX;
-        private double posicionY;
-
-        public DocumentAnnotationRequest() {}
-
-        public DocumentAnnotationRequest(String texto, double posicionX, double posicionY) {
-            this.texto = texto;
-            this.posicionX = posicionX;
-            this.posicionY = posicionY;
-        }
-
-        public String getTexto() { return texto; }
-        public void setTexto(String texto) { this.texto = texto; }
-        public double getPosicionX() { return posicionX; }
-        public void setPosicionX(double posicionX) { this.posicionX = posicionX; }
-        public double getPosicionY() { return posicionY; }
-        public void setPosicionY(double posicionY) { this.posicionY = posicionY; }
-    }
-
-    /**
-     * DTO para respuesta de anotación
-     */
-    public static class DocumentAnnotationResponse {
-        private String id;
-        private String documentoId;
-        private String texto;
-        private double posicionX;
-        private double posicionY;
-        private String creadoPor;
-        private LocalDateTime fechaCreacion;
-
-        public DocumentAnnotationResponse() {}
-
-        public DocumentAnnotationResponse(String id, String documentoId, String texto, double posicionX, double posicionY, String creadoPor, LocalDateTime fechaCreacion) {
-            this.id = id;
-            this.documentoId = documentoId;
-            this.texto = texto;
-            this.posicionX = posicionX;
-            this.posicionY = posicionY;
-            this.creadoPor = creadoPor;
-            this.fechaCreacion = fechaCreacion;
-        }
-
-        // Getters and Setters
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getDocumentoId() { return documentoId; }
-        public void setDocumentoId(String documentoId) { this.documentoId = documentoId; }
-        public String getTexto() { return texto; }
-        public void setTexto(String texto) { this.texto = texto; }
-        public double getPosicionX() { return posicionX; }
-        public void setPosicionX(double posicionX) { this.posicionX = posicionX; }
-        public double getPosicionY() { return posicionY; }
-        public void setPosicionY(double posicionY) { this.posicionY = posicionY; }
-        public String getCreadoPor() { return creadoPor; }
-        public void setCreadoPor(String creadoPor) { this.creadoPor = creadoPor; }
-        public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-        public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
-    }
-
-    /**
-     * Obtiene documentos con filtros y paginación
+     * Lista documentos con filtros y paginación para administradores
      */
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Obtiene documentos con filtros y paginación")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar documentos para administración",
+               description = "Lista todos los documentos con filtros avanzados para administradores")
     public ResponseEntity<PagedDocumentResponse> getDocuments(
-            @Parameter(description = "Estado del documento") @RequestParam(required = false) String estado,
-            @Parameter(description = "ID del tipo de documento") @RequestParam(required = false) String tipoDocumentoId,
-            @Parameter(description = "ID del usuario") @RequestParam(required = false) String usuarioId,
-            @Parameter(description = "Fecha desde") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaDesde,
-            @Parameter(description = "Fecha hasta") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaHasta,
-            @Parameter(description = "Término de búsqueda") @RequestParam(required = false) String busqueda,
-            @Parameter(description = "Número de página") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Tamaño de página") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Campo de ordenamiento") @RequestParam(defaultValue = "fechaCarga") String sort,
-            @Parameter(description = "Dirección de ordenamiento") @RequestParam(defaultValue = "desc") String direction) {
+        @Parameter(description = "Número de página (base 0)") @RequestParam(defaultValue = "0") int page,
+        @Parameter(description = "Tamaño de página") @RequestParam(defaultValue = "20") int size,
+        @Parameter(description = "Filtrar por título") @RequestParam(required = false) String titulo,
+        @Parameter(description = "Filtrar por tipo de documento") @RequestParam(required = false) String tipo,
+        @Parameter(description = "Filtrar por estado") @RequestParam(required = false) String estado,
+        @Parameter(description = "Filtrar por usuario") @RequestParam(required = false) String usuario,
+        @Parameter(description = "Fecha desde") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaDesde,
+        @Parameter(description = "Fecha hasta") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaHasta,
+        @Parameter(description = "Campo de ordenación") @RequestParam(defaultValue = "fechaCreacion") String sortBy,
+        @Parameter(description = "Dirección de ordenación") @RequestParam(defaultValue = "DESC") String sortDir
+    ) {
+        DocumentFilters filters = new DocumentFilters(
+            titulo, tipo, estado, usuario, fechaDesde, fechaHasta);
 
+        PagedDocumentResponse response = adminDocumentService.getDocumentsWithFilters(
+            page, size, filters, sortBy, sortDir);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Obtiene un documento específico por su ID
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Obtener documento por ID",
+               description = "Obtiene los detalles completos de un documento específico")
+    public ResponseEntity<AdminDocumentDto> getDocumentById(@PathVariable UUID id) {
         try {
-            log.debug("Obteniendo documentos - página: {}, tamaño: {}, filtros: estado={}, tipo={}, usuario={}", 
-                     page, size, estado, tipoDocumentoId, usuarioId);
-
-            // Crear filtros
-            DocumentFilters filters = new DocumentFilters();
-            filters.setEstado(estado);
-            filters.setTipoDocumentoId(tipoDocumentoId);
-            filters.setUsuarioId(usuarioId);
-            filters.setFechaDesde(fechaDesde);
-            filters.setFechaHasta(fechaHasta);
-            filters.setBusqueda(busqueda);
-
-            PagedDocumentResponse response = adminDocumentService.getDocuments(filters, page, size, sort, direction);
-            
-            log.debug("Documentos obtenidos exitosamente - total: {}, página: {}", response.getTotalElements(), page);
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            log.error("Error al obtener documentos", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            AdminDocumentDto document = adminDocumentService.getDocumentById(id);
+            return ResponseEntity.ok(document);
+        } catch (RuntimeException e) {
+            log.warn("Documento no encontrado: {}", id);
+            return ResponseEntity.notFound().build();
         }
     }
 
     /**
-     * Obtiene estadísticas de documentos
+     * Actualiza un documento existente
      */
-    @GetMapping("/estadisticas")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Obtiene estadísticas de documentos")
-    public ResponseEntity<DocumentStatistics> getDocumentStatistics() {
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Actualizar documento",
+               description = "Actualiza los datos de un documento existente")
+    public ResponseEntity<AdminDocumentDto> updateDocument(
+        @PathVariable UUID id,
+        @Valid @RequestBody DocumentDto documentDto
+    ) {
         try {
-            log.debug("Obteniendo estadísticas de documentos");
-            
-            DocumentStatistics statistics = adminDocumentService.getDocumentStatistics();
-            
-            log.debug("Estadísticas obtenidas - total: {}, pendientes: {}, aprobados: {}, rechazados: {}", 
-                     statistics.getTotalDocumentos(), statistics.getPendientes(), 
-                     statistics.getAprobados(), statistics.getRechazados());
-            
-            return ResponseEntity.ok(statistics);
-
-        } catch (Exception e) {
-            log.error("Error al obtener estadísticas de documentos", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            AdminDocumentDto updatedDocument = adminDocumentService.updateDocument(id, documentDto);
+            return ResponseEntity.ok(updatedDocument);
+        } catch (RuntimeException e) {
+            log.warn("Error al actualizar documento {}: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
         }
     }
 
     /**
      * Aprueba un documento
      */
-    @PatchMapping("/{id}/aprobar")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Aprueba un documento")
-    public ResponseEntity<DocumentDto> approveDocument(@PathVariable String id) {
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Aprobar documento",
+               description = "Marca un documento como aprobado")
+    public ResponseEntity<Map<String, String>> approveDocument(@PathVariable UUID id) {
         try {
-            log.info("Aprobando documento: {}", id);
-
-            String currentUserIdStr = securityUtils.getCurrentUserId();
-            if (currentUserIdStr == null) {
-                log.error("Usuario no autenticado al intentar aprobar documento");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            UUID adminId = UUID.fromString(currentUserIdStr);
-            DocumentDto approvedDocument = adminDocumentService.approveDocument(id, adminId);
-
-            log.info("Documento {} aprobado exitosamente por admin {}", id, adminId);
-            return ResponseEntity.ok(approvedDocument);
-
-        } catch (IllegalArgumentException e) {
-            log.error("Documento no encontrado: {}", id, e);
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error al aprobar documento: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            String adminUsername = securityUtils.getCurrentUsername();
+            adminDocumentService.approveDocument(id.toString(), UUID.fromString(securityUtils.getCurrentUserId()));
+            log.info("Documento {} aprobado por admin {}", id, adminUsername);
+            return ResponseEntity.ok(Map.of("message", "Documento aprobado exitosamente"));
+        } catch (RuntimeException e) {
+            log.warn("Error al aprobar documento {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * Rechaza un documento
+     * Rechaza un documento con motivo
      */
-    @PatchMapping("/{id}/rechazar")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Rechaza un documento")
-    public ResponseEntity<DocumentDto> rejectDocument(
-            @PathVariable String id,
-            @Valid @RequestBody RejectDocumentRequest request) {
-        
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Rechazar documento",
+               description = "Rechaza un documento con un motivo específico")
+    public ResponseEntity<Map<String, String>> rejectDocument(
+        @PathVariable UUID id,
+        @Valid @RequestBody RejectDocumentRequest request
+    ) {
         try {
-            log.info("Rechazando documento: {} con motivo: {}", id, request.getMotivo());
-
-            if (request.getMotivo() == null || request.getMotivo().trim().isEmpty()) {
-                log.error("Motivo de rechazo requerido para documento: {}", id);
-                return ResponseEntity.badRequest().build();
-            }
-
-            String currentUserIdStr = securityUtils.getCurrentUserId();
-            if (currentUserIdStr == null) {
-                log.error("Usuario no autenticado al intentar rechazar documento");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            UUID adminId = UUID.fromString(currentUserIdStr);
-            DocumentDto rejectedDocument = adminDocumentService.rejectDocument(id, request.getMotivo().trim(), adminId);
-
-            log.info("Documento {} rechazado exitosamente por admin {}", id, adminId);
-            return ResponseEntity.ok(rejectedDocument);
-
-        } catch (IllegalArgumentException e) {
-            log.error("Documento no encontrado: {}", id, e);
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error al rechazar documento: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            String adminUsername = securityUtils.getCurrentUsername();
+            adminDocumentService.rejectDocument(id.toString(), request.getMotivo(), UUID.fromString(securityUtils.getCurrentUserId()));
+            log.info("Documento {} rechazado por admin {} con motivo: {}", 
+                    id, adminUsername, request.getMotivo());
+            return ResponseEntity.ok(Map.of("message", "Documento rechazado exitosamente"));
+        } catch (RuntimeException e) {
+            log.warn("Error al rechazar documento {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * Agrega una anotación a un documento
-     * Nota: Esta es una implementación básica. En una implementación completa,
-     * se necesitaría una entidad separada para almacenar anotaciones.
+     * Elimina (archiva) un documento
      */
-    @PostMapping("/{id}/anotaciones")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Agrega una anotación a un documento")
-    public ResponseEntity<DocumentAnnotationResponse> addDocumentAnnotation(
-            @PathVariable String id,
-            @Valid @RequestBody DocumentAnnotationRequest request) {
-        
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Eliminar documento",
+               description = "Archiva lógicamente un documento y elimina el archivo físico si existe")
+    public ResponseEntity<Map<String, String>> deleteDocument(@PathVariable UUID id) {
         try {
-            log.info("Agregando anotación al documento: {}", id);
-
-            String currentUserIdStr = securityUtils.getCurrentUserId();
-            if (currentUserIdStr == null) {
-                log.error("Usuario no autenticado al intentar agregar anotación");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            String adminUsername = securityUtils.getCurrentUsername();
+            adminDocumentService.deleteDocument(id, adminUsername);
+            log.info("Documento {} eliminado (archivado) por admin {}", id, adminUsername);
+            return ResponseEntity.ok(Map.of("message", "Documento eliminado exitosamente"));
+        } catch (RuntimeException e) {
+            log.warn("Error al eliminar documento {}: {}", id, e.getMessage());
+            if (e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.notFound().build();
             }
-
-            // Por ahora, retornamos una respuesta simulada ya que no tenemos la entidad de anotaciones
-            // En una implementación completa, se guardaría en base de datos
-            DocumentAnnotationResponse annotation = new DocumentAnnotationResponse(
-                UUID.randomUUID().toString(),
-                id,
-                request.getTexto(),
-                request.getPosicionX(),
-                request.getPosicionY(),
-                currentUserIdStr,
-                LocalDateTime.now()
-            );
-
-            log.info("Anotación agregada exitosamente al documento: {}", id);
-            return ResponseEntity.ok(annotation);
-
-        } catch (Exception e) {
-            log.error("Error al agregar anotación al documento: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-
-    /**
-     * Revierte un documento a estado PENDING
-     */
-    @PatchMapping("/{id}/revertir")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Revierte un documento a estado PENDING")
-    public ResponseEntity<DocumentDto> revertDocument(@PathVariable String id) {
-        try {
-            log.info("Revirtiendo documento: {}", id);
-
-            String currentUserIdStr = securityUtils.getCurrentUserId();
-            if (currentUserIdStr == null) {
-                log.error("Usuario no autenticado al intentar revertir documento");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            UUID adminId = UUID.fromString(currentUserIdStr);
-            DocumentDto revertedDocument = adminDocumentService.revertDocument(id, adminId);
-
-            log.info("Documento {} revertido exitosamente por admin {}", id, adminId);
-            return ResponseEntity.ok(revertedDocument);
-
-        } catch (IllegalArgumentException e) {
-            log.error("Documento no encontrado: {}", id, e);
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error al revertir documento: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * Endpoint de salud para verificar que el controlador está funcionando
+     * Obtiene estadísticas de documentos
      */
-    @GetMapping("/health")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Operation(summary = "Verifica el estado del controlador de administración de documentos")
-    public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of(
-            "status", "UP",
-            "service", "AdminDocumentController",
-            "timestamp", LocalDateTime.now().toString()
-        ));
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Estadísticas de documentos",
+               description = "Obtiene estadísticas generales sobre los documentos del sistema")
+    public ResponseEntity<DocumentStatistics> getDocumentStatistics() {
+        DocumentStatistics stats = adminDocumentService.getDocumentStatistics();
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Búsqueda avanzada de documentos
+     */
+    @PostMapping("/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Búsqueda avanzada",
+               description = "Realiza una búsqueda avanzada de documentos con criterios complejos")
+    public ResponseEntity<PagedDocumentResponse> searchDocuments(
+        @Parameter(description = "Número de página") @RequestParam(defaultValue = "0") int page,
+        @Parameter(description = "Tamaño de página") @RequestParam(defaultValue = "20") int size,
+        @Parameter(description = "Texto de búsqueda") @RequestParam(required = false) String searchText,
+        @Valid @RequestBody(required = false) DocumentFilters filters
+    ) {
+        if (filters == null) {
+            filters = new DocumentFilters();
+        }
+        if (searchText != null) {
+            filters.setBusqueda(searchText);
+        }
+
+        PagedDocumentResponse response = adminDocumentService.getDocuments(
+            filters, page, size, "uploadDate", "desc");
+
+        return ResponseEntity.ok(response);
     }
 }

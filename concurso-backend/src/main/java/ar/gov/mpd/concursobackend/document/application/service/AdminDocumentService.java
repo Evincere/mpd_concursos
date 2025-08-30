@@ -12,6 +12,7 @@ import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.sp
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
 import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
+import ar.gov.mpd.concursobackend.document.domain.port.IDocumentStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,8 @@ public class AdminDocumentService {
     private final IUserSpringRepository userSpringRepository;
     private final DocumentMapper documentMapper;
     private final EntityManager entityManager;
+    private final IDocumentStorageService documentStorageService;
+    private final ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils securityUtils;
 
     /**
      * DTO para documentos con información de usuario
@@ -126,6 +129,20 @@ public class AdminDocumentService {
         public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
         public String getBusqueda() { return busqueda; }
         public void setBusqueda(String busqueda) { this.busqueda = busqueda; }
+
+        // Constructor sin parámetros
+        public DocumentFilters() {}
+
+
+        // Constructor con parámetros
+        public DocumentFilters(String estado, String tipoDocumentoId, String busqueda, String usuarioId, LocalDateTime fechaDesde, LocalDateTime fechaHasta) {
+            this.estado = estado;
+            this.tipoDocumentoId = tipoDocumentoId;
+            this.busqueda = busqueda;
+            this.usuarioId = usuarioId;
+            this.fechaDesde = fechaDesde;
+            this.fechaHasta = fechaHasta;
+        }
     }
 
     /**
@@ -393,7 +410,7 @@ public class AdminDocumentService {
         Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
         
         if (entityOpt.isEmpty()) {
-            throw new DocumentException("Documento no encontrado: " + documentId);
+            throw new DocumentException("Documento no encontrado: " + docUuid);
         }
         
         DocumentEntity entity = entityOpt.get();
@@ -427,7 +444,7 @@ public class AdminDocumentService {
         Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
         
         if (entityOpt.isEmpty()) {
-            throw new DocumentException("Documento no encontrado: " + documentId);
+            throw new DocumentException("Documento no encontrado: " + docUuid);
         }
         
         DocumentEntity entity = entityOpt.get();
@@ -461,7 +478,7 @@ public class AdminDocumentService {
         Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
         
         if (entityOpt.isEmpty()) {
-            throw new DocumentException("Documento no encontrado: " + documentId);
+            throw new DocumentException("Documento no encontrado: " + docUuid);
         }
         
         DocumentEntity entity = entityOpt.get();
@@ -480,5 +497,111 @@ public class AdminDocumentService {
 
         log.info("Documento {} revertido exitosamente a PENDING", documentId);
         return documentMapper.toDto(domainDocument);
+    }
+
+    /**
+     * Elimina (archiva) un documento del sistema
+     * Usa archivado lógico para mantener integridad referencial y elimina archivo físico
+     */
+    @Transactional
+    public Map<String, String> deleteDocument(UUID documentId, String adminUsername) {
+        log.info("Eliminando (archivando) documento {} por admin {}", documentId, adminUsername);
+
+        // Usar operación directa en la entidad para evitar problemas de optimistic locking
+        UUID docUuid = documentId;
+        Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(docUuid);
+        
+        if (entityOpt.isEmpty()) {
+            throw new DocumentException("Documento no encontrado: " + docUuid);
+        }
+        
+        DocumentEntity entity = entityOpt.get();
+        
+        // Verificar si ya está archivado
+        if (entity.getIsArchived()) {
+            throw new DocumentException("El documento ya está eliminado: " + documentId);
+        }
+        
+        // Guardar la ruta del archivo antes de actualizar la entidad
+        String filePath = entity.getFilePath();
+        
+        // Actualizar campos de archivado directamente en la entidad
+        entity.setIsArchived(true);
+        entity.setArchivedAt(LocalDateTime.now());
+        entity.setArchivedBy(UUID.fromString(securityUtils.getCurrentUserId()));
+        
+        // Guardar usando el repositorio Spring
+        DocumentEntity savedEntity = documentSpringRepository.save(entity);
+        
+        // Intentar eliminar el archivo físico
+        boolean fileDeleted = false;
+        if (filePath != null && !filePath.trim().isEmpty()) {
+            try {
+                documentStorageService.deleteFile(filePath);
+                fileDeleted = true;
+                log.info("Archivo físico eliminado exitosamente: {}", filePath);
+            } catch (Exception e) {
+                log.warn("No se pudo eliminar el archivo físico: {} - Error: {}", filePath, e.getMessage());
+                // No fallar la operación completa por errores del archivo físico
+            }
+        }
+        
+        log.info("Documento {} eliminado (archivado) exitosamente", docUuid);
+        
+        Map<String, String> result = Map.of(
+            "message", "Documento eliminado exitosamente",
+            "documentId", docUuid.toString(),
+            "archivedAt", savedEntity.getArchivedAt().toString(),
+            "archivedBy", adminUsername,
+            "fileDeleted", String.valueOf(fileDeleted)
+        );
+        
+        return result;
+    }
+    // Métodos adicionales requeridos por el controlador
+
+    public PagedDocumentResponse getDocumentsWithFilters(int page, int size, DocumentFilters filters, String sort, String order) {
+        // Delegamos al método existente
+        return getDocuments(filters, page, size, sort, order);
+    }
+
+
+    public AdminDocumentDto getDocumentById(UUID id) {
+        // Buscar el documento por ID
+        Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(id);
+        
+        if (entityOpt.isEmpty()) {
+            throw new DocumentException("Documento no encontrado: " + id);
+        }
+        
+        DocumentEntity entity = entityOpt.get();
+        
+        // Usar el método de conversión existente que ya funciona
+        return convertToAdminDocumentDto(entity);
+    }
+
+    public AdminDocumentDto updateDocument(UUID id, DocumentDto documentDto) {
+        // Buscar el documento por ID
+        Optional<DocumentEntity> entityOpt = documentSpringRepository.findById(id);
+        
+        if (entityOpt.isEmpty()) {
+            throw new DocumentException("Documento no encontrado: " + id);
+        }
+        
+        DocumentEntity entity = entityOpt.get();
+        
+        // Actualizar campos permitidos (usando nombres correctos de DocumentDto y DocumentEntity)
+        if (documentDto.getNombreArchivo() != null) {
+            entity.setFileName(documentDto.getNombreArchivo());
+        }
+        if (documentDto.getComentarios() != null) {
+            entity.setComments(documentDto.getComentarios());
+        }
+        
+        // Guardar cambios
+        DocumentEntity savedEntity = documentSpringRepository.save(entity);
+        
+        // Convertir y retornar usando el método existente
+        return convertToAdminDocumentDto(savedEntity);
     }
 }

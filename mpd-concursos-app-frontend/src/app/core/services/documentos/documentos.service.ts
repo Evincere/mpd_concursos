@@ -12,7 +12,7 @@ import { TempDocumentCacheService } from '../cv/temp-document-cache.service';
 export class DocumentosService {
   private readonly http = inject(HttpClient);
   private readonly tempDocumentCache = inject(TempDocumentCacheService);
-  private readonly apiUrl = `${environment.apiUrl}/documentos`;
+  private readonly apiUrl = `${environment.apiUrl}/admin/documentos`;
 
   // Subject para notificar cuando se sube un nuevo documento
   private documentoActualizadoSource = new Subject<number>();
