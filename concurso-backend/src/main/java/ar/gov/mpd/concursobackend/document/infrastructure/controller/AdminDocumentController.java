@@ -29,7 +29,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/admin/documents")
-@CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com", "https://vps-4778464-x.dattaweb.com:9003"}, allowCredentials = "true")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin Documents", description = "API para administración de documentos")
@@ -73,8 +73,11 @@ public class AdminDocumentController {
         @Parameter(description = "Campo de ordenación") @RequestParam(defaultValue = "fechaCreacion") String sortBy,
         @Parameter(description = "Dirección de ordenación") @RequestParam(defaultValue = "DESC") String sortDir
     ) {
-        DocumentFilters filters = new DocumentFilters(
-            titulo, tipo, estado, usuario, fechaDesde, fechaHasta);
+        DocumentFilters filters = // CORREGIR ORDEN DE PARAMETROS
+        // titulo, tipo, estado, usuario, fechaDesde, fechaHasta
+        // pero constructor espera: estado, tipoDocumentoId, busqueda, usuarioId, fechaDesde, fechaHasta
+        new DocumentFilters(
+            estado, tipo, titulo, usuario, fechaDesde, fechaHasta);
 
         PagedDocumentResponse response = adminDocumentService.getDocumentsWithFilters(
             page, size, filters, sortBy, sortDir);
@@ -212,7 +215,10 @@ public class AdminDocumentController {
         @Valid @RequestBody(required = false) DocumentFilters filters
     ) {
         if (filters == null) {
-            filters = new DocumentFilters();
+            filters = // CORREGIR ORDEN DE PARAMETROS
+        // titulo, tipo, estado, usuario, fechaDesde, fechaHasta
+        // pero constructor espera: estado, tipoDocumentoId, busqueda, usuarioId, fechaDesde, fechaHasta
+        new DocumentFilters();
         }
         if (searchText != null) {
             filters.setBusqueda(searchText);
@@ -223,4 +229,25 @@ public class AdminDocumentController {
 
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Revierte un documento a estado PENDING
+     */
+    @PostMapping("/{id}/revert")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Revertir documento a PENDING",
+               description = "Revierte un documento aprobado o rechazado de vuelta a estado PENDING")
+    public ResponseEntity<Map<String, String>> revertDocument(@PathVariable UUID id) {
+        try {
+            String adminUsername = securityUtils.getCurrentUsername();
+            adminDocumentService.revertDocument(id.toString(), UUID.fromString(securityUtils.getCurrentUserId()));
+            log.info("Documento {} revertido a PENDING por admin {}", id, adminUsername);
+            return ResponseEntity.ok(Map.of("message", "Documento revertido a PENDING exitosamente"));
+        } catch (RuntimeException e) {
+            log.warn("Error al revertir documento {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }
