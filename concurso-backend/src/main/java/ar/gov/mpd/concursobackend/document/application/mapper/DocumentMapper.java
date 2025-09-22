@@ -40,6 +40,7 @@ public class DocumentMapper {
                 .validadoPor(document.getValidatedBy() != null ? document.getValidatedBy().toString() : null)
                 .fechaValidacion(document.getValidatedAt())
                 .motivoRechazo(document.getRejectionReason())
+                .fileSize(calculateFileSize(document.getFilePath()))
                 .build();
     }
 
@@ -162,5 +163,30 @@ public class DocumentMapper {
         return documentTypes.stream()
                 .map(this::toTypeDto)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Calculates file size dynamically from file system
+     * @param filePath the path to the file
+     * @return file size in bytes, or null if file not found
+     */
+    private Long calculateFileSize(String filePath) {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            java.nio.file.Path path = java.nio.file.Paths.get(filePath);
+            if (java.nio.file.Files.exists(path)) {
+                return java.nio.file.Files.size(path);
+            } else {
+                // File not found, return null
+                return null;
+            }
+        } catch (Exception e) {
+            // Log error but dont break the mapping
+            System.err.println("Error calculating file size for: " + filePath + " - " + e.getMessage());
+            return null;
+        }
     }
 }

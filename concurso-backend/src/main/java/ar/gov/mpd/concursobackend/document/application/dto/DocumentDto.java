@@ -23,4 +23,5 @@ public class DocumentDto {
     private String validadoPor;
     private LocalDateTime fechaValidacion;
     private String motivoRechazo;
+    private Long fileSize; // Calculated dynamically from file system
 }

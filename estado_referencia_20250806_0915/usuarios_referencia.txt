@@ -1,2 +1,0 @@
-total_usuarios	usuarios_hoy	primer_usuario	ultimo_usuario
-196	4	2025-07-30 11:11:10.870885	2025-08-06 03:03:53.181612

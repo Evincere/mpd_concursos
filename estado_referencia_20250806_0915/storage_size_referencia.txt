@@ -1,1 +1,0 @@
-142M	/var/lib/docker/volumes/mpd_concursos_storage_data_prod/_data

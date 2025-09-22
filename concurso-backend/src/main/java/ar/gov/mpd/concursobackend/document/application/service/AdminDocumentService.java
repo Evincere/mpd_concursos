@@ -63,7 +63,7 @@ public class AdminDocumentService {
             super(documentDto.getId(), documentDto.getTipoDocumentoId(), documentDto.getTipoDocumento(),
                   documentDto.getNombreArchivo(), documentDto.getContentType(), documentDto.getEstado(),
                   documentDto.getComentarios(), documentDto.getFechaCarga(), documentDto.getValidadoPor(),
-                  documentDto.getFechaValidacion(), documentDto.getMotivoRechazo());
+                  documentDto.getFechaValidacion(), documentDto.getMotivoRechazo(), documentDto.getFileSize());
             this.nombreUsuario = nombreUsuario;
             this.emailUsuario = emailUsuario;
             this.dniUsuario = dniUsuario;
